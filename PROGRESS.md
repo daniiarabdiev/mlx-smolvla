@@ -950,3 +950,42 @@
   seconds**; `git diff --check` passed.
 - Next: write `OPTIMIZER_LOCKSTEP.md`, update stage state, rerun the standalone
   report and full 236-test protected suite, then close and push T2.
+
+## 2026-09-01 — Stage T2 completion and protected regression
+
+- Deliverable: `OPTIMIZER_LOCKSTEP.md` records every audited AdamW, clipping,
+  schedule, and update-order semantic; all 25 reference/MLX loss pairs; the
+  five worst loss steps and final tensors; artifact links; reproduction
+  commands; and measured resource use.
+- Final gate evidence: a fresh `make optimizer-lockstep` passed **25/25** loss
+  and **155/155** final-parameter gates. Worst loss steps are 7
+  (**1.3529624562582406e-6**), 18 (**1.282254892855697e-6**), 9
+  (**1.1715480594856972e-6**), 14 (**1.0663780020910487e-6**), and 24
+  (**1.0560605024102234e-6**), all below `1e-3`.
+- Worst final tensors are `expert.layers.1.self_attn.q_proj.weight`
+  (**2.8499913470883435e-8**),
+  `expert.layers.1.self_attn.o_proj.weight` (**1.939221166057099e-8**),
+  `expert.layers.5.self_attn.o_proj.weight` (**1.796292933841857e-8**),
+  `expert.layers.3.self_attn.q_proj.weight` (**1.785367358266342e-8**), and
+  `expert.layers.9.self_attn.o_proj.weight` (**1.769763506243787e-8**), all
+  below `5e-3`.
+- Hash evidence: the final report SHA-256 is
+  `da8cabf5eecf4379065771b3a74407c47290b8aee9c2d0a9756893b6dd87a6a4`;
+  its embedded T1 and optimizer hashes match independently computed manifests
+  `b029a0ed66312e785cb8aa3f1db0affb16c9502ad7b5d0fe0feea3177bf8c145`
+  and `88c3febc7da3e553bcb7c26f261721369ed1f56efd457887b7d43d50a077807c`.
+- Full regression evidence: the exact post-T2 tree passed **236/236 tests in
+  189.07 seconds**, including the entire inference/reference ladder, T0, T1,
+  both real artifacts, and the cumulative T2 optimizer gate.
+- Closure evidence: `uv lock --check` resolved **103 packages**; `git diff
+  --check` passed; no training test contains a skip, `xfail`, or mock escape;
+  **542 GiB** remains free; caches remain repository-local; and local `HEAD`
+  matched `refs/remotes/origin/main` before the documentation-only completion
+  commit.
+- Decision: Stage T2 is complete without failure documentation. T3 remains
+  ready on its T1 dependency, now with both step-zero and optimizer evolution
+  correctness evidence. `TRAINING ALPHA` is still reserved for T3's held-out
+  improvement, export round-trip, and unchanged inference-parity gates.
+- Next: audit LoRA insertion/export and whole-episode data split mechanics,
+  benchmark a real Metal training step, then freeze the Stage T3 design and
+  time-bounded run plan.

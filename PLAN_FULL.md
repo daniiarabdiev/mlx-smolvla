@@ -60,13 +60,13 @@ to `origin/main`.
 
 ## Stage T2 — Optimizer lockstep
 
-**Dependency:** T1. **State:** ready.
+**Dependency:** T1. **State:** complete.
 
-- [ ] Match reference AdamW semantics and cosine-with-warmup schedule exactly.
-- [ ] Execute 25 CPU/fp32 steps over identical serialized batches and draws.
-- [ ] Gate every step's loss relative difference at `≤ 1e-3` and final
+- [x] Match reference AdamW semantics and cosine-with-warmup schedule exactly.
+- [x] Execute 25 CPU/fp32 steps over identical serialized batches and draws.
+- [x] Gate every step's loss relative difference at `≤ 1e-3` and final
   per-tensor parameter drift relative L2 at `≤ 5e-3`.
-- [ ] Commit and push a passing result or write the required failure analysis;
+- [x] Commit and push a passing result or write the required failure analysis;
   T3 remains eligible when T1 passed.
 
 ## Stage T3 — MLX LoRA fine-tune
