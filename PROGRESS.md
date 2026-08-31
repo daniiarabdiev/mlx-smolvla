@@ -847,3 +847,26 @@
   outcome and round-trip gates.
 - Next: audit the installed reference AdamW and cosine-with-warmup semantics,
   then write and execute the Stage T2 25-step lockstep design.
+
+## 2026-08-31 — Stage T2 optimizer/scheduler design audit
+
+- Upstream audit: the pinned SmolVLA config selects PyTorch AdamW with LR
+  `1e-4`, betas `(0.9, 0.95)`, epsilon `1e-8`, decoupled weight decay `1e-10`,
+  and global gradient-norm clipping at `10`. The loop orders backward → clip →
+  optimizer step → zero-grad → scheduler step.
+- Scheduler audit: LeRobot uses 1,000 warmup steps, 30,000 cosine-decay steps,
+  and a `2.5e-6` floor. T2 freezes the first 25 updates of the default
+  100,000-step configuration, giving LR **9.990009990009991e-8** at step 0 and
+  **2.4975024975025017e-6** at step 24. A 25-step scheduler horizon was rejected
+  because LeRobot's short-run scaling truncates warmup to zero and tests a
+  different edge-case schedule.
+- Clipping probe: the serialized T1 gradient tree has PyTorch global norm
+  **43.20928955078125**, so the configured clip is materially active.
+- Data decision: repeat the exact non-padded T1 real batch for the 25-step
+  optimizer isolation test, while serializing a distinct sequential noise and
+  timestep draw for every update.
+- Design: `docs/superpowers/specs/2026-08-31-optimizer-lockstep-design.md`.
+- Plan: `docs/superpowers/plans/2026-08-31-optimizer-lockstep.md` defines four
+  test-first packages from scalar semantics through full protected closure.
+- Next: write failing cross-framework scheduler, clipping, and AdamW tests,
+  then implement the Torch-free MLX optimizer layer.
