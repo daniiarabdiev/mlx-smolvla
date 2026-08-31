@@ -784,3 +784,31 @@
 - Next: load the converted checkpoint through `SmolVLATrainingModel`, consume
   the serialized batch and draws under MLX CPU autodiff, and compare all 155
   gradients against the immutable T1 limits.
+
+## 2026-08-31 — Stage T1 Package 5 checkpoint-backed parity gate
+
+- Red evidence: the four new checkpoint/batch/threshold/gate cases failed
+  **4/4** because `training.parity` and its required APIs did not exist.
+- Structural gate: the strict native fp32 loader matched every one of the
+  **155** selected MLX parameter tensors exactly to the serialized Torch
+  values before differentiation; names, shapes, dtypes, and values are hard
+  failures rather than tolerance checks.
+- Numerical gate: reference loss **2.101923942565918** and MLX loss
+  **2.101925849914551** differ by **9.074298999059449e-7**, below the immutable
+  `1e-4` limit. All **155/155** gradients pass both limits: worst relative L2
+  **8.673578115837066e-6** (`action_time_mlp_in.weight`) versus `1e-2`, and
+  minimum cosine **0.9999999999623879** versus `0.999`.
+- Artifact evidence: `make training-parity` wrote the complete 155-comparison
+  report to `.cache/training/t1-parity.json` with SHA-256
+  `f29f0d81b23cab2929b9126985b5e2a0ce513c23893093729e2fd49040a42be6`.
+  It binds golden manifest SHA-256
+  `b029a0ed66312e785cb8aa3f1db0affb16c9502ad7b5d0fe0feea3177bf8c145`.
+- Resource evidence: the official MLX forward/backward took **1.590 seconds**,
+  total validation took **2.851 seconds**, peak MLX memory was
+  **2,173,085,650 bytes**, and disk free remained above **542 GiB**.
+- Green evidence: the complete checkpoint-backed parity plus protected
+  training objective, gradient metrics, differentiable primitives, model, and
+  import-isolation set passed **29/29 in 3.64 seconds**; `git diff --check`
+  passed.
+- Next: commit the executable gate, then write the T1 evidence report, update
+  milestone state, and run the complete protected repository suite.

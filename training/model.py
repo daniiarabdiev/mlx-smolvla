@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from pathlib import Path
 
 import mlx.core as mx
 import mlx.nn as nn
@@ -40,13 +41,63 @@ class TrainingBatch:
 class SmolVLATrainingModel(nn.Module):
     """Full native architecture arranged under a differentiable MLX module."""
 
-    def __init__(self) -> None:
+    def __init__(
+        self,
+        *,
+        vision: VisionEncoder | None = None,
+        connector: Connector | None = None,
+        language: TruncatedLanguageModel | None = None,
+        state_proj: nn.Linear | None = None,
+        expert: ActionExpert | None = None,
+    ) -> None:
         super().__init__()
-        self.vision = VisionEncoder()
-        self.connector = Connector()
-        self.language = TruncatedLanguageModel()
-        self.state_proj = nn.Linear(_STATE_PADDED_DIM, 960, bias=True)
-        self.expert = ActionExpert()
+        self.vision = VisionEncoder() if vision is None else vision
+        self.connector = Connector() if connector is None else connector
+        self.language = TruncatedLanguageModel() if language is None else language
+        self.state_proj = (
+            nn.Linear(_STATE_PADDED_DIM, 960, bias=True)
+            if state_proj is None
+            else state_proj
+        )
+        self.expert = ActionExpert() if expert is None else expert
+        self._converted_weights_path: Path | None = None
+
+    @classmethod
+    def from_pretrained(
+        cls,
+        model_id: str | Path = "lerobot/smolvla_base",
+        cache_dir: str | Path | None = None,
+        dtype: object = mx.float32,
+        *,
+        tokenizer_dir: str | Path | None = None,
+    ) -> "SmolVLATrainingModel":
+        """Compose training ownership around the strict native checkpoint load."""
+
+        if dtype != mx.float32 and dtype != "float32":
+            raise ValueError("checkpoint-backed gradient parity requires float32 weights")
+        from smolvla_mlx.policy import SmolVLAMLX
+
+        policy = SmolVLAMLX.from_pretrained(
+            model_id=model_id,
+            cache_dir=cache_dir,
+            dtype=mx.float32,
+            tokenizer_dir=tokenizer_dir,
+        )
+        model = cls(
+            vision=policy.vision,
+            connector=policy.connector,
+            language=policy.language,
+            state_proj=policy.state_proj,
+            expert=policy.expert,
+        )
+        model._converted_weights_path = policy.converted_weights_path
+        return model
+
+    @property
+    def converted_weights_path(self) -> Path | None:
+        """Return the strict converted artifact backing a loaded model, if any."""
+
+        return self._converted_weights_path
 
 
 def make_random_audit_batch(seed: int) -> TrainingBatch:
