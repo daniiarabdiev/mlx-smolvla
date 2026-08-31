@@ -616,3 +616,22 @@
 - Next: compose the existing full architecture behind a training container and
   prove its selected parameter tree is exactly `state_proj` plus the action
   expert.
+
+## 2026-08-31 — Stage T0 full training-path composition
+
+- Red evidence: four tests failed because the training component container,
+  parameter selector, canonical name mapping, and deterministic audit batch did
+  not exist.
+- What: composed the existing 12-layer vision encoder, connector, 16-layer
+  language prefix, state projection, and 16-layer expert under one optional MLX
+  training module. The default selection freezes vision/connector/language and
+  enables only `state_proj` plus the complete expert, matching the audited
+  reference configuration.
+- Behavior evidence: the deterministic batch is one observation with two
+  `3×512×512` camera tensors, 48 language tokens, six state dimensions, and
+  `50×32` action/noise tensors. A real bf16-storage full forward returned a
+  finite positive scalar flow loss; no component was mocked.
+- Green evidence: repository-local-cache `pytest tests/test_training_model.py
+  tests/test_training_objective.py -q` passed **10/10 in 0.35 seconds**.
+- Next: differentiate this full path, evaluate every selected gradient, and
+  record latency, MLX memory, and disk measurements in the T0 audit result.

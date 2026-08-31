@@ -275,7 +275,7 @@ git push origin main
 - Consumes: existing fixed-dimension runtime modules and Task 2's flow
   objective.
 
-- [ ] **Step 1: Write the failing model-selection tests**
+- [x] **Step 1: Write the failing model-selection tests**
 
 Create `tests/test_training_model.py` with a small real MLX container for the
 selection contract and a deterministic batch-shape assertion:
@@ -320,7 +320,7 @@ def test_random_audit_batch_has_the_audited_shapes() -> None:
     mx.eval(batch.actions, batch.noise)
 ```
 
-- [ ] **Step 2: Verify the tests fail because the APIs are absent**
+- [x] **Step 2: Verify the tests fail because the APIs are absent**
 
 Run:
 
@@ -330,7 +330,7 @@ uv run pytest tests/test_training_model.py -q
 
 Expected: two failures inside the test bodies for missing training modules.
 
-- [ ] **Step 3: Implement the component container and exact selection**
+- [x] **Step 3: Implement the component container and exact selection**
 
 `SmolVLATrainingModel` owns these attributes with the existing constructors:
 
@@ -374,7 +374,7 @@ prefix build/encode, calling `flow_matching_inputs` to obtain `x_t` and the
 target velocity, running expert denoise, and calling `masked_velocity_mse` on
 the expert velocity. Cast the final MSE path to fp32.
 
-- [ ] **Step 4: Verify selection and batch construction pass**
+- [x] **Step 4: Verify selection and batch construction pass**
 
 Run:
 
@@ -384,7 +384,7 @@ uv run pytest tests/test_training_model.py tests/test_training_objective.py -q
 
 Expected: 4 tests pass.
 
-- [ ] **Step 5: Record and commit the model composition**
+- [x] **Step 5: Record and commit the model composition**
 
 Append evidence to `PROGRESS.md`, then commit and push:
 
