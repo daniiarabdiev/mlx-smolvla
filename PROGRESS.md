@@ -383,3 +383,22 @@
   public policy and still loads no prohibited reference frameworks.
 - Next: perform the 50-sample statistical accuracy check, record a benchmark,
   and add the packaging/CLI/README surface specified for v0.1.
+
+## 2026-08-31 — Phase 4 statistical accuracy gate
+
+- What: added a deterministic reference-lane statistical checker and a
+  dependency-isolated JSON parser/gate. It evaluates the first physical action
+  from the same noise-driven chunk against the ground-truth action at frame 0
+  of each of the 50 SO-101 episodes, preserving the checkpoint's effective
+  identity output normalization.
+- Evidence artifact: `.cache/statistical.json` records 50 episode/frame IDs,
+  noise seeds, per-backend absolute-error sums and element counts, aggregate
+  MAEs, and MLX-to-reference ratios. Its atomic final values are PyTorch fp32
+  MAE `55.783039437383415`, MLX fp32 MAE `55.78303926587105` (ratio
+  `0.9999999969253671`), and MLX bf16 MAE `55.78358466590444` (ratio
+  `1.0000097740913103`).
+- Test evidence: `uv run --extra reference pytest tests/test_statistical.py
+  -q` passed **1/1** in 0.01 seconds after the full checker completed. Both
+  ratios remain below the immutable `1.05` gate; no tolerance was changed.
+- Next: add reproducible performance measurement and a machine-readable
+  benchmark report, then finish the user-facing packaging surface.

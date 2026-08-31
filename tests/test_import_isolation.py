@@ -17,6 +17,7 @@ import smolvla_mlx.language
 import smolvla_mlx.policy
 import smolvla_mlx.preprocessing
 import smolvla_mlx.rmsnorm
+import smolvla_mlx.statistical
 import smolvla_mlx.types
 import smolvla_mlx.vision
 
