@@ -402,3 +402,20 @@
   ratios remain below the immutable `1.05` gate; no tolerance was changed.
 - Next: add reproducible performance measurement and a machine-readable
   benchmark report, then finish the user-facing packaging surface.
+
+## 2026-08-31 — Phase 5 Metal timestep compatibility
+
+- What: fixed the action timestep embedding's device boundary. CPU keeps the
+  audited float64 construction before its fp32 cast for golden parity; Metal
+  now uses the equivalent fp32 construction because MLX intentionally does not
+  support float64 GPU arrays.
+- Test evidence: `uv run --extra reference pytest tests/test_expert.py
+  tests/test_flow.py -q` passed **36/36** in 14.08 seconds, including the new
+  no-float64 Metal execution contract and the unchanged CPU golden suite.
+- Metal smoke evidence: a real bf16 `SmolVLAMLX.predict_action_chunk` on the
+  default `Device(gpu, 0)` returned a finite `[1, 50, 6]` result, took
+  `2851.56 ms` on its cold run, and reported `1,868,069,105` bytes peak MLX
+  memory. Against sample 000 it had relative L2 `0.00424612` and max absolute
+  `0.0408914`, within the immutable bf16 end-to-end `5e-2` maximum bound.
+- Next: make the warmed Metal path measurable over 50 runs with per-stage
+  timing and an auditable benchmark report.

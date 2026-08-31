@@ -9,7 +9,7 @@ import mlx.core as mx
 import numpy as np
 import pytest
 
-from smolvla_mlx.expert import ActionExpert
+from smolvla_mlx.expert import ActionExpert, timestep_embedding
 from tests.test_prefix import _prefix_inputs
 
 
@@ -100,6 +100,18 @@ def test_action_and_timestep_embedding_matches_all_real_goldens(golden, expert_p
         golden.array("flow/step_00/suffix_embeddings"),
         dtype=expert_parts.dtype,
     )
+
+
+def test_timestep_embedding_runs_on_metal_without_float64() -> None:
+    """The performance path must not send the CPU-only float64 construction to Metal."""
+
+    with mx.stream(mx.gpu):
+        embedding = timestep_embedding(mx.array([1.0], dtype=mx.float32))
+        mx.eval(embedding)
+
+    assert embedding.shape == (1, 720)
+    assert embedding.dtype == mx.float32
+    assert bool(mx.all(mx.isfinite(embedding)))
 
 
 @pytest.mark.parametrize("golden", [0], indirect=True)

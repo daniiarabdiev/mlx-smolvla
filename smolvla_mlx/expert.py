@@ -48,18 +48,19 @@ def timestep_embedding(
     min_period: float = _MIN_PERIOD,
     max_period: float = _MAX_PERIOD,
 ) -> mx.array:
-    """Match the reference's float64 sinusoid construction before its fp32 cast."""
+    """Build the reference CPU sinusoid exactly and a Metal-safe fp32 equivalent."""
 
     if timestep.ndim != 1:
         raise ValueError(f"timestep must have [batch] shape, got {timestep.shape}")
     if dimension % 2:
         raise ValueError(f"dimension must be even, got {dimension}")
-    fraction = mx.linspace(0.0, 1.0, dimension // 2, dtype=mx.float64)
-    period = mx.array(min_period, dtype=mx.float64) * mx.power(
-        mx.array(max_period / min_period, dtype=mx.float64), fraction
+    arithmetic_dtype = mx.float64 if mx.default_device() == mx.cpu else mx.float32
+    fraction = mx.linspace(0.0, 1.0, dimension // 2, dtype=arithmetic_dtype)
+    period = mx.array(min_period, dtype=arithmetic_dtype) * mx.power(
+        mx.array(max_period / min_period, dtype=arithmetic_dtype), fraction
     )
-    scaling = (mx.array(2.0 * math.pi, dtype=mx.float64) / period)[None, :]
-    radians = timestep.astype(mx.float64)[:, None] * scaling
+    scaling = (mx.array(2.0 * math.pi, dtype=arithmetic_dtype) / period)[None, :]
+    radians = timestep.astype(arithmetic_dtype)[:, None] * scaling
     return mx.concatenate((mx.sin(radians), mx.cos(radians)), axis=1).astype(mx.float32)
 
 
