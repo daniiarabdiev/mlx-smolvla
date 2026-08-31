@@ -10,7 +10,14 @@ from typing import Mapping
 import mlx.core as mx
 import numpy as np
 import pytest
+from huggingface_hub import snapshot_download
 
+from reference.discovery import (
+    BASE_VLM_ID,
+    BASE_VLM_REVISION,
+    CHECKPOINT_ID,
+    CHECKPOINT_REVISION,
+)
 from reference.goldens import GoldenStore
 
 
@@ -68,3 +75,41 @@ def golden(request: pytest.FixtureRequest, golden_root: Path, golden_metadata: d
     if not isinstance(metadata, dict) or not isinstance(metadata.get("name"), str):
         raise TypeError("Golden sample metadata must contain a string name")
     return GoldenCase(root=golden_root, sample_name=metadata["name"], metadata=metadata)
+
+
+@pytest.fixture(scope="session")
+def checkpoint_dir() -> Path:
+    return Path(
+        snapshot_download(
+            CHECKPOINT_ID,
+            revision=CHECKPOINT_REVISION,
+            cache_dir=Path(".cache/hf"),
+            allow_patterns=[
+                "config.json",
+                "policy_preprocessor.json",
+                "policy_postprocessor.json",
+                "policy_preprocessor_step_5_normalizer_processor.safetensors",
+                "policy_postprocessor_step_0_unnormalizer_processor.safetensors",
+            ],
+        )
+    )
+
+
+@pytest.fixture(scope="session")
+def base_vlm_dir() -> Path:
+    return Path(
+        snapshot_download(
+            BASE_VLM_ID,
+            revision=BASE_VLM_REVISION,
+            cache_dir=Path(".cache/hf"),
+            allow_patterns=[
+                "config.json",
+                "added_tokens.json",
+                "merges.txt",
+                "special_tokens_map.json",
+                "tokenizer.json",
+                "tokenizer_config.json",
+                "vocab.json",
+            ],
+        )
+    )

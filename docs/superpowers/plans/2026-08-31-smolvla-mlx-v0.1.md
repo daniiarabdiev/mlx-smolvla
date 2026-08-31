@@ -301,7 +301,7 @@ git commit -m "phase-0: capture deterministic goldens (golden tests pass)"
 - Consumes: checkpoint config, processor files, normalization statistics, observation dictionaries, and preprocessing goldens.
 - Produces: `SmolVLAConfig.from_pretrained_files(path)`, `ProcessedObservation`, `SmolVLAPreprocessor.__call__(observation)`, `normalize_actions`, and `unnormalize_actions`.
 
-- [ ] **Step 1: Write failing config and real-golden preprocessing tests**
+- [x] **Step 1: Write failing config and real-golden preprocessing tests**
 
 ```python
 def test_config_matches_audited_checkpoint(checkpoint_dir):
@@ -318,13 +318,13 @@ def test_preprocessing_matches_reference(sample, preprocessor, golden):
     np.testing.assert_allclose(actual.state, golden.array(sample, "state_normalized"), atol=1e-6, rtol=0)
 ```
 
-- [ ] **Step 2: Run preprocessing tests and record the absent interfaces**
+- [x] **Step 2: Run preprocessing tests and record the absent interfaces**
 
 Run: `uv run pytest tests/test_config.py tests/test_preprocessing.py -v`
 
 Expected: collection failures for `SmolVLAConfig` and `SmolVLAPreprocessor`.
 
-- [ ] **Step 3: Implement validated dataclasses and one preprocessing stage at a time**
+- [x] **Step 3: Implement validated dataclasses and one preprocessing stage at a time**
 
 ```python
 @dataclass(frozen=True)
@@ -338,13 +338,13 @@ class ProcessedObservation:
 
 Match audited camera ordering/empty-camera masking, Pillow resize and padding, processor mean/std, tokenizer IDs and fixed padding, and checkpoint normalization statistics. Reject missing required keys and non-finite inputs with field-specific errors.
 
-- [ ] **Step 4: Run focused tests after each preprocessing boundary**
+- [x] **Step 4: Run focused tests after each preprocessing boundary**
 
 Run: `uv run pytest tests/test_config.py tests/test_preprocessing.py -v`
 
 Expected: exact token IDs, state max error at most `1e-6`, and normalized image max error at most `1e-5` for all samples.
 
-- [ ] **Step 5: Commit passing preprocessing evidence**
+- [x] **Step 5: Commit passing preprocessing evidence**
 
 ```bash
 git add smolvla_mlx/config.py smolvla_mlx/types.py smolvla_mlx/preprocessing.py tests/test_config.py tests/test_preprocessing.py PROGRESS.md

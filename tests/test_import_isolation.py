@@ -9,6 +9,9 @@ import json
 import sys
 
 import smolvla_mlx
+import smolvla_mlx.config
+import smolvla_mlx.preprocessing
+import smolvla_mlx.types
 
 loaded = {name.split('.', 1)[0] for name in sys.modules}
 print(json.dumps(sorted(loaded & {'torch', 'lerobot', 'transformers'})))

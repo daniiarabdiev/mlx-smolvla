@@ -117,3 +117,32 @@
 - Next: implement checkpoint-derived native configuration and preprocessing,
   beginning with exact camera resize/padding and tokenizer parity against all
   saved golden inputs.
+
+## 2026-08-31 — Phase 3 native configuration and preprocessing
+
+- What: added dependency-isolated `SmolVLAConfig`, `ProcessedObservation`, and
+  `SmolVLAPreprocessor` runtime interfaces. The native processor reads
+  `tokenizer.json` through `tokenizers`, appends the required instruction
+  newline, pads on the right with token ID 2 to 48 slots, and emits MLX arrays.
+- Image evidence: a float32 NumPy bilinear implementation matches PyTorch
+  `align_corners=False`; it aspect-resizes 480x640 frames to 384x512, pads
+  128 rows on top (and left when needed), then applies `x * 2 - 1`.
+  All eight golden cases match the reference pixels at max absolute tolerance
+  1e-5.
+- State/action evidence: observations remain 1x6 after the saved processor,
+  then policy code will zero-pad state to 32 before projection. The checkpoint's
+  mismatched statistics retain identity action normalize/unnormalize behavior,
+  proven by an MLX action round-trip test.
+- Isolation evidence: importing `smolvla_mlx`, `.config`, `.preprocessing`,
+  and `.types` in a clean subprocess leaves `torch`, `lerobot`, and
+  `transformers` absent from `sys.modules`.
+- Test evidence: `make test TESTS="tests/test_config.py
+  tests/test_preprocessing.py tests/test_import_isolation.py"` collected 11
+  tests and passed 11/11 in 0.50 seconds. The 8 parametrized real-golden cases
+  assert exact IDs/masks and fixed image/state tolerances.
+- Open questions: native preprocessing currently uses NumPy for the exact
+  bilinear arithmetic before moving the compact result to MLX. It is correct
+  and dependency-light; Phase 5 benchmarking will decide whether a Metal resize
+  optimization can preserve the same golden tolerance.
+- Next: define the full native module parameter tree and explicit safetensors
+  conversion map, with one source tensor mapped exactly once.
