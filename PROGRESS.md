@@ -359,3 +359,27 @@
   runtime modules and still loads none of `torch`, `lerobot`, or `transformers`.
 - Next: assemble preprocessing, vision, prefix-cache, expert, unnormalization,
   and the 50-action FIFO into the public `SmolVLAMLX` API.
+
+## 2026-08-31 — Phase 4 native policy API and deterministic parity
+
+- What: added `SmolVLAMLX.from_pretrained`, `predict_action_chunk`,
+  `select_action`, `reset`, `queued_actions`, and explicit converted-weight
+  provenance. The loader supports a local checkpoint or Hub ID, reuses cached
+  conversion artifacts, and strictly accounts for all 500 canonical tensors.
+- Loader evidence: the native parameter tree and converted safetensors name set
+  are identical in both storage modes. The test rejects both an omitted source
+  tensor and a tensor attached under the wrong native prefix before inference
+  begins.
+- API evidence: prediction preprocesses one observation, evaluates vision and
+  connector, creates exactly one VLM prefix cache, reuses that cache through
+  ten denoising steps, then slices 32 padded action dimensions to the physical
+  6-D normalized chunk. `select_action` postprocesses only when queueing and
+  refills its FIFO with 50 actions only after it is empty; `reset()` clears it.
+- Test evidence: `uv run --extra reference pytest tests/test_policy_api.py
+  tests/test_end_to_end.py tests/test_import_isolation.py -q` passed **21/21**
+  in 18.22 seconds. The end-to-end test covers 8 real frames × fp32/bf16
+  storage at the fixed `5e-3` / `5e-2` maximum-absolute thresholds; queue and
+  loader assertions run in both modes. The isolation subprocess imports the
+  public policy and still loads no prohibited reference frameworks.
+- Next: perform the 50-sample statistical accuracy check, record a benchmark,
+  and add the packaging/CLI/README surface specified for v0.1.
