@@ -146,3 +146,34 @@
   optimization can preserve the same golden tolerance.
 - Next: define the full native module parameter tree and explicit safetensors
   conversion map, with one source tensor mapped exactly once.
+
+## 2026-08-31 — Phase 2 checkpoint conversion
+
+- What: implemented a native MLX safetensors converter with a strict 500-to-500
+  canonical name bijection. Target names are `vision.*`, `connector.*`,
+  `language.*`, `expert.*`, and the five policy projections; the unused language
+  head is retained as `language.lm_head` so source/target parameter equality is
+  exact.
+- Transform evidence: 499 tensors retain their original layout. The sole shape
+  transform is the SigLIP patch convolution,
+  `model...patch_embedding.weight` `[768, 3, 16, 16]` →
+  `vision.embeddings.patch_embedding.weight` `[768, 16, 16, 3]`, matching MLX
+  Conv2D's OHWI convention.
+- Integrity evidence: each conversion emits fp32 or bf16 safetensors plus a
+  500-record `name_map.json` carrying source and target shapes, transform name,
+  raw source SHA-256, and raw converted SHA-256. Both modes report exactly
+  450,046,176 source and target parameters, zero unmapped source tensors, and
+  zero uninitialized target tensors.
+- Artifacts: local ignored test conversions measured 1.7 GiB fp32 and 858 MiB
+  bf16. This validates that the user-facing cache can retain either precision
+  without reference dependencies.
+- Test evidence: `make test TESTS="tests/test_conversion.py
+  tests/test_import_isolation.py"` collected 4 tests and passed 4/4 in
+  2.16 seconds. Tests validate fp32/bf16 output, every mapping's uniqueness,
+  the special convolution layout, and native import isolation.
+- Open questions: none for conversion. The next modules must retain the
+  canonical tree names in `name_map.json`; loading them will turn any mismatch
+  into an immediate, auditable error.
+- Next: vendor/adapt the MIT MLX vision and connector primitives under the
+  documented license boundary, load converted weights, and prove their outputs
+  against the vision/connector goldens.

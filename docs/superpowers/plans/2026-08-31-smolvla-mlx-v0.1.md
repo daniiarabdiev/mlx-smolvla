@@ -362,7 +362,7 @@ git commit -m "phase-3: port preprocessing (preprocessing tests pass)"
 - Consumes: original checkpoint safetensors, audited target parameter tree, and cache directory.
 - Produces: `ConversionReport`, `build_name_map(source_names, target_names)`, and `convert_checkpoint(source_dir, output_dir, dtype) -> ConversionReport`.
 
-- [ ] **Step 1: Write failing bijection, shape, checksum, and round-trip tests**
+- [x] **Step 1: Write failing bijection, shape, checksum, and round-trip tests**
 
 ```python
 def test_conversion_maps_every_tensor_once(checkpoint_dir, converted_dir):
@@ -373,13 +373,13 @@ def test_conversion_maps_every_tensor_once(checkpoint_dir, converted_dir):
     assert len(report.source_names) == len(set(report.source_names))
 ```
 
-- [ ] **Step 2: Run conversion tests before implementation**
+- [x] **Step 2: Run conversion tests before implementation**
 
 Run: `uv run pytest tests/test_conversion.py -v`
 
 Expected: import or symbol failure for the converter.
 
-- [ ] **Step 3: Implement explicit auditable mapping and atomic output**
+- [x] **Step 3: Implement explicit auditable mapping and atomic output**
 
 ```python
 @dataclass(frozen=True)
@@ -395,13 +395,13 @@ class ConversionReport:
 
 Encode every audited rename/transpose explicitly, write `name_map.json`, retain fp32 source values, derive bf16 output from fp32, and refuse duplicate or shape-changing mappings unless the audited rule names the exact reshape/transpose.
 
-- [ ] **Step 4: Convert both dtypes and run full conversion checks**
+- [x] **Step 4: Convert both dtypes and run full conversion checks**
 
 Run: `uv run pytest tests/test_conversion.py -v`
 
 Expected: zero unmapped source tensors, zero uninitialized targets, equal parameter counts, and stable per-tensor checksums.
 
-- [ ] **Step 5: Commit converter and evidence**
+- [x] **Step 5: Commit converter and evidence**
 
 ```bash
 git add smolvla_mlx/convert.py tests/test_conversion.py PROGRESS.md
