@@ -800,15 +800,50 @@
   minimum cosine **0.9999999999623879** versus `0.999`.
 - Artifact evidence: `make training-parity` wrote the complete 155-comparison
   report to `.cache/training/t1-parity.json` with SHA-256
-  `f29f0d81b23cab2929b9126985b5e2a0ce513c23893093729e2fd49040a42be6`.
+  `f4da0c16771a462e45bd615728bc02a059633db19eb77883342203426cb4d634`.
   It binds golden manifest SHA-256
   `b029a0ed66312e785cb8aa3f1db0affb16c9502ad7b5d0fe0feea3177bf8c145`.
-- Resource evidence: the official MLX forward/backward took **1.590 seconds**,
-  total validation took **2.851 seconds**, peak MLX memory was
-  **2,173,085,650 bytes**, and disk free remained above **542 GiB**.
+- Resource evidence: the final official MLX forward/backward took **1.161
+  seconds**, total validation took **2.169 seconds**, peak MLX memory was
+  **2,173,315,618 bytes**, and disk free remained above **542 GiB**.
 - Green evidence: the complete checkpoint-backed parity plus protected
   training objective, gradient metrics, differentiable primitives, model, and
   import-isolation set passed **29/29 in 3.64 seconds**; `git diff --check`
   passed.
 - Next: commit the executable gate, then write the T1 evidence report, update
   milestone state, and run the complete protected repository suite.
+
+## 2026-08-31 — Stage T1 completion and protected regression
+
+- Deliverable: `GRADIENT_PARITY.md` binds the pinned checkpoint, VLM, dataset,
+  exact real batch, serialized draws, structural identity gate, immutable
+  numerical gates, resource measurements, and reproduction commands.
+- Worst-five relative-L2 evidence, reported regardless of pass:
+  `action_time_mlp_in.weight` (**8.673578115837066e-6**, cosine
+  **0.9999999999623879**),
+  `expert.layers.1.input_layernorm.weight` (**6.656345209857855e-6**,
+  **0.9999999999789950**),
+  `expert.layers.1.self_attn.q_proj.weight` (**6.3123810635703525e-6**,
+  **0.9999999999808424**),
+  `expert.layers.9.input_layernorm.weight` (**5.851465222097282e-6**,
+  **0.9999999999864958**), and
+  `expert.layers.1.self_attn.k_proj.weight` (**5.559739433938906e-6**,
+  **0.9999999999855081**).
+- Final artifact evidence: `make training-parity` again passed **155/155** and
+  wrote report SHA-256
+  `f4da0c16771a462e45bd615728bc02a059633db19eb77883342203426cb4d634`;
+  its embedded golden-manifest SHA matches the independently computed
+  `b029a0ed66312e785cb8aa3f1db0affb16c9502ad7b5d0fe0feea3177bf8c145`.
+- Full regression evidence: the exact post-T1 tree passed **224/224 tests in
+  172.58 seconds**. This includes the complete v0.1 inference/reference ladder,
+  real training artifacts, T0 audit, T1 identity/parity, and base import
+  isolation.
+- Closure evidence: `uv lock --check` resolved **103 packages**; `git diff
+  --check` passed; no training test contains a skip, `xfail`, or mock escape
+  hatch; **543 GiB** remains free; and local `HEAD` matched
+  `refs/remotes/origin/main` before the documentation-only completion commit.
+- Decision: Stage T1 is complete. Stage T2 optimizer lockstep and Stage T3 LoRA
+  fine-tuning are both ready. `TRAINING ALPHA` remains reserved for T3's three
+  outcome and round-trip gates.
+- Next: audit the installed reference AdamW and cosine-with-warmup semantics,
+  then write and execute the Stage T2 25-step lockstep design.

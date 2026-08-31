@@ -13,4 +13,5 @@
   repository, Git history, attachments, Downloads, unreachable objects, and
   the initially empty GitHub remote did not recover it.
 - **Current impact:** Stage R cannot earn `RELEASE READY`, and Stage Q / Stage H
-  remain dependency-blocked. Independent Stage T0-T5 work continues.
+  remain dependency-blocked. Independent Stage T0 and T1 are complete; T2-T5
+  work continues.

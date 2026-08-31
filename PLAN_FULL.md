@@ -47,20 +47,20 @@ to `origin/main`.
 
 ## Stage T1 — Gradient parity at step zero
 
-**Dependency:** T0.
+**Dependency:** T0. **State:** complete.
 
-- [ ] Serialize one real reference batch, sampled timesteps, noise, scalar loss,
+- [x] Serialize one real reference batch, sampled timesteps, noise, scalar loss,
   and every trainable gradient with a deterministic manifest.
-- [ ] Implement the exact differentiable MLX flow-matching loss over identical
+- [x] Implement the exact differentiable MLX flow-matching loss over identical
   draws.
-- [ ] Gate loss relative difference at `≤ 1e-4` and every trainable tensor at
+- [x] Gate loss relative difference at `≤ 1e-4` and every trainable tensor at
   gradient relative L2 `≤ 1e-2` plus cosine similarity `≥ 0.999`.
-- [ ] Report the worst five gradient tensors, rerun protected gates, commit, and
+- [x] Report the worst five gradient tensors, rerun protected gates, commit, and
   push.
 
 ## Stage T2 — Optimizer lockstep
 
-**Dependency:** T1.
+**Dependency:** T1. **State:** ready.
 
 - [ ] Match reference AdamW semantics and cosine-with-warmup schedule exactly.
 - [ ] Execute 25 CPU/fp32 steps over identical serialized batches and draws.
@@ -71,7 +71,7 @@ to `origin/main`.
 
 ## Stage T3 — MLX LoRA fine-tune
 
-**Dependency:** T1.
+**Dependency:** T1. **State:** ready.
 
 - [ ] Add configurable LoRA to the used VLM attention/MLP linears and expert.
 - [ ] Train on Metal/bf16 using a fixed whole-episode held-out split of at least
