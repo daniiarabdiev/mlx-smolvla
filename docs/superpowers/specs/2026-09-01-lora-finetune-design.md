@@ -68,7 +68,12 @@ The insertion set is explicit and count-checked:
 
 The total is exactly 229 adapters. Vision, connector, embeddings,
 normalizations, and the language head stay frozen. Only 458 LoRA tensors may
-appear in `trainable_parameters()`.
+appear in `trainable_parameters()`. At zero-B initialization, every A gradient
+is zero by construction. Five B gradients in terminal VLM layer 15 (`q`, `o`,
+and its three MLP projections) are also exactly zero because SmolVLA consumes
+that layer's exported K/V cache but not its terminal hidden output. Keeping
+those declared used-layer targets preserves the requested topology; the other
+224 B matrices receive the first-step action-loss signal.
 
 Merging computes `weight + scale * B.T @ A.T` in fp32, replaces every wrapper
 with a plain `nn.Linear`, preserves bias, and verifies that no adapter tensor

@@ -73,14 +73,14 @@ class SmolVLATrainingModel(nn.Module):
     ) -> "SmolVLATrainingModel":
         """Compose training ownership around the strict native checkpoint load."""
 
-        if dtype != mx.float32 and dtype != "float32":
-            raise ValueError("checkpoint-backed gradient parity requires float32 weights")
+        if dtype not in (mx.float32, mx.bfloat16, "float32", "bfloat16"):
+            raise ValueError("training weights must use float32 or bfloat16 storage")
         from smolvla_mlx.policy import SmolVLAMLX
 
         policy = SmolVLAMLX.from_pretrained(
             model_id=model_id,
             cache_dir=cache_dir,
-            dtype=mx.float32,
+            dtype=dtype,
             tokenizer_dir=tokenizer_dir,
         )
         model = cls(
