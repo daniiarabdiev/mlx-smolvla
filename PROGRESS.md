@@ -419,3 +419,24 @@
   `0.0408914`, within the immutable bf16 end-to-end `5e-2` maximum bound.
 - Next: make the warmed Metal path measurable over 50 runs with per-stage
   timing and an auditable benchmark report.
+
+## 2026-08-31 — Phase 5 native Metal benchmark
+
+- What: added synchronized stage-level timing with five excluded warmups and
+  fifty measured real-observation runs per compact-weight mode. The benchmark
+  evaluates MLX work at every boundary, reports median/p95s, and records the
+  maximum of active and peak allocator memory after warmup.
+- Machine evidence: Apple M5 Pro, 51,539,607,552-byte unified memory, macOS
+  26.5.2, Python 3.12.13, and MLX 0.32.2. `BENCHMARK.md` records commit
+  `72b1716d3cda72a26bced98721133fbd158a5919` and the complete output.
+- Result evidence: fp32 median/p95 chunk latency is `111.34 / 111.80 ms`
+  (preprocess `4.45`, vision+connector `46.12`, prefix `8.17`, expert loop
+  `52.62` ms) at `2.94 GiB` peak MLX memory. bf16 is `131.12 / 131.71 ms`
+  (stage medians `4.50 / 48.25 / 11.08 / 67.36` ms) at `2.44 GiB` peak. The
+  bf16 latency target is met in this measured environment; its lower memory
+  use is retained even though this MLX version's fp32 kernels are faster.
+- Test evidence: `uv run pytest tests/test_bench.py
+  tests/test_import_isolation.py -q` passed **2/2** in 0.21 seconds. The
+  schema test verifies 50 measured samples, explicit warmup exclusion, all
+  four required stages, percentile ordering, and peak-memory reporting.
+- Next: add the CLI, README, wheel/fresh-install proof, and final audit.

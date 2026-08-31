@@ -11,6 +11,6 @@ The 50-frame statistical gate is green: fp32 MLX MAE is
 `0.9999999969253671`); bf16 MLX MAE is `55.78358466590444` (ratio
 `1.0000097740913103`). Both are below the immutable 1.05 ratio limit.
 
-Remaining v0.1 work is Phase 5 benchmark evidence, Phase 6 CLI/documentation
-and fresh-install proof, followed by the final repository audit. No human task
-is currently required.
+Phase 5 benchmark evidence is now present. Remaining v0.1 work is Phase 6
+CLI/documentation and fresh-install proof, followed by the final repository
+audit. No human task is currently required.
