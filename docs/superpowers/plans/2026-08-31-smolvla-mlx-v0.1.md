@@ -63,7 +63,7 @@
 - Consumes: repository rules in `AGENTS.md` and dependency boundaries in `BRIEF.md`.
 - Produces: `smolvla_mlx.cache.resolve_cache_dir(explicit: Path | None = None) -> Path`, an importable package, and repeatable `make goldens`, `make test`, and `make bench` commands.
 
-- [ ] **Step 1: Write failing bootstrap tests**
+- [x] **Step 1: Write failing bootstrap tests**
 
 ```python
 def test_runtime_import_isolation():
@@ -75,13 +75,13 @@ def test_explicit_cache_wins(tmp_path):
     assert resolve_cache_dir(tmp_path) == tmp_path.resolve()
 ```
 
-- [ ] **Step 2: Prove the tests fail before the package exists**
+- [x] **Step 2: Prove the tests fail before the package exists**
 
 Run: `HF_HOME=$PWD/.cache/hf UV_CACHE_DIR=$PWD/.cache/uv uv run pytest tests/test_import_isolation.py tests/test_cache.py -v`
 
 Expected: collection fails because `smolvla_mlx` is not importable.
 
-- [ ] **Step 3: Add package metadata, cache resolver, command targets, and state files**
+- [x] **Step 3: Add package metadata, cache resolver, command targets, and state files**
 
 ```python
 def resolve_cache_dir(explicit: Path | None = None) -> Path:
@@ -91,13 +91,13 @@ def resolve_cache_dir(explicit: Path | None = None) -> Path:
 
 Use `uv python install 3.12`, initialize the package for Python `>=3.12,<3.13`, add the allowed runtime dependencies, add pytest as a development dependency, and write `.codex/config.toml` exactly as specified in `SETUP.md` Section 2. Make targets must prefix all three in-repo cache variables.
 
-- [ ] **Step 4: Lock, sync, and verify bootstrap tests**
+- [x] **Step 4: Lock, sync, and verify bootstrap tests**
 
 Run: `UV_CACHE_DIR=$PWD/.cache/uv uv lock && make test`
 
 Expected: both bootstrap tests pass and the subprocess reports none of the three forbidden modules.
 
-- [ ] **Step 5: Record and commit the evidence**
+- [x] **Step 5: Record and commit the evidence**
 
 Append Python, uv, macOS, CPU, memory, and MLX versions plus the two passing test names to `PROGRESS.md`.
 

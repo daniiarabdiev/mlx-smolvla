@@ -1,0 +1,8 @@
+# Project-scoped settings for smolvla-mlx development.
+sandbox_mode = "workspace-write"
+approval_policy = "never"
+model_reasoning_effort = "high"
+
+[sandbox_workspace_write]
+network_access = true
+writable_roots = []

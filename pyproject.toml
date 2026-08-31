@@ -1,0 +1,34 @@
+[build-system]
+requires = ["hatchling>=1.27,<2"]
+build-backend = "hatchling.build"
+
+[project]
+name = "smolvla-mlx"
+version = "0.0.1"
+description = "Native MLX inference for SmolVLA on Apple Silicon"
+requires-python = ">=3.12,<3.13"
+license = { text = "Apache-2.0" }
+dependencies = [
+  "huggingface-hub",
+  "mlx",
+  "mlx-vlm",
+  "numpy",
+  "pillow",
+  "safetensors",
+  "tokenizers",
+]
+
+[dependency-groups]
+dev = [
+  "pytest",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["smolvla_mlx"]
+
+[tool.pytest.ini_options]
+addopts = ["-ra"]
+testpaths = ["tests"]
+markers = [
+  "slow: integration tests that load model or dataset assets",
+]
