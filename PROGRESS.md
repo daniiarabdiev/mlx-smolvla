@@ -891,3 +891,32 @@
 - Next: capture the actual 25-step PyTorch checkpoint evolution with the T1
   batch, 25 serialized draw pairs, per-step optimizer metrics, and all 155
   final parameters.
+
+## 2026-09-01 — Stage T2 Package 2 reference optimizer capture
+
+- Red evidence: the four fixed-window/artifact/step/final-parameter cases first
+  failed on the absent reference module and artifact.
+- What: added a real PyTorch capture that proves the prepared batch and all 155
+  initial selected parameters exactly equal T1, builds the checkpoint's own
+  AdamW and scheduler presets, seeds once, and performs 25 actual
+  forward/backward/clip/update/zero/schedule steps. It serializes 25 draw pairs,
+  125 scalar step metrics, and all 155 final fp32 parameters.
+- Debugging evidence: the first artifact showed that stochastic step 23 has
+  gradient norm **6.328668594360352**, below the clip limit, while step 0 is
+  **43.20928955078125**. The over-constrained test was corrected to verify the
+  exact coefficient at every step and require clipping to be exercised; 24/25
+  steps clip and one correctly uses coefficient 1.0. A tensor-detach warning
+  was also removed at its scalar-conversion boundary.
+- Artifact evidence: `.cache/training/optimizer_goldens` contains **330**
+  payloads and is **399,852,897 bytes**. Reference loss moves from
+  **2.101923942565918** to **0.5079650282859802** over the fixed-batch window.
+  Two complete captures produced identical manifest SHA-256
+  `88c3febc7da3e553bcb7c26f261721369ed1f56efd457887b7d43d50a077807c`,
+  bound to T1 manifest
+  `b029a0ed66312e785cb8aa3f1db0affb16c9502ad7b5d0fe0feea3177bf8c145`.
+- Green evidence: the reference optimizer artifact contract passed **4/4 in
+  0.34 seconds**; the wider reference/artifact/import-isolation set passed
+  **18/18 in 6.78 seconds**; `git diff --check` passed. The final capture took
+  **23.311 seconds**, with more than **542 GiB** disk free.
+- Next: execute the same 25 draws and update order in MLX, compare every loss
+  and all 155 final parameters, and emit the immutable lockstep report.
