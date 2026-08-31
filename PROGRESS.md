@@ -496,3 +496,32 @@
 - Next: commit the dependency metadata/test/doc changes, run the full suite
   and build artifacts one final time, audit repository state, and write the
   Definition-of-Done status.
+
+## 2026-08-31 — Phase 6 final artifact and reproducibility audit
+
+- Golden reproducibility: `make goldens` regenerated all 2,160 tensors for
+  the eight specified real observations twice. Both passes produced manifest
+  SHA-256 `8531e61b98506d5a43e0b1235de7aece578bf4efa66b007fa13f6cecd1ceb215`
+  and metadata SHA-256
+  `469144c0a539a2c40a7f0ea33066f2be6da12d44bd94d2167913d97482460c56`.
+- Full-suite evidence: `make test` passed **179/179** in 147.02 seconds after
+  the release-metadata changes, including fp32/bf16 module parity,
+  deterministic end-to-end, 50-frame statistical, standalone script, CLI,
+  and import-isolation checks.
+- Artifact evidence: `UV_NO_CACHE=1 uv build` successfully rebuilt the sdist
+  and wheel from the sdist. The source archive contains `CMakeLists.txt`, the
+  README, CLI, and all C++/header build inputs; the wheel contains the compiled
+  `_rmsnorm_native` extension and console entry point.
+- Packaging correction: the build initially warned that the source-only
+  `smolvla_mlx.native` directory looked like an undeclared package. Setting
+  `include_package_data=False` in `setup.py` retains those files in the sdist
+  for compilation but omits them from the wheel. A second build has no
+  setuptools package-discovery warning and retains the native extension.
+- Wheel smoke evidence: the rebuilt wheel installed into a separate Python
+  3.12 virtual environment using only the pinned core runtime. Outside the
+  checkout, `smolvla-mlx --help` exposed all four commands;
+  `smolvla_mlx._rmsnorm_native` loaded from `site-packages`; and the forbidden
+  module set remained empty.
+- Next: checkpoint this final packaging correction, rerun the full suite on
+  the exact final tree, then update `PLAN.md` and `STATUS.md` to the v0.1
+  Definition of Done.
