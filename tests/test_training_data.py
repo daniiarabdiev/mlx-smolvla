@@ -86,3 +86,15 @@ def test_training_artifact_detects_manifest_tampering(tmp_path: Path) -> None:
 
     with pytest.raises(ValueError, match="manifest hash mismatch"):
         module.TrainingArtifact(tmp_path)
+
+
+def test_training_artifact_preserves_zero_dimensional_scalars(tmp_path: Path) -> None:
+    module = __import__("training.data", fromlist=["TrainingArtifactWriter", "TrainingArtifact"])
+    writer = module.TrainingArtifactWriter(tmp_path)
+    writer.add("scalar", np.asarray(2.5, dtype=np.float32))
+    writer.finalize({"format_version": 1, "artifact_type": "unit-test"})
+
+    scalar = module.TrainingArtifact(tmp_path).load("scalar")
+
+    assert scalar.shape == ()
+    assert scalar.item() == 2.5

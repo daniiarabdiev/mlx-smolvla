@@ -48,6 +48,13 @@ def _validated_relative_path(name: str, *, suffix: str = "") -> Path:
     return Path(f"{name}{suffix}")
 
 
+def _as_contiguous_array(value: object) -> np.ndarray:
+    array = np.asarray(value)
+    if array.ndim == 0:
+        return np.array(array, copy=True)
+    return np.ascontiguousarray(array)
+
+
 class TrainingArtifactWriter:
     """Atomically write contiguous NumPy arrays and their integrity manifest."""
 
@@ -65,7 +72,7 @@ class TrainingArtifactWriter:
         array = np.asarray(value)
         if array.dtype.hasobject:
             raise TypeError(f"training artifact arrays cannot have object dtype: {name!r}")
-        array = np.ascontiguousarray(array)
+        array = _as_contiguous_array(array)
         buffer = io.BytesIO()
         np.save(buffer, array, allow_pickle=False)
         payload = buffer.getvalue()
@@ -164,7 +171,7 @@ class TrainingArtifact:
         array = np.load(io.BytesIO(payload), allow_pickle=False)
         if list(array.shape) != record["shape"] or array.dtype.name != record["dtype"]:
             raise ValueError(f"training artifact array metadata mismatch for {name}")
-        return np.ascontiguousarray(array)
+        return _as_contiguous_array(array)
 
     def verify_all(self) -> tuple[str, ...]:
         names = tuple(sorted(self.manifest))

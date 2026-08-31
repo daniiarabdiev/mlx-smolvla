@@ -752,3 +752,35 @@
   --check` passed. No `smolvla_mlx/` source changed.
 - Next: reproduce the real LeRobot train-loop batch and serialize the actual
   Torch loss, draws, parameters, and all 155 gradients.
+
+## 2026-08-31 — Stage T1 Package 4 reference gradient capture
+
+- Red evidence: the real-batch contract initially produced **3 collection
+  errors** because `training.reference` was absent, while the golden-integrity
+  case failed because no artifact had been captured.
+- What: mirrored LeRobot 0.6.1's actual uint8 collation, `/255` camera path,
+  camera renaming, public-dataset statistics override, tokenization, padding,
+  and trainable-parameter selection for episode/frame/absolute index
+  **0/100/100**. Added an actual Torch CPU/fp32 forward/backward capture with
+  seed **20260831**, exact serialized noise/timestep draws, flow boundaries,
+  masked-loss reconstruction, and all canonical parameters and gradients.
+- Artifact evidence: `.cache/training/gradient_goldens` contains **324**
+  hash-verified tensors totaling **805,554,153 bytes**, including **155**
+  trainable tensors and **99,880,992** trainable scalars. It records loss
+  **2.101923942565918**, timestep **0.8003060817718506**, and dataset-statistics
+  SHA-256 `4ae86bed785e0f98914812e87736e216139a22b43cf2b990e68384d85168c3c8`.
+  Every captured gradient is finite and nonzero.
+- Determinism evidence: two complete post-fix captures independently produced
+  manifest SHA-256
+  `b029a0ed66312e785cb8aa3f1db0affb16c9502ad7b5d0fe0feea3177bf8c145`.
+- Debugging evidence: full artifact verification exposed NumPy's promotion of
+  zero-dimensional arrays through `ascontiguousarray`. A focused regression
+  first reproduced the incorrect `(1,)` shape; the artifact boundary now
+  preserves true scalars without changing non-scalar contiguity.
+- Green evidence: real preparation, complete artifact integrity, artifact IO,
+  scalar preservation, and runtime import isolation passed **14/14 in 8.14
+  seconds**. `git diff --check` passed. Disk free remained above **545 GiB**,
+  far above the 40 GiB gate.
+- Next: load the converted checkpoint through `SmolVLATrainingModel`, consume
+  the serialized batch and draws under MLX CPU autodiff, and compare all 155
+  gradients against the immutable T1 limits.
