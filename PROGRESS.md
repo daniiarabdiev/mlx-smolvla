@@ -635,3 +635,29 @@
   tests/test_training_objective.py -q` passed **10/10 in 0.35 seconds**.
 - Next: differentiate this full path, evaluate every selected gradient, and
   record latency, MLX memory, and disk measurements in the T0 audit result.
+
+## 2026-08-31 — Stage T0 full differentiability and resource gate
+
+- Red evidence: the integration test first failed because `training.audit` did
+  not exist. The first complete implementation then exposed a reporting defect:
+  MLX 0.32.2's namespace has no `__version__`; a focused regression test failed
+  on that exact boundary before the implementation switched to installed
+  distribution metadata.
+- Gradient evidence: seed 0, bf16 parameter storage, microbatch 1, two
+  `3×512×512` cameras, and a `50×32` action tensor produced loss
+  **2.7361748218536377**. All **155/155** selected parameter tensors
+  (**99,880,992 scalars**) had present, shape-matching, finite, nonzero
+  gradients; maximum absolute gradient was **1.4765625**.
+- Resource evidence: synchronized forward was **119.758 ms** and synchronized
+  forward+backward was **181.849 ms**. Active MLX memory was
+  **1,108,300,302 bytes** and peak was **2,510,577,166 bytes**. Disk free moved
+  from **591,044,726,784** to **591,044,689,920 bytes**, remaining more than
+  500 GiB above the 40 GiB gate.
+- Green evidence: repository-local-cache `pytest tests/test_training_audit.py
+  -q` passed **2/2 in 0.62 seconds**, including a second real full-architecture
+  gradient step and the MLX-version regression test.
+- Decision: the reference-default expert-plus-state training path is feasible
+  on this M5 Pro. Native CPU compatibility calls remain inference-only; the
+  training path uses differentiable MLX kernels.
+- Next: add the standalone audit command and machine-readable artifact, write
+  `TRAINING_FEASIBILITY.md`, then run the complete protected suite.

@@ -409,7 +409,7 @@ git push origin main
   `run_training_readiness_audit(seed=0) -> TrainingAuditResult`.
 - Consumes: Task 3's model, batch, selector, and scalar loss.
 
-- [ ] **Step 1: Write the failing audit-schema and full-smoke test**
+- [x] **Step 1: Write the failing audit-schema and full-smoke test**
 
 Create `tests/test_training_audit.py`:
 
@@ -435,7 +435,7 @@ def test_full_random_weight_training_step_has_finite_selected_gradients() -> Non
     assert payload["disk_free_after_bytes"] >= 40 * 1024**3
 ```
 
-- [ ] **Step 2: Run the integration test and verify the intended red state**
+- [x] **Step 2: Run the integration test and verify the intended red state**
 
 Run:
 
@@ -445,7 +445,7 @@ uv run pytest tests/test_training_audit.py -q
 
 Expected: failure inside the test because `training.audit` is absent.
 
-- [ ] **Step 3: Implement synchronized audit measurement**
+- [x] **Step 3: Implement synchronized audit measurement**
 
 `run_training_readiness_audit` performs these exact operations:
 
@@ -478,7 +478,7 @@ macOS, MLX, seed, shapes, device, and dtype in the frozen result dataclass.
 Raise before returning if free disk falls below 40 GiB, names differ, a gradient
 is non-finite, or any selected tensor has zero norm.
 
-- [ ] **Step 4: Run the real gate to green**
+- [x] **Step 4: Run the real gate to green**
 
 Run:
 
@@ -489,7 +489,7 @@ uv run pytest tests/test_training_audit.py -q
 Expected: 1 full-architecture test passes; record its measured duration,
 trainable tensor/scalar counts, peak memory, and loss in `PROGRESS.md`.
 
-- [ ] **Step 5: Commit and push the measured audit implementation**
+- [x] **Step 5: Commit and push the measured audit implementation**
 
 Run `git diff --check`, then:
 
