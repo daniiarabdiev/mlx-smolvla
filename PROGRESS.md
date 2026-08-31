@@ -599,3 +599,20 @@
   required repository-local caches.
 - Next: add the pure-MLX differentiable RMSNorm and exact padded flow-matching
   objective through a new red/green cycle.
+
+## 2026-08-31 — Stage T0 differentiable objective
+
+- Red evidence: six focused tests failed because the training-only RMSNorm and
+  flow-objective modules did not exist. The tests independently cover input and
+  weight gradients, the literal flow interpolation/velocity target, exclusion
+  of padded action dimensions, and invalid shape/action-width rejection.
+- What: added a pure-MLX fp32 RMSNorm with autodiff support plus the exact
+  `x_t = t * noise + (1 - t) * actions`, `u_t = noise - actions`, and physical-
+  action-only MSE operations. The native inference compatibility extension is
+  unchanged.
+- Green evidence: repository-local-cache `pytest
+  tests/test_training_objective.py -q` passed **6/6 in 0.02 seconds**. Both the
+  input and RMSNorm-weight gradients were shape-matching and finite.
+- Next: compose the existing full architecture behind a training container and
+  prove its selected parameter tree is exactly `state_proj` plus the action
+  expert.

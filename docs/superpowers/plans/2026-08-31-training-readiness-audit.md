@@ -152,7 +152,7 @@ git push origin main
   action_dim) -> mx.array`.
 - Consumes: only MLX arrays; no runtime or reference framework imports.
 
-- [ ] **Step 1: Write failing tests for gradients and padded-action masking**
+- [x] **Step 1: Write failing tests for gradients and padded-action masking**
 
 Create `tests/test_training_objective.py`:
 
@@ -192,7 +192,7 @@ def test_flow_objective_ignores_padded_action_dimensions() -> None:
     assert float(loss) == 0.5
 ```
 
-- [ ] **Step 2: Verify both tests fail for missing production behavior**
+- [x] **Step 2: Verify both tests fail for missing production behavior**
 
 Run:
 
@@ -203,7 +203,7 @@ uv run pytest tests/test_training_objective.py -q
 Expected: failures inside the test bodies because the two training modules do
 not yet exist.
 
-- [ ] **Step 3: Implement the minimal differentiable formulas**
+- [x] **Step 3: Implement the minimal differentiable formulas**
 
 Create `training/differentiable.py`:
 
@@ -236,7 +236,7 @@ return loss
 Reject mismatched action/noise/prediction shapes, non-`[batch]` timesteps, and
 `action_dim` outside `[1, padded_width]` with `ValueError`.
 
-- [ ] **Step 4: Verify the objective tests pass**
+- [x] **Step 4: Verify the objective tests pass**
 
 Run:
 
@@ -244,9 +244,10 @@ Run:
 uv run pytest tests/test_training_objective.py -q
 ```
 
-Expected: 2 tests pass with finite gradients and exact padding behavior.
+Expected: 6 tests pass with finite gradients, exact padding behavior, and the
+shape/action-width rejection cases exercised.
 
-- [ ] **Step 5: Record and commit the objective**
+- [x] **Step 5: Record and commit the objective**
 
 Append the red/green evidence to `PROGRESS.md`, then commit and push:
 
