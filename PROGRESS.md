@@ -440,3 +440,28 @@
   schema test verifies 50 measured samples, explicit warmup exclusion, all
   four required stages, percentile ordering, and peak-memory reporting.
 - Next: add the CLI, README, wheel/fresh-install proof, and final audit.
+
+## 2026-08-31 — Phase 6 CLI, source distribution, and standalone-script repair
+
+- What: added the `smolvla-mlx` console entry point with `convert`, `test`,
+  `bench`, and `predict` subcommands; added the project README; and made the
+  source distribution include the CMake build file and native compatibility
+  sources required to rebuild the extension.
+- Build evidence: with all persistent caches routed under `.cache/`,
+  `UV_NO_CACHE=1 uv build` produced both
+  `dist/smolvla_mlx-0.0.1.tar.gz` and
+  `dist/smolvla_mlx-0.0.1-cp312-cp312-macosx_26_0_arm64.whl`. The first build
+  exposed the absent build inputs in the sdist; `MANIFEST.in` fixes the root
+  cause rather than relying on an in-tree build.
+- CLI/isolation evidence: `tests/test_cli.py` passed **1/1**, and the clean
+  import-isolation test now imports the CLI along with every runtime module.
+- Script repair evidence: the full-suite release check reproduced two
+  standalone-script failures caused by Python setting `sys.path[0]` to
+  `scripts/`. Both `make_goldens.py` and `inspect_reference.py` now insert the
+  repository root before their first `reference` import, matching the working
+  benchmark and statistical scripts. `uv run --extra reference pytest
+  tests/test_goldens.py tests/test_reference_audit.py -q` passed **7/7** in
+  35.28 seconds.
+- Next: install the wheel into a clean virtual environment, exercise the
+  installed console command against a real cached dataset frame, then run the
+  complete final verification and repository audit.

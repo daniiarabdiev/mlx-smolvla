@@ -11,6 +11,7 @@ build-backend = "setuptools.build_meta"
 name = "smolvla-mlx"
 version = "0.0.1"
 description = "Native MLX inference for SmolVLA on Apple Silicon"
+readme = "README.md"
 requires-python = ">=3.12,<3.13"
 license = "Apache-2.0"
 dependencies = [
@@ -22,6 +23,9 @@ dependencies = [
   "safetensors",
   "tokenizers",
 ]
+
+[project.scripts]
+smolvla-mlx = "smolvla_mlx.cli:main"
 
 [project.optional-dependencies]
 reference = [
