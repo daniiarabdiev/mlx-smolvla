@@ -19,6 +19,13 @@ For repository development and the optional PyTorch reference lane:
 uv sync --extra reference
 ```
 
+`predict --dataset` uses the optional LeRobot dataset bridge in a child
+process. Install that extra when you need the dataset-backed CLI command:
+
+```bash
+pip install ".[reference]"
+```
+
 The first `from_pretrained` call downloads the checkpoint and tokenizer, then
 converts the 500 tensors into MLX safetensors. By default this uses
 `~/.cache/smolvla_mlx`; set `SMOLVLA_MLX_CACHE` or pass `cache_dir` to control
@@ -64,8 +71,8 @@ smolvla-mlx predict --dataset lerobot/svla_so101_pickplace --episode 0 --index 0
 
 `bench` uses a saved real golden observation by default; run `make goldens`
 first if the local golden files are absent. `predict --dataset` extracts a
-dataset frame through an optional child-process LeRobot bridge, so a core-only
-installation remains dependency-isolated.
+dataset frame through the optional child-process LeRobot bridge, so the
+core-only installation remains dependency-isolated.
 
 ## Correctness
 

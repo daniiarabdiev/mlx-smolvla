@@ -465,3 +465,34 @@
 - Next: install the wheel into a clean virtual environment, exercise the
   installed console command against a real cached dataset frame, then run the
   complete final verification and repository audit.
+
+## 2026-08-31 — Phase 6 fresh-install and real CLI prediction proof
+
+- What: tightened the published runtime metadata to the six audited native
+  dependencies and removed the unused `mlx-vlm` distribution, whose source
+  logic is already vendored under the MIT attribution in `NOTICE`. All runtime
+  versions are now exact pins in both `pyproject.toml` and `uv.lock`.
+- Metadata evidence: the red/green installed-distribution tests first caught
+  `mlx-vlm` as an unconditional requirement, then verified the final exact
+  runtime set: `huggingface-hub 1.29.0`, `mlx 0.32.2`, `numpy 2.2.6`,
+  `pillow 12.3.0`, `safetensors 0.8.0`, and `tokenizers 0.22.2`.
+  `uv run pytest tests/test_distribution.py -q` passed **2/2** in 0.01
+  seconds, and `uv lock --check` resolved 103 packages successfully.
+- Fresh-install evidence: a new Python 3.12 virtual environment under
+  `.cache/fresh-final.3AeWfA` completed the literal `pip install .` path,
+  rebuilt the native CMake extension, and imported the installed
+  `site-packages/smolvla_mlx` with no `torch`, `lerobot`, or `transformers`
+  modules loaded. The installed console command exposed all four required
+  subcommands and converted the real checkpoint into an 858 MiB bf16 MLX
+  safetensors artifact.
+- Real CLI evidence: after `pip install ".[reference]"` installed the pinned
+  optional LeRobot 0.6.1/PyTorch 2.11.0 bridge, installed
+  `smolvla-mlx predict --dataset lerobot/svla_so101_pickplace --episode 0
+  --index 0` returned the real bf16 action
+  `[-0.3573277, -0.3161944, -0.0685726, 0.0844326, 1.1378109, -0.8640175]`.
+  Its dataset cache was preseeded from the already-downloaded public dataset;
+  inference, conversion, and child-process extraction all ran in the fresh
+  environment.
+- Next: commit the dependency metadata/test/doc changes, run the full suite
+  and build artifacts one final time, audit repository state, and write the
+  Definition-of-Done status.
