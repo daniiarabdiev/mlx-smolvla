@@ -463,7 +463,7 @@ git commit -m "phase-3: port vision and connector (vision tests pass)"
 - Consumes: token embeddings, connector output, state placement, prefix mask, converted decoder weights, and per-layer hidden/KV goldens.
 - Produces: `PrefixCache(hidden: mx.array, keys: tuple[mx.array, ...], values: tuple[mx.array, ...], mask: mx.array)` and `TruncatedLanguageModel.encode_prefix(processed: ProcessedObservation, image_tokens: mx.array, stop_after: int | None = None) -> PrefixCache`.
 
-- [ ] **Step 1: Write failing layer-by-layer and mask tests**
+- [x] **Step 1: Write failing layer-by-layer and mask tests**
 
 ```python
 def test_prefix_mask_is_exact(prefix_builder, golden):
@@ -476,13 +476,13 @@ def test_decoder_layer_matches_golden(layer, language, golden):
     assert_error(cache.hidden, golden.array(f"decoder/{layer}/hidden"), rel_l2=1e-3, max_abs=1e-3)
 ```
 
-- [ ] **Step 2: Run tests before the truncated decoder exists**
+- [x] **Step 2: Run tests before the truncated decoder exists**
 
 Run: `uv run pytest tests/test_language.py tests/test_prefix.py -v`
 
 Expected: missing symbol failures.
 
-- [ ] **Step 3: Implement exact prefix assembly, 2D mask, RoPE, and layer cutoff**
+- [x] **Step 3: Implement exact prefix assembly, 2D mask, RoPE, and layer cutoff**
 
 ```python
 @dataclass(frozen=True)
@@ -495,7 +495,7 @@ class PrefixCache:
 
 Expose each used layer's post-projection keys and values in the audited layout. Assert the configured cutoff is no greater than the checkpoint decoder depth and that key/value tuple lengths equal the used layer count.
 
-- [ ] **Step 4: Run every layer and prefix test in fp32 and bf16**
+- [ ] **Step 4: Run every layer and prefix test in fp32 and bf16 — blocked by the documented fp32 RMS-reduction boundary**
 
 Run: `uv run pytest tests/test_language.py tests/test_prefix.py -v`
 

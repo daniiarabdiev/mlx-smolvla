@@ -59,6 +59,13 @@ is applied to the 960-wide text model. Its attention still uses 15 × 64 query
 channels and 5 × 64 KV channels; cross-attention layers project cached VLM KV
 channels into expert KV channels.
 
+**Layer-depth correction.** The base-VLM configuration declares 32 text layers,
+but this SmolVLA safetensors checkpoint contains exactly 144 language-layer
+tensors: nine tensors for each of layers `0` through `15`, and none for
+`16` through `31`. The native language tree therefore has 16 layers so strict
+converted-weight loading proves the actual checkpoint boundary rather than
+inventing unused parameters.
+
 ## Boundary tensors and cache
 
 | Field | Verified value |

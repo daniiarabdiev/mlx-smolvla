@@ -214,3 +214,55 @@
 - Commit: `phase-3: port vision and connector (vision tests pass)`.
 - Next: port the truncated language decoder, prefix assembly, and KV cache
   against the saved layer-by-layer goldens.
+
+## 2026-08-31 — Phase 3 truncated language decoder precision boundary
+
+- What: added a dependency-isolated native `TruncatedLanguageModel`, exact
+  image/language/state prefix assembly, the cumulative prefix-LM 2-D mask,
+  split-half RoPE at base 10,000, 15-query/5-KV grouped-query attention,
+  explicit post-RoPE cache export, and a bounded decoder cutoff. The source
+  checkpoint's actual language subtree is exactly layers `0..15`, so the native
+  tree uses 16 layers and strict loading succeeds; it does not synthesize the
+  16 absent layers advertised by the base-VLM config.
+- Prefix/cache evidence: fp32 prefix embeddings and all masks/position IDs are
+  exact. Across all eight real golden samples, exported fp32 K/V differ by at
+  most `4.351139e-05` / `1.180172e-05` for keys/values, and the final normalized
+  prefix output differs by at most `2.336502e-05` absolute. The 3-layer cutoff,
+  cache length, and cache mask all pass.
+- bf16 contract: the test boundary now correctly keeps observations and
+  connector outputs in fp32 while varying only compact checkpoint storage.
+  This follows the real runtime path and BRIEF Section 6: bf16 has a relative
+  L2 bound of `3e-2`, not an extra maximum-absolute bound. All 25 bf16 focused
+  cases pass under that unchanged contract; no tolerance was loosened.
+- fp32 precision evidence: `uv run pytest tests/test_prefix.py
+  tests/test_language.py -q` collected 50 cases. It passed 46 and failed only
+  the raw decoder-residual maximum-absolute check for samples 004–007:
+  `1.4648438e-03`, `3.2958984e-03`, `2.3193359e-03`, and `1.0986328e-03`
+  respectively, versus the immutable `1e-3` limit. Every one of those cases
+  remains comfortably within the required relative-L2 bound; the failure is
+  solely the raw-output maximum absolute boundary.
+- Root-cause trace: the incoming prefix is byte-identical. The first divergence
+  occurs in MLX CPU RMS-normalization/reduction at roughly `5e-7` to `1e-6` per
+  activation. With an identical normalized input, native and PyTorch MLP
+  projections agree; the small norm difference is amplified by the high-gain
+  SwiGLU path. In sample 005 layer 03, token 134 / feature 87, the native MLP
+  result is `-1584.9042` versus PyTorch `-1584.9069`, producing `2.6855469e-03`
+  raw error even though its layer K/V boundaries remain near `1e-5`.
+- Ruled out: wrong prefix ordering/mask/state placement (exact); wrong layer
+  depth/weight mapping (strict source tree loads); RoPE base/pairing/GQA/cache
+  layout (K/V evidence above); delayed MLX materialization (unchanged); a
+  direct reference-form RMS expression (unchanged); fp64 RMS reduction
+  (improved several samples but sample 005 still reached `1.953125e-03`); and
+  GEMM-reduced RMS, fp64 attention, and fp64 MLP variants (did not meet the
+  fixed bound and sometimes worsened it).
+- Decision: retain the source-semantic fp32 MLX implementation and the
+  immutable test. `FAILURE_language.md` records the reproducible precision
+  boundary; no test is skipped or xfailed. Later modules that require a
+  Section-6-passing prefix decoder are blocked pending an MLX CPU reduction
+  precision control or a justified native kernel that reproduces this reference
+  arithmetic.
+- Licensing/isolation: added the mlx-vlm MIT and LeRobot Apache-2.0 notices for
+  `language.py`; the clean-subprocess isolation test now imports the decoder as
+  part of its forbidden-framework check.
+- Next: preserve this checkpointed native implementation and resolve the
+  documented RMS-reduction precision boundary before integrating the expert.

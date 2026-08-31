@@ -6,6 +6,7 @@ This project includes adapted portions of `mlx-vlm` 0.6.4 in:
 
 - `smolvla_mlx/vision.py`, adapted from `mlx_vlm/models/idefics3/vision.py`
 - `smolvla_mlx/connector.py`, adapted from `mlx_vlm/models/idefics3/idefics3.py`
+- `smolvla_mlx/language.py`, adapted from `mlx_vlm/models/idefics3/language.py`
 
 Copyright © 2025 Prince Canuma
 
@@ -34,3 +35,13 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
+
+## LeRobot 0.6.1
+
+`smolvla_mlx/language.py` also reproduces the prefix/cache execution behavior
+verified from `lerobot/policies/smolvla/smolvlm_with_expert.py` in LeRobot 0.6.1.
+
+Copyright 2025 The Hugging Face Inc. team.
+
+The referenced source is licensed under the Apache License, Version 2.0. A copy
+of the license is available at <https://www.apache.org/licenses/LICENSE-2.0>.

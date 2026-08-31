@@ -51,10 +51,11 @@ its policy semantics will retain the Apache-2.0 header and be enumerated in
 `NOTICE`. Pure clean-room implementations are still documented here as derived
 from the reference's externally verified behavior.
 
-The following focused MIT adaptations are now vendored, retaining upstream
-source/version headers in the files and a full license notice in `NOTICE`:
+The following focused adaptations are now vendored, retaining upstream
+source/version headers in the files and license notices in `NOTICE`:
 
 | Local file | Upstream source | Adaptation |
 | --- | --- | --- |
 | `smolvla_mlx/vision.py` | `mlx_vlm/models/idefics3/vision.py` at mlx-vlm 0.6.4 | Fixed the audited 512px SigLIP dimensions, accepts NCHW policy input, omits unused variable-resolution mask machinery, and replaces precise GELU with `gelu_pytorch_tanh`. |
 | `smolvla_mlx/connector.py` | `mlx_vlm/models/idefics3/idefics3.py` at mlx-vlm 0.6.4 | Retains the pixel-shuffle layout while fixing the checkpoint's scale factor to 4 and exposing only the required modality projection. |
+| `smolvla_mlx/language.py` | `mlx_vlm/models/idefics3/language.py` at mlx-vlm 0.6.4, with prefix/cache behavior verified from LeRobot 0.6.1 `policies/smolvla/smolvlm_with_expert.py` | Fixes the audited 16-layer checkpoint subset, split-half RoPE base 10,000, prefix-LM mask, grouped-query attention, and explicit post-RoPE K/V export. |
