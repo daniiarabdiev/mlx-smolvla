@@ -31,18 +31,18 @@ to `origin/main`.
 
 ## Stage T0 — Training-readiness audit
 
-**Dependencies:** none. **State:** next executable package.
+**Dependencies:** none. **State:** complete.
 
-- [ ] Add a training-only optional extra and isolated `training/` package
+- [x] Add a training-only optional extra and isolated `training/` package
   without changing base-runtime imports.
-- [ ] Build a differentiable full-path random-weight smoke harness.
-- [ ] Prove finite gradients for every reference-trainable parameter and record
+- [x] Build a differentiable full-path random-weight smoke harness.
+- [x] Prove finite gradients for every reference-trainable parameter and record
   step latency, peak memory, parameter counts, and disk before/after.
-- [ ] Exclude the inference-only native RMSNorm/CPU primitive from autodiff and
+- [x] Exclude the inference-only native RMSNorm/CPU primitive from autodiff and
   document the differentiable MLX training path.
-- [ ] Inventory the current bridge loader, episode split requirements, and T1
+- [x] Inventory the current bridge loader, episode split requirements, and T1
   serialized-draw format.
-- [ ] Deliver `TRAINING_FEASIBILITY.md`, focused tests, full regression, commit,
+- [x] Deliver `TRAINING_FEASIBILITY.md`, focused tests, full regression, commit,
   and push.
 
 ## Stage T1 — Gradient parity at step zero

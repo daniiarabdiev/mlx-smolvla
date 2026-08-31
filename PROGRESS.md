@@ -661,3 +661,24 @@
   training path uses differentiable MLX kernels.
 - Next: add the standalone audit command and machine-readable artifact, write
   `TRAINING_FEASIBILITY.md`, then run the complete protected suite.
+
+## 2026-08-31 — Stage T0 feasibility artifact and completion
+
+- Artifact evidence: `make training-audit` wrote
+  `.cache/training/t0-audit.json` with SHA-256
+  `88dacde30996c2d9cbad90681204e2583c92f6d51f0f3747c6e37e57b709fd51`.
+  The artifact independently recorded **155/155** finite, nonzero gradients,
+  **99,880,992** trainable scalars, **196.799 ms** synchronized
+  forward+backward, and **2,509,594,126 bytes** peak MLX memory.
+- Focused evidence: all objective, model, audit, standalone-script, and runtime
+  import-isolation cases passed **14/14 in 7.99 seconds**.
+- Full regression evidence: `make test` passed **193/193 in 158.14 seconds** on
+  the exact Stage T0 code and report tree. The original 179 inference/reference
+  gates remain green; no tolerance, skip, mock, or `xfail` changed.
+- Deliverable: `TRAINING_FEASIBILITY.md` records the native-RMSNorm exclusion,
+  bridge-loader inventory, one-observation batching limitation, measured
+  resource headroom, and exact T1 gradient-golden manifest design.
+- Decision: Stage T0 is complete. `TRAINING ALPHA` is not claimed; that
+  milestone requires the Stage T3 real LoRA outcome and round-trip gates.
+- Next: begin Stage T1 with the actual pinned LeRobot training forward on one
+  fixed public-dataset batch and fully serialized noise/timestep draws.

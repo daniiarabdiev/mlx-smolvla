@@ -2,6 +2,11 @@
 
 from __future__ import annotations
 
+import json
+from pathlib import Path
+import subprocess
+import sys
+
 
 def test_audit_reads_the_installed_mlx_distribution_version() -> None:
     module = __import__("training.audit", fromlist=["installed_mlx_version"])
@@ -37,3 +42,28 @@ def test_full_random_weight_training_step_has_finite_selected_gradients() -> Non
     assert payload["peak_memory_bytes"] >= payload["active_memory_bytes"]
     assert payload["disk_free_before_bytes"] >= 40 * 1024**3
     assert payload["disk_free_after_bytes"] >= 40 * 1024**3
+
+
+def test_training_feasibility_script_writes_machine_readable_evidence(
+    tmp_path: Path,
+) -> None:
+    output = tmp_path / "audit.json"
+
+    completed = subprocess.run(
+        [
+            sys.executable,
+            "scripts/training_feasibility.py",
+            "--output",
+            str(output),
+            "--seed",
+            "0",
+        ],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+
+    assert completed.returncode == 0, completed.stderr
+    payload = json.loads(output.read_text(encoding="utf-8"))
+    assert payload["all_gradients_finite"] is True
+    assert payload["gradient_tensor_count"] == payload["trainable_tensor_count"]

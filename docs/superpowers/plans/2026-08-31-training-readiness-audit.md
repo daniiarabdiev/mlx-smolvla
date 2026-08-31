@@ -516,7 +516,7 @@ git push origin main
   `.cache/training/t0-audit.json`, and the tracked feasibility decision record.
 - Consumes: `run_training_readiness_audit(seed=0)`.
 
-- [ ] **Step 1: Write the failing standalone-script contract**
+- [x] **Step 1: Write the failing standalone-script contract**
 
 Add a subprocess test to `tests/test_training_audit.py`:
 
@@ -542,7 +542,7 @@ def test_training_feasibility_script_writes_machine_readable_evidence(tmp_path: 
     assert payload["gradient_tensor_count"] == payload["trainable_tensor_count"]
 ```
 
-- [ ] **Step 2: Verify the script test fails because the entrypoint is absent**
+- [x] **Step 2: Verify the script test fails because the entrypoint is absent**
 
 Run:
 
@@ -552,7 +552,7 @@ uv run pytest tests/test_training_audit.py::test_training_feasibility_script_wri
 
 Expected: failure with Python unable to open `scripts/training_feasibility.py`.
 
-- [ ] **Step 3: Add the standalone entrypoint and Make target**
+- [x] **Step 3: Add the standalone entrypoint and Make target**
 
 The script inserts the repository root into `sys.path`, parses `--output` and
 `--seed`, calls the audit, creates only the output's parent under `.cache/`, and
@@ -565,7 +565,7 @@ training-audit:
 	uv run python scripts/training_feasibility.py --seed 0 --output $(CURDIR)/.cache/training/t0-audit.json
 ```
 
-- [ ] **Step 4: Run the artifact command and focused tests**
+- [x] **Step 4: Run the artifact command and focused tests**
 
 Run:
 
@@ -577,7 +577,7 @@ uv run pytest tests/test_training_objective.py tests/test_training_model.py test
 Expected: JSON is written under `.cache/training/`; every T0 and isolation test
 passes. Record its SHA-256 and exact numeric fields.
 
-- [ ] **Step 5: Write the evidence-backed feasibility report**
+- [x] **Step 5: Write the evidence-backed feasibility report**
 
 Create `TRAINING_FEASIBILITY.md` with the JSON's exact machine/dtype/shape,
 loss, gradient counts, zero/non-finite counts, forward and forward+backward
@@ -598,7 +598,7 @@ Document these decisions explicitly:
 Mark Stage T0 complete in `PLAN_FULL.md`; update `STATUS_FULL.md` with the
 measured evidence and Stage T1 as next only if the gate passed.
 
-- [ ] **Step 6: Run the complete protected verification**
+- [x] **Step 6: Run the complete protected verification**
 
 Run:
 
@@ -611,7 +611,7 @@ git diff --check
 Expected: all old and new tests pass with zero failures; lock and whitespace
 checks exit 0.
 
-- [ ] **Step 7: Commit, push, and verify synchronization**
+- [x] **Step 7: Commit, push, and verify synchronization**
 
 ```bash
 git add scripts/training_feasibility.py TRAINING_FEASIBILITY.md Makefile PLAN_FULL.md STATUS_FULL.md PROGRESS.md tests/test_training_audit.py
