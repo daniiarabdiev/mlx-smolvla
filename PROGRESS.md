@@ -542,3 +542,16 @@
 - Decision: mark `STATUS.md` with `DEFINITION OF DONE MET`. Future work is
   limited to the explicitly deferred v0.2/training, quantization, and robot-I/O
   scope in `BRIEF.md`.
+
+## 2026-08-31 — Agent handoff report
+
+- What: added `HANDOFF_REPORT.md`, a self-contained record for a successor
+  agent of the canonical workspace, final v0.1 evidence, pinned artifacts,
+  runtime contract, safety boundaries, known Metal-parity caveat, and a safe
+  first-turn checklist.
+- Evidence: the report was based on the clean v0.1 completion commit
+  `f1ae9d6`, `STATUS.md`, `BENCHMARK.md`, final `PROGRESS.md` entries,
+  `ARCHITECTURE.md`, and the preserved failure analyses. It makes no code,
+  model, cache, hardware, or package changes.
+- Next: wait for an explicitly scoped follow-on request; do not start deferred
+  Phase 7 robot integration, training parity, or quantization autonomously.
