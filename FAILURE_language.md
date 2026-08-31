@@ -57,6 +57,12 @@ pass their fixed relative-L2 bound of `3e-2`.
 4. **Alternative numerical formulations.** Ruled out: a GEMM-based RMS
    reduction, fp64 attention, and fp64 SwiGLU projections did not pass every
    sample and in some cases increased the maximum error.
+5. **Supported MLX precision control or upgrade.** Ruled out: MLX `0.32.2` is
+   the current release, and its documented CPU RMSNorm fallback is the same
+   fp32 `mean(square(x))`/`rsqrt` expression with no public reduction-precision
+   control. See the upstream
+   [RMSNorm source](https://github.com/ml-explore/mlx/blob/main/mlx/fast.cpp)
+   and [release record](https://github.com/ml-explore/mlx/releases).
 
 ## Decision and next step
 

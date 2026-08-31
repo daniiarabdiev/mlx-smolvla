@@ -255,6 +255,11 @@
   (improved several samples but sample 005 still reached `1.953125e-03`); and
   GEMM-reduced RMS, fp64 attention, and fp64 MLP variants (did not meet the
   fixed bound and sometimes worsened it).
+- Upstream check: the installed MLX `0.32.2` is the current release, and its
+  public RMSNorm source documents the CPU fallback as fp32
+  `mean(square(x))` followed by `rsqrt`, with no exposed reduction-precision
+  control. An in-place upgrade or supported runtime flag is therefore not an
+  available resolution for this boundary.
 - Decision: retain the source-semantic fp32 MLX implementation and the
   immutable test. `FAILURE_language.md` records the reproducible precision
   boundary; no test is skipped or xfailed. Later modules that require a
