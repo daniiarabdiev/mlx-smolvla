@@ -55,6 +55,8 @@ Neither `RELEASE READY` nor `TRAINING ALPHA` has been reached.
 | `.cache/training/optimizer_goldens` | 381.329 MiB | manifest SHA-256 `88c3febc7da3e553bcb7c26f261721369ed1f56efd457887b7d43d50a077807c` |
 | `.cache/training/t2-lockstep.json` | 60 KiB | SHA-256 `da8cabf5eecf4379065771b3a74407c47290b8aee9c2d0a9756893b6dd87a6a4` |
 | `.cache/training/t3-benchmark.json` | JSON | SHA-256 `3598214cecd083cd3d5d143edd3edbe614dc899d30622152573e87dd104fe442` |
+| `.cache/training/t3-evaluation` | 100 MiB | Manifest SHA-256 `9cabca6cd21e8658a94e42980af3e91ecd8ff5ed5daca5f75eb7a1ebd1d261a3` |
+| `.cache/training/t3-base-evaluation.json` | JSON | SHA-256 `211d6778b0530208ca2e81abe6f4002cc683e24d496a09ddbe39c100ebd4f7ce`; base MAE `4.639846293521779` |
 | `.cache/hf` | 965 MiB | repository-local source cache |
 | `.cache/smolvla_mlx` | 67 GiB | repository-local conversion/golden cache; T1 fp32 policy subset is 4.2 GiB |
 

@@ -1040,3 +1040,25 @@
   floor. The run budget is now immutable; the held-out outcome cannot extend it.
 - Next: execute the fresh 3,000-update run, export, and apply all three frozen
   held-out/round-trip/stats-active parity gates.
+
+## 2026-09-01 — Stage T3 held-out evidence frozen before training
+
+- Evaluation population: captured **56** cases, exactly seven spread through
+  each of the eight unseen episodes. Every case includes raw uint8 camera
+  frames, raw six-axis state, the physical first-action target, and one fixed
+  `1x50x32` Gaussian flow draw from seed `20260902`.
+- Integrity: the **280-array**, 100 MiB local artifact has manifest SHA-256
+  `9cabca6cd21e8658a94e42980af3e91ecd8ff5ed5daca5f75eb7a1ebd1d261a3`
+  and remains bound to train-stat hash
+  `5aa5ab85e0c71c0adee97782be37907b0918050a8539bb3aab88fe392953948e`.
+- Frozen baseline: fp32 MLX on the CPU compatibility lane, with those train-only
+  stats active, scored physical first-action MAE **4.639846293521779** over
+  **336** action elements. Its report SHA-256 is
+  `211d6778b0530208ca2e81abe6f4002cc683e24d496a09ddbe39c100ebd4f7ce`.
+- Immutable improvement target: the final MLX export must score at most
+  **4.175861664169601** (`0.9 *` the unrounded base MAE). Case selection,
+  noise, target, statistics, and baseline are now fixed before update one.
+- Green evidence: all **5/5** evaluation artifact, metric, threshold-boundary,
+  and baseline-binding cases passed in **0.17 seconds**.
+- Next: run exactly 3,000 effective-batch updates from a fresh base; no result
+  may change this population, baseline, budget, or threshold.
