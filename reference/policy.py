@@ -53,16 +53,18 @@ class ReferencePrediction:
     actions: torch.Tensor
 
 
-def load_dataset_observation(cache_dir: Path, index: int) -> ReferenceSample:
+def load_dataset_observation(cache_dir: Path, index: int, episode: int = 0) -> ReferenceSample:
     """Load one real SO-101 frame and map its two cameras deterministically."""
 
     dataset = LeRobotDataset(
         DATASET_ID,
         root=cache_dir / "datasets" / "svla_so101_pickplace",
-        episodes=[0],
+        episodes=[episode],
         revision=DATASET_REVISION,
         video_backend="pyav",
     )
+    if index < 0 or index >= len(dataset):
+        raise IndexError(f"Frame index {index} is outside episode {episode} with {len(dataset)} frames")
     item = dataset[index]
     observation = {
         "observation.images.camera1": item["observation.images.side"].cpu().float(),

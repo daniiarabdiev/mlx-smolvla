@@ -7,7 +7,7 @@ TESTS ?= tests
 .PHONY: goldens test bench
 
 goldens:
-	uv run --extra reference python scripts/make_goldens.py
+	uv run --extra reference python scripts/make_goldens.py --cache-dir $(HF_HOME) --output tests/golden
 
 test:
 	uv run --extra reference pytest $(TESTS)

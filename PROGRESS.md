@@ -88,3 +88,32 @@
   the model port uses it.
 - Next: capture byte-stable goldens at the audited module boundaries, then map
   every checkpoint tensor into the native MLX module tree.
+
+## 2026-08-31 — Phase 0 deterministic golden capture
+
+- What: implemented an atomic `.npy` golden writer/store, deterministic
+  eight-episode sample plan, transparent residual-block hooks, and the
+  `make goldens` reference capture command. Generated arrays include raw and
+  preprocessed inputs, vision and connector features, all 16 VLM block outputs
+  and K/V pairs, all 16 expert outputs for each of 10 Euler steps, action suffix
+  embeddings, padded velocities, and final normalized/un-normalized actions.
+- Coverage: `tests/golden/manifest.json` contains 2,160 tensors across 8 real
+  frames from episodes 0, 7, 14, 21, 28, 35, 42, and 49. Each sample has 270
+  named tensors: 16 VLM hidden outputs, 32 VLM cache K/V tensors, 170 expert
+  tensors, 30 flow tensors, plus preprocessing and final-action boundaries.
+- Correction: the per-step velocity remains `[1, 50, 32]` in the padded action
+  space; only `SmolVLAPolicy._get_action_chunk` slices the final action chunk to
+  the physical `[1, 50, 6]` dimension. The architecture report and tests now
+  encode that distinction.
+- Reproducibility evidence: `make goldens`, copied `manifest.json` and
+  `metadata.json`, ran `make goldens` again, then `cmp` passed for both files.
+  The output reports 2,160 tensors and 8 samples on both runs.
+- Test evidence: `tests/test_goldens.py` collected 5 tests and passed 5/5 in
+  17.02 seconds, including real reference capture and the CLI capture path.
+- Decision: goldens are intentionally ignored because they are large generated
+  derivatives. The writer's per-file SHA-256 manifest and fixed checkpoint,
+  VLM, dataset, sample, and seed metadata make them locally regenerable.
+- Open questions: none for golden capture.
+- Next: implement checkpoint-derived native configuration and preprocessing,
+  beginning with exact camera resize/padding and tokenizer parity against all
+  saved golden inputs.

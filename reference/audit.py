@@ -221,6 +221,8 @@ def inspect_reference(reference: ReferencePolicy, sample: ReferenceSample) -> di
         },
         "flow": {
             "steps": reference.config.num_steps,
+            "velocity_dim": reference.config.max_action_dim,
+            "output_action_dim": reference.config.action_feature.shape[0],
             "dt": dt,
             "times": times,
             "update": "x_t = x_t + dt * v_t",

@@ -39,7 +39,7 @@ state (6 → zero-padded 32) ──► linear projection ──┤
 noise actions (50 × 32) + timestep ───────────────► 16-layer action expert
                                                     │  self-attn even layers; cross-attn odd layers
                                                     ▼
-                                  velocity → Euler (10 steps, t=1 → 0) → 50 × 6 actions
+                    50 × 32 velocity → Euler (10 steps, t=1 → 0) → slice → 50 × 6 actions
 ```
 
 | Field | Verified value |
@@ -113,6 +113,7 @@ opt-in, rather than silently applying unrelated statistics.
 | Image/language cannot attend state | True |
 | Action suffix is causal | True |
 | Flow steps / dt | 10 / -0.1 |
+| Velocity / returned action width | 32 / 6 |
 | Timesteps | 1.0, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2, 0.1 |
 | Update | x_t = x_t + dt * v_t |
 | Noise / action endpoint | t=1 / t=0 |

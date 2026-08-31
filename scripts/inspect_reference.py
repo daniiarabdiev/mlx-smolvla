@@ -103,7 +103,7 @@ state (6 → zero-padded 32) ──► linear projection ──┤
 noise actions (50 × 32) + timestep ───────────────► {model['expert_layers']}-layer action expert
                                                     │  self-attn even layers; cross-attn odd layers
                                                     ▼
-                                  velocity → Euler (10 steps, t=1 → 0) → 50 × 6 actions
+                    50 × {flow['velocity_dim']} velocity → Euler (10 steps, t=1 → 0) → slice → 50 × {flow['output_action_dim']} actions
 ```
 
 {_table([
@@ -176,6 +176,7 @@ opt-in, rather than silently applying unrelated statistics.
     ("Image/language cannot attend state", str(attention['prefix_cannot_attend_state'])),
     ("Action suffix is causal", str(attention['suffix_is_causal'])),
     ("Flow steps / dt", f"{flow['steps']} / {flow['dt']}"),
+    ("Velocity / returned action width", f"{flow['velocity_dim']} / {flow['output_action_dim']}"),
     ("Timesteps", ", ".join(f"{time:.1f}" for time in flow['times'])),
     ("Update", flow['update']),
     ("Noise / action endpoint", f"{flow['noise_at']} / {flow['actions_at']}"),

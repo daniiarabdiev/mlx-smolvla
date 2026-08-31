@@ -240,7 +240,7 @@ git commit -m "phase-1: audit reference architecture (reference smoke test passe
 - Consumes: `ReferencePolicy`, eight or more deterministic dataset observations, fixed Gaussian noise, and audited hook points.
 - Produces: `GoldenWriter.add(name: str, tensor: torch.Tensor | np.ndarray)`, `GoldenStore.load(name: str) -> np.ndarray`, test-side `GoldenCase.array(name) -> np.ndarray`, `GoldenCase.mx(name, dtype) -> mx.array`, `GoldenCase.observation() -> Mapping[str, object]`, and `tests/golden/manifest.json` with shape, dtype, and SHA-256.
 
-- [ ] **Step 1: Write failing manifest and reproducibility tests**
+- [x] **Step 1: Write failing manifest and reproducibility tests**
 
 ```python
 def test_golden_writer_hashes_exact_bytes(tmp_path):
@@ -254,13 +254,13 @@ def test_manifest_is_stable(golden_regenerator):
     assert golden_regenerator() == golden_regenerator()
 ```
 
-- [ ] **Step 2: Run tests and observe missing writer/store failures**
+- [x] **Step 2: Run tests and observe missing writer/store failures**
 
 Run: `uv run --extra reference pytest tests/test_goldens.py -v`
 
 Expected: collection or attribute failures for the unimplemented golden API.
 
-- [ ] **Step 3: Implement atomic array capture and sorted manifest output**
+- [x] **Step 3: Implement atomic array capture and sorted manifest output**
 
 ```python
 def add(self, name: str, value: TensorLike) -> None:
@@ -273,13 +273,13 @@ def add(self, name: str, value: TensorLike) -> None:
 
 Register audited forward hooks for preprocessed inputs, vision output, connector output, every used decoder hidden/KV pair, state embedding, every expert block output, every Euler velocity, normalized actions, and un-normalized actions. Write sample metadata and fixed seeds alongside the tensor manifest.
 
-- [ ] **Step 4: Generate goldens twice from a clean output directory**
+- [x] **Step 4: Generate goldens twice from a clean output directory**
 
 Run: `make goldens && cp tests/golden/manifest.json .cache/manifest.first.json && make goldens && cmp .cache/manifest.first.json tests/golden/manifest.json`
 
 Expected: `cmp` exits zero and the manifest covers at least eight real observations and every audited boundary.
 
-- [ ] **Step 5: Verify helper and reference tests, then commit code only**
+- [x] **Step 5: Verify helper and reference tests, then commit code only**
 
 Run: `make test TESTS="tests/test_goldens.py tests/test_reference_policy.py"`
 
