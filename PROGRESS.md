@@ -525,3 +525,20 @@
 - Next: checkpoint this final packaging correction, rerun the full suite on
   the exact final tree, then update `PLAN.md` and `STATUS.md` to the v0.1
   Definition of Done.
+
+## 2026-08-31 — v0.1 Definition of Done
+
+- Final exact-tree verification: `make test` passed **179/179** in **147.26
+  seconds** after the final `setup.py` artifact correction.
+- Audit evidence: the tree was clean before the completion-document update;
+  the runtime-source scan found no direct `torch`, `lerobot`, or `transformers`
+  imports; the tracked-content scan found no token-shaped credentials; and no
+  human task is open.
+- Definition evidence: strict conversion, all fp32/bf16 module tests,
+  deterministic action parity, the 50-frame statistical gate, real policy API,
+  reproducible goldens, M5 Pro benchmark, source/wheel artifacts, clean source
+  and wheel installs, and a real installed CLI dataset prediction are recorded
+  above and in `BENCHMARK.md`/`STATUS.md`.
+- Decision: mark `STATUS.md` with `DEFINITION OF DONE MET`. Future work is
+  limited to the explicitly deferred v0.2/training, quantization, and robot-I/O
+  scope in `BRIEF.md`.
