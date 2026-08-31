@@ -49,3 +49,42 @@
   for the Phase 1 source/runtime audit.
 - Next: download the pinned checkpoint into the repository cache, load the
   policy on CPU fp32, and execute one real observation.
+
+## 2026-08-31 — Phase 1 reference runtime audit
+
+- What: loaded the immutable SmolVLA checkpoint on CPU fp32, pinned its base
+  SmolVLM2 tokenizer/config snapshot, mapped one real two-camera SO-101 sample,
+  ran a deterministic 50-action chunk, and generated an execution-derived
+  architecture report plus complete safetensors header inventory.
+- Reference pins: checkpoint `c83c3163b8ca9b7e67c509fffd9121e66cb96205`;
+  base VLM `HuggingFaceTB/SmolVLM2-500M-Video-Instruct` revision
+  `7b375e1b73b11138ff12fe22c8f2822d8fe03467`; LeRobot 0.6.1 / PyTorch 2.11.0 /
+  Transformers 5.5.4 / mlx-vlm 0.6.4.
+- Architecture evidence: 450,046,176 parameters: 350,165,184 VLM and
+  98,245,840 expert. Two 512x512 cameras produce 2x64x960 connector tokens;
+  the fixed prefix is 1x177x960, 16 cache layers each expose K/V of 1x5x177x64,
+  and the expert is 16 layers wide 720 with self-attention at even layers and
+  VLM-K/V cross-attention at odd layers.
+- Preprocessing evidence: bilinear aspect-preserving resize to 512x512 with
+  left/top zero padding, then `x * 2 - 1`; task newline plus right-padded
+  48-token encoding; state zero-padded from 6 to 32. The saved processor
+  declares MEAN_STD but has only robot-prefixed action-stat keys, so on this
+  unprefixed checkpoint path state normalization and action unnormalization are
+  both effective identity transforms.
+- Flow evidence: starts at t=1.0, uses 10 steps at dt=-0.1 through t=0.1, and
+  applies `x_t = x_t + dt * v_t`. A unit-velocity characterization ends at
+  -1.0000001192092896, consistent with float32 arithmetic.
+- Reuse decision: vendor/adapt only the MLX-only focused vision/connector/text
+  primitives from mlx-vlm under MIT notices; reimplement preprocessing,
+  tokenization, policy assembly, expert, flow, cache semantics, and conversion
+  from the audited behavior to preserve dependency isolation.
+- Test evidence: `make test TESTS="tests/test_reference_discovery.py
+  tests/test_reference_policy.py tests/test_reference_audit.py tests/test_cache.py
+  tests/test_import_isolation.py"` collected 11 tests and passed 11/11 in
+  45.37 seconds. The audit script writes JSON evidence and a 500-tensor
+  Markdown inventory.
+- Open questions: none that block deterministic golden capture. Exact MLX
+  preprocessing/tokenizer behavior will be proven against saved tensors before
+  the model port uses it.
+- Next: capture byte-stable goldens at the audited module boundaries, then map
+  every checkpoint tensor into the native MLX module tree.

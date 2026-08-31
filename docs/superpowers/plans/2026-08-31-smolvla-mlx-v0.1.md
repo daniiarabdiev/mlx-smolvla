@@ -184,7 +184,7 @@ git commit -m "phase-0: discover pinned reference (discovery tests pass)"
 - Consumes: `ReferenceDiscovery` and one real dataset observation.
 - Produces: `ReferencePolicy.load(discovery)`, `ReferencePolicy.prepare(observation)`, `ReferencePolicy.predict(observation, noise)`, and a complete verified architecture report.
 
-- [ ] **Step 1: Write a failing real-reference smoke test**
+- [x] **Step 1: Write a failing real-reference smoke test**
 
 ```python
 def test_reference_predicts_one_action_chunk(reference_case):
@@ -196,13 +196,13 @@ def test_reference_predicts_one_action_chunk(reference_case):
     assert chunk.dtype == torch.float32
 ```
 
-- [ ] **Step 2: Run the smoke test before the adapter exists**
+- [x] **Step 2: Run the smoke test before the adapter exists**
 
 Run: `HF_HOME=$PWD/.cache/hf UV_CACHE_DIR=$PWD/.cache/uv uv run --extra reference pytest tests/test_reference_policy.py -v`
 
 Expected: failure naming the absent adapter or fixture.
 
-- [ ] **Step 3: Implement the CPU fp32 adapter and deterministic observation loader**
+- [x] **Step 3: Implement the CPU fp32 adapter and deterministic observation loader**
 
 ```python
 class ReferencePolicy:
@@ -214,11 +214,11 @@ class ReferencePolicy:
 
 Adapt the signature to the installed reference after inspecting it; keep fixed noise explicit, call `eval()`, force CPU/fp32, and assert no parameter or input resides on MPS.
 
-- [ ] **Step 4: Audit every `BRIEF.md` Section 3 hypothesis**
+- [x] **Step 4: Audit every `BRIEF.md` Section 3 hypothesis**
 
 Run `scripts/inspect_reference.py` to record module nesting, tensor boundary shapes, exact layer counts, state placement, attention masks, preprocessing constants, normalization mode/statistics, Euler schedule/sign, action queue behavior, and callable signatures. Inspect installed `mlx-vlm` source for matching SmolVLM/Idefics components and record reuse/vendor/reimplement decisions plus license obligations.
 
-- [ ] **Step 5: Run the smoke test and commit audit evidence**
+- [x] **Step 5: Run the smoke test and commit audit evidence**
 
 Run: `make test TESTS="tests/test_reference_policy.py tests/test_reference_discovery.py"`
 

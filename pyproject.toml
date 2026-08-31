@@ -20,7 +20,7 @@ dependencies = [
 
 [project.optional-dependencies]
 reference = [
-  "lerobot[smolvla]==0.6.1",
+  "lerobot[dataset,smolvla]==0.6.1",
   "torch==2.11.0",
 ]
 

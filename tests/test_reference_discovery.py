@@ -11,6 +11,8 @@ def test_discovery_finds_installed_smolvla_sources(tmp_path: Path) -> None:
     assert result.lerobot_version == "0.6.1"
     assert result.policy_source.is_file()
     assert result.config_source.is_file()
+    assert result.expert_source.is_file()
+    assert "SmolVLMWithExpertModel" in result.expert_source.read_text(encoding="utf-8")
     assert result.checkpoint_id == "lerobot/smolvla_base"
 
 

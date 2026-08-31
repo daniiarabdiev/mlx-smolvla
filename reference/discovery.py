@@ -14,6 +14,8 @@ from huggingface_hub import HfApi, get_safetensors_metadata, hf_hub_download
 
 CHECKPOINT_ID = "lerobot/smolvla_base"
 CHECKPOINT_REVISION = "c83c3163b8ca9b7e67c509fffd9121e66cb96205"
+BASE_VLM_ID = "HuggingFaceTB/SmolVLM2-500M-Video-Instruct"
+BASE_VLM_REVISION = "7b375e1b73b11138ff12fe22c8f2822d8fe03467"
 DATASET_ID = "lerobot/svla_so101_pickplace"
 DATASET_REVISION = "f641879e22172be7e8161d5e6c1503c2d2feb657"
 
@@ -27,6 +29,7 @@ class ReferenceDiscovery:
     transformers_version: str
     policy_source: Path
     config_source: Path
+    expert_source: Path
     checkpoint_id: str
     checkpoint_revision: str
     checkpoint_config: Path
@@ -97,6 +100,7 @@ def discover_reference(cache_dir: Path) -> ReferenceDiscovery:
         transformers_version=version("transformers"),
         policy_source=_source_containing(root, "class SmolVLAPolicy"),
         config_source=_source_containing(root, "class SmolVLAConfig"),
+        expert_source=_source_containing(root, "class SmolVLMWithExpertModel"),
         checkpoint_id=CHECKPOINT_ID,
         checkpoint_revision=CHECKPOINT_REVISION,
         checkpoint_config=checkpoint_config,
@@ -124,6 +128,7 @@ def render_architecture_evidence(discovery: ReferenceDiscovery) -> str:
 - Transformers {discovery.transformers_version}
 - Policy source: `{discovery.policy_source}`
 - Configuration source: `{discovery.config_source}`
+- VLM-with-expert source: `{discovery.expert_source}`
 
 ## Checkpoint inventory
 
