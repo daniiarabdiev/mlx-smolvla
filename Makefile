@@ -10,7 +10,7 @@ goldens:
 	uv run --extra reference python scripts/make_goldens.py
 
 test:
-	uv run pytest $(TESTS)
+	uv run --extra reference pytest $(TESTS)
 
 bench:
 	uv run python scripts/bench.py

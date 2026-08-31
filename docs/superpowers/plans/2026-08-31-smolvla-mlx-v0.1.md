@@ -117,7 +117,7 @@ git commit -m "phase-0: bootstrap repository (isolation tests pass)"
 - Consumes: in-repo Hugging Face cache and the optional `reference` environment.
 - Produces: `ReferenceDiscovery` with installed versions, exact source files, checkpoint revision/config, tensor inventory, parameter count, and selected dataset identifier.
 
-- [ ] **Step 1: Add pinned reference dependencies and write a failing discovery test**
+- [x] **Step 1: Add pinned reference dependencies and write a failing discovery test**
 
 ```python
 def test_discovery_finds_installed_smolvla(tmp_path):
@@ -130,13 +130,13 @@ def test_discovery_finds_installed_smolvla(tmp_path):
 
 Use uv's optional `reference` group for mainline LeRobot, PyTorch, Transformers, and datasets; regenerate `uv.lock` so exact versions are committed.
 
-- [ ] **Step 2: Run the discovery test and capture the missing implementation failure**
+- [x] **Step 2: Run the discovery test and capture the missing implementation failure**
 
 Run: `HF_HOME=$PWD/.cache/hf UV_CACHE_DIR=$PWD/.cache/uv uv run --extra reference pytest tests/test_reference_discovery.py -v`
 
 Expected: import fails for `reference.discovery` or `discover_reference`.
 
-- [ ] **Step 3: Implement source discovery without remembered paths**
+- [x] **Step 3: Implement source discovery without remembered paths**
 
 ```python
 @dataclass(frozen=True)
@@ -156,13 +156,13 @@ def smolvla_sources() -> list[Path]:
 
 Inspect candidates for the exported policy/configuration class names, record the exact installed package versions and source paths, query Hub metadata for the checkpoint revision and config, and verify candidate SO-101 datasets by loading their metadata and feature schema.
 
-- [ ] **Step 4: Run discovery and write the immutable evidence section**
+- [x] **Step 4: Run discovery and write the immutable evidence section**
 
 Run: `HF_HOME=$PWD/.cache/hf UV_CACHE_DIR=$PWD/.cache/uv uv run --extra reference python -m reference.discovery --write ARCHITECTURE.md`
 
 Expected: `ARCHITECTURE.md` names exact versions, source paths, checkpoint revision, model tensor count/parameter count, and a dataset with at least two image features plus state, action, and task text.
 
-- [ ] **Step 5: Verify and commit**
+- [x] **Step 5: Verify and commit**
 
 Run: `make test TESTS="tests/test_reference_discovery.py tests/test_import_isolation.py"`
 
