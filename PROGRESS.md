@@ -709,3 +709,17 @@
   official immutable gate and protected regression.
 - Next: execute Package 1 with a failing manifest test, then progress through
   the plan without changing the pinned thresholds.
+
+## 2026-08-31 — Stage T1 Package 1 artifact manifests
+
+- Red evidence: `tests/test_training_data.py` first failed **8/8** because the
+  planned `training.data` module did not exist.
+- What: added framework-neutral atomic `.npy` artifact writing, sorted JSON
+  manifests, per-payload SHA-256/shape/dtype/byte counts, manifest hashing in
+  metadata, safe relative-name enforcement, complete reload verification, and
+  explicit tamper detection. The module imports NumPy only; it does not import
+  Torch, LeRobot, or Transformers.
+- Green evidence: artifact and runtime import-isolation tests passed **9/9 in
+  0.25 seconds**; `git diff --check` passed.
+- Next: add red cases for temporal padding, physical action-width masking, and
+  float64 gradient-comparison metrics.
