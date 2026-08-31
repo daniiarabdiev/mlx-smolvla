@@ -737,3 +737,18 @@
   passed **23/23 in 2.87 seconds**; `git diff --check` passed.
 - Next: replace the inference-only CPU primitive calls inside an exception-safe
   training scope and prove exact inference dispatch is restored afterward.
+
+## 2026-08-31 — Stage T1 Package 3 scoped CPU autodiff
+
+- Red evidence: all **4** new scoped primitive cases failed on the absent RoPE,
+  softmax, SiLU, and context-manager APIs.
+- What: added pure fp32 MLX VJPs for split-half RoPE, last-axis softmax, SiLU,
+  and the existing RMSNorm, plus a locked CPU-only context that lazily redirects
+  language/expert aliases and `ReferenceRMSNorm.__call__`. Nested activation is
+  rejected and every callable is restored in reverse order after normal or
+  exceptional exit.
+- Protected evidence: scoped-autodiff, exact native RMSNorm/RoPE/softmax/SiLU,
+  and import-isolation tests passed **12/12 in 2.22 seconds**; `git diff
+  --check` passed. No `smolvla_mlx/` source changed.
+- Next: reproduce the real LeRobot train-loop batch and serialize the actual
+  Torch loss, draws, parameters, and all 155 gradients.
