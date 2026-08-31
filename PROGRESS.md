@@ -579,3 +579,23 @@
   `docs/superpowers/specs/`.
 - Next: create the detailed test-first Stage T0 implementation plan, execute
   its differentiability/resource audit, then rerun the protected suite.
+
+## 2026-08-31 — Stage T0 optional training package boundary
+
+- Red evidence: the new distribution and import-boundary tests produced the
+  intended **2 failures / 2 passes** because `training` did not exist and the
+  `train` extra was absent.
+- What: added a side-effect-free `training` package, declared an empty optional
+  `train` extra, included the package in wheel/sdist metadata, and kept every
+  reference framework out of unconditional dependencies and import state.
+- Green evidence: with `HF_HOME`, `UV_CACHE_DIR`, and `SMOLVLA_MLX_CACHE`
+  explicitly under this repository,
+  `pytest tests/test_distribution.py tests/test_import_isolation.py -q`
+  passed **4/4 in 0.62 seconds**; `uv lock --check` resolved all 103 packages
+  in 3 ms.
+- Cache correction: an earlier direct uv invocation inherited the user's
+  pre-existing global uv cache and waited on its lock. Both agent-started
+  processes were stopped before testing; the recorded green run used only the
+  required repository-local caches.
+- Next: add the pure-MLX differentiable RMSNorm and exact padded flow-matching
+  objective through a new red/green cycle.

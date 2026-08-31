@@ -1,3 +1,4 @@
 include CMakeLists.txt
 include NOTICE
 recursive-include smolvla_mlx/native *.cpp *.h
+recursive-include training *.py

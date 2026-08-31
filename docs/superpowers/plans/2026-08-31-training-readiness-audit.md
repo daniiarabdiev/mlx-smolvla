@@ -39,7 +39,7 @@
 - Consumes: existing `smolvla-mlx` package metadata and import-isolation subprocess.
 - Produces: importable but side-effect-free `training` package and optional extra named `train`; no new unconditional dependency.
 
-- [ ] **Step 1: Write the failing package-boundary tests**
+- [x] **Step 1: Write the failing package-boundary tests**
 
 Add these assertions to `tests/test_distribution.py`:
 
@@ -75,7 +75,7 @@ assert payload["forbidden"] == []
 assert payload["training_api"] == []
 ```
 
-- [ ] **Step 2: Run the tests and verify the intended red state**
+- [x] **Step 2: Run the tests and verify the intended red state**
 
 Run:
 
@@ -86,7 +86,7 @@ uv run --extra reference pytest tests/test_distribution.py tests/test_import_iso
 Expected: failure because `training` is not installed and the `train` extra is
 not declared; existing runtime dependency assertions remain green.
 
-- [ ] **Step 3: Add the minimal optional package**
+- [x] **Step 3: Add the minimal optional package**
 
 Create `training/__init__.py` with only a module docstring. Add this extra to
 `pyproject.toml`:
@@ -113,7 +113,7 @@ Regenerate package metadata:
 uv lock
 ```
 
-- [ ] **Step 4: Verify the package boundary is green**
+- [x] **Step 4: Verify the package boundary is green**
 
 Run:
 
@@ -125,7 +125,7 @@ uv lock --check
 Expected: all focused tests pass; the unconditional runtime dependency set is
 still exactly the six pinned v0.1 packages.
 
-- [ ] **Step 5: Record and commit the package boundary**
+- [x] **Step 5: Record and commit the package boundary**
 
 Append focused results to `PROGRESS.md`, check `git diff --check`, then commit:
 

@@ -1247,7 +1247,7 @@ requires-dist = [
     { name = "tokenizers", specifier = "==0.22.2" },
     { name = "torch", marker = "extra == 'reference'", specifier = "==2.11.0" },
 ]
-provides-extras = ["reference"]
+provides-extras = ["reference", "train"]
 
 [package.metadata.requires-dev]
 dev = [{ name = "pytest" }]

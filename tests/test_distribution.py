@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from importlib.metadata import distribution
+from importlib.util import find_spec
 
 from packaging.requirements import Requirement
 
@@ -37,3 +38,10 @@ def test_installed_runtime_requires_the_audited_dependency_versions() -> None:
         "safetensors": "==0.8.0",
         "tokenizers": "==0.22.2",
     }
+
+
+def test_training_package_is_shipped_as_an_optional_surface() -> None:
+    metadata = distribution("smolvla-mlx").metadata
+
+    assert find_spec("training") is not None
+    assert "train" in (metadata.get_all("Provides-Extra") or [])

@@ -31,6 +31,7 @@ reference = [
   "lerobot[dataset,smolvla]==0.6.1",
   "torch==2.11.0",
 ]
+train = []
 
 [dependency-groups]
 dev = [

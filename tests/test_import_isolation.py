@@ -22,9 +22,13 @@ import smolvla_mlx.rmsnorm
 import smolvla_mlx.statistical
 import smolvla_mlx.types
 import smolvla_mlx.vision
+import training
 
 loaded = {name.split('.', 1)[0] for name in sys.modules}
-print(json.dumps(sorted(loaded & {'torch', 'lerobot', 'transformers'})))
+print(json.dumps({
+    'forbidden': sorted(loaded & {'torch', 'lerobot', 'transformers'}),
+    'training_api': sorted(name for name in vars(training) if not name.startswith('_')),
+}))
 """
     completed = subprocess.run(
         [sys.executable, "-c", code],
@@ -34,4 +38,6 @@ print(json.dumps(sorted(loaded & {'torch', 'lerobot', 'transformers'})))
     )
 
     assert completed.returncode == 0, completed.stderr
-    assert json.loads(completed.stdout) == []
+    payload = json.loads(completed.stdout)
+    assert payload["forbidden"] == []
+    assert payload["training_api"] == []
