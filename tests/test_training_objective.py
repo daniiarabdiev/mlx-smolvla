@@ -44,6 +44,42 @@ def test_flow_objective_ignores_padded_action_dimensions() -> None:
     assert float(loss) == 0.5
 
 
+def test_flow_objective_ignores_temporally_padded_actions_in_numerator_and_denominator() -> None:
+    module = __import__("training.objective", fromlist=["masked_velocity_mse"])
+    target = mx.zeros((1, 2, 4), dtype=mx.float32)
+    prediction = mx.array(
+        [[[1.0, 3.0, 100.0, 100.0], [50.0, 70.0, 100.0, 100.0]]],
+        dtype=mx.float32,
+    )
+    action_is_pad = mx.array([[False, True]], dtype=mx.bool_)
+
+    loss = module.masked_velocity_mse(
+        prediction,
+        target,
+        action_dim=2,
+        action_is_pad=action_is_pad,
+    )
+    mx.eval(loss)
+
+    assert float(loss) == 5.0
+
+
+def test_flow_objective_all_padded_batch_uses_clamped_denominator() -> None:
+    module = __import__("training.objective", fromlist=["masked_velocity_mse"])
+    target = mx.zeros((1, 2, 4), dtype=mx.float32)
+    prediction = mx.full((1, 2, 4), 100.0, dtype=mx.float32)
+
+    loss = module.masked_velocity_mse(
+        prediction,
+        target,
+        action_dim=2,
+        action_is_pad=mx.ones((1, 2), dtype=mx.bool_),
+    )
+    mx.eval(loss)
+
+    assert float(loss) == 0.0
+
+
 def test_flow_inputs_reject_mismatched_action_and_noise_shapes() -> None:
     module = __import__("training.objective", fromlist=["flow_matching_inputs"])
 
@@ -82,4 +118,17 @@ def test_velocity_loss_rejects_mismatched_prediction_and_target_shapes() -> None
             mx.zeros((1, 2, 4)),
             mx.zeros((1, 3, 4)),
             action_dim=4,
+        )
+
+
+def test_velocity_loss_rejects_mismatched_temporal_mask_shape() -> None:
+    module = __import__("training.objective", fromlist=["masked_velocity_mse"])
+    velocity = mx.zeros((2, 3, 4))
+
+    with pytest.raises(ValueError, match="action_is_pad must have shape"):
+        module.masked_velocity_mse(
+            velocity,
+            velocity,
+            action_dim=4,
+            action_is_pad=mx.zeros((2, 2), dtype=mx.bool_),
         )

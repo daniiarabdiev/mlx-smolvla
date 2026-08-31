@@ -36,8 +36,9 @@ def masked_velocity_mse(
     target_velocity: mx.array,
     *,
     action_dim: int,
+    action_is_pad: mx.array | None = None,
 ) -> mx.array:
-    """Return MSE over physical action dimensions, excluding right padding."""
+    """Return LeRobot's MSE over valid timesteps and physical dimensions."""
 
     if predicted_velocity.shape != target_velocity.shape:
         raise ValueError(
@@ -52,4 +53,17 @@ def masked_velocity_mse(
         predicted_velocity.astype(mx.float32)[:, :, :action_dim]
         - target_velocity.astype(mx.float32)[:, :, :action_dim]
     )
-    return mx.mean(error * error)
+    squared_error = error * error
+    if action_is_pad is None:
+        return mx.mean(squared_error)
+
+    expected_mask_shape = predicted_velocity.shape[:2]
+    if action_is_pad.shape != expected_mask_shape:
+        raise ValueError(
+            f"action_is_pad must have shape {expected_mask_shape}, got {action_is_pad.shape}"
+        )
+    valid = mx.logical_not(action_is_pad.astype(mx.bool_)).astype(mx.float32)
+    numerator = mx.sum(squared_error * valid[:, :, None])
+    denominator = mx.sum(valid) * mx.array(action_dim, dtype=mx.float32)
+    denominator = mx.maximum(denominator, mx.array(1.0, dtype=mx.float32))
+    return numerator / denominator

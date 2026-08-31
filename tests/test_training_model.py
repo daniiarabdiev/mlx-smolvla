@@ -51,11 +51,14 @@ def test_random_audit_batch_has_the_audited_shapes_and_is_repeatable() -> None:
     assert first.processed.text_attention_mask.shape == (1, 48)
     assert first.processed.state.shape == (1, 6)
     assert first.actions.shape == (1, 50, 32)
+    assert first.action_is_pad.shape == (1, 50)
+    assert not bool(mx.any(first.action_is_pad))
     assert first.noise.shape == (1, 50, 32)
     assert first.timesteps.shape == (1,)
     assert first.action_dim == 6
     assert bool(mx.array_equal(first.processed.pixel_values, second.processed.pixel_values))
     assert bool(mx.array_equal(first.actions, second.actions))
+    assert bool(mx.array_equal(first.action_is_pad, second.action_is_pad))
     assert bool(mx.array_equal(first.noise, second.noise))
 
 

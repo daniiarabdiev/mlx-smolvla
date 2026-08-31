@@ -723,3 +723,17 @@
   0.25 seconds**; `git diff --check` passed.
 - Next: add red cases for temporal padding, physical action-width masking, and
   float64 gradient-comparison metrics.
+
+## 2026-08-31 — Stage T1 Package 2 loss masks and metrics
+
+- Red evidence: the new objective, batch, and comparison cases produced **11
+  expected failures** while all 9 pre-existing focused cases stayed green.
+- What: threaded `action_is_pad` through `TrainingBatch` and the full loss,
+  cropped squared error to the physical action width, and matched LeRobot's
+  valid-timestep × physical-dimension denominator with its clamp-to-one
+  behavior. Added strict float64 relative-L2, cosine, maximum-difference, and
+  relative-loss helpers with explicit invalid/zero-reference handling.
+- Green evidence: objective, model, comparison, and real T0 audit regressions
+  passed **23/23 in 2.87 seconds**; `git diff --check` passed.
+- Next: replace the inference-only CPU primitive calls inside an exception-safe
+  training scope and prove exact inference dispatch is restored afterward.

@@ -31,6 +31,7 @@ class TrainingBatch:
 
     processed: ProcessedObservation
     actions: mx.array
+    action_is_pad: mx.array
     noise: mx.array
     timesteps: mx.array
     action_dim: int
@@ -64,6 +65,7 @@ def make_random_audit_batch(seed: int) -> TrainingBatch:
     return TrainingBatch(
         processed=processed,
         actions=mx.random.normal((1, _CHUNK_SIZE, _ACTION_PADDED_DIM)).astype(mx.float32),
+        action_is_pad=mx.zeros((1, _CHUNK_SIZE), dtype=mx.bool_),
         noise=mx.random.normal((1, _CHUNK_SIZE, _ACTION_PADDED_DIM)).astype(mx.float32),
         timesteps=mx.array([0.5], dtype=mx.float32),
         action_dim=_ACTION_DIM,
@@ -97,4 +99,5 @@ def training_loss(model: SmolVLATrainingModel, batch: TrainingBatch) -> mx.array
         predicted_velocity,
         target_velocity,
         action_dim=batch.action_dim,
+        action_is_pad=batch.action_is_pad,
     )
