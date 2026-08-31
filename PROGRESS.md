@@ -870,3 +870,24 @@
   test-first packages from scalar semantics through full protected closure.
 - Next: write failing cross-framework scheduler, clipping, and AdamW tests,
   then implement the Torch-free MLX optimizer layer.
+
+## 2026-08-31 — Stage T2 Package 1 optimizer semantics
+
+- Red evidence: all **5** schedule/default/clipping/one-step/25-step cases failed
+  because the planned `training.optimizer` module did not exist.
+- What: added a Torch-free immutable SmolVLA optimizer config, exact LeRobot
+  cosine-with-warmup LR function including its short-horizon branch,
+  PyTorch-order multi-tensor fp32 global-norm clipping, and an MLX AdamW wrapper
+  with decoupled pre-update decay and enabled first/second-moment bias
+  correction.
+- Cross-framework evidence: all first 25 default-run LR values match the
+  installed LeRobot scheduler at zero tolerance; clipping matches
+  `torch.nn.utils.clip_grad_norm_` on an active multi-tensor case; and both one
+  and 25 updates match `torch.optim.AdamW` under deliberately enlarged decay,
+  epsilon, and altered betas that make ordering errors observable.
+- Green evidence: optimizer semantics plus protected objective, gradient,
+  training-model, and base import-isolation cases passed **26/26 in 0.40
+  seconds**; `git diff --check` passed.
+- Next: capture the actual 25-step PyTorch checkpoint evolution with the T1
+  batch, 25 serialized draw pairs, per-step optimizer metrics, and all 155
+  final parameters.
