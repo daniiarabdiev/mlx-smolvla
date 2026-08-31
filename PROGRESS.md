@@ -682,3 +682,26 @@
   milestone requires the Stage T3 real LoRA outcome and round-trip gates.
 - Next: begin Stage T1 with the actual pinned LeRobot training forward on one
   fixed public-dataset batch and fully serialized noise/timestep draws.
+
+## 2026-08-31 — Stage T1 design audit
+
+- What: traced the installed LeRobot 0.6.1 dataset, training loop, processor,
+  SmolVLA forward, and trainable parameter tree before fixing the T1 design.
+- Fixed case: public dataset episode 0, frame/absolute index 100, seed
+  20260831. All 50 target actions are valid. The actual training path converts
+  uint8 cameras to fp32/255, renames side/up to camera1/camera2, and injects the
+  public dataset statistics into the checkpoint processor.
+- Reference probe: CPU/fp32 loss 2.101923942565918 at sampled timestep
+  0.8003060817718506; 155/155 gradients present, finite, and nonzero over
+  99,880,992 scalars. Measured forward plus backward was 0.68445 seconds.
+- Differentiable MLX CPU probe: loss 2.101925849914551, loss relative difference
+  9.074298999059449e-07, worst gradient relative L2
+  8.673578115837066e-06 (`action_time_mlp_in.weight`), and minimum cosine
+  0.9999999999623879 across the strict 155-name canonical bijection.
+- Decision: use a scoped training-only pure-MLX primitive adapter around the
+  unchanged runtime modules. The probe clears the immutable T1 limits without a
+  duplicate model or inference behavior change. The non-gating probe produced no
+  repository artifact; official evidence will come from the manifest-backed T1
+  scripts.
+- Design: `docs/superpowers/specs/2026-08-31-gradient-parity-design.md`.
+- Next: write and execute the red/green Stage T1 implementation plan.
