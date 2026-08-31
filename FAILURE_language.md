@@ -1,6 +1,18 @@
 # Language decoder precision boundary
 
-## Status
+## Resolution — 2026-08-31
+
+This boundary is resolved. The native CPU compatibility primitives now match
+the pinned PyTorch arithmetic for RMSNorm, the fixed 177-token RoPE prefix,
+masked attention softmax, and SwiGLU SiLU. The original reproduction command
+now passes all 50 prefix/language cases under the unchanged Section 6
+tolerances; the wider focused decoder/isolation suite passes 57/57. No test was
+skipped, xfailed, or relaxed.
+
+The diagnosis below is retained as historical context for why the native CPU
+primitives exist. It is no longer an active block on the action-expert work.
+
+## Historical status
 
 The native MLX language decoder is functionally implemented and dependency
 isolated, but its fp32 raw residual outputs do not meet the immutable Section 6
@@ -64,7 +76,7 @@ pass their fixed relative-L2 bound of `3e-2`.
    [RMSNorm source](https://github.com/ml-explore/mlx/blob/main/mlx/fast.cpp)
    and [release record](https://github.com/ml-explore/mlx/releases).
 
-## Decision and next step
+## Historical decision and next step
 
 The implementation retains the source-semantic MLX fp32 model rather than a
 sample-specific numerical adjustment. A future resolution needs an MLX CPU

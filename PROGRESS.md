@@ -290,3 +290,31 @@
   absent. The direct and isolation checks passed 2/2 in 0.74 seconds.
 - Next: replace the decoder's three RMSNorm construction sites and rerun the
   immutable focused decoder suite.
+
+## 2026-08-31 — Phase 3 exact CPU decoder arithmetic
+
+- What: resolved the strict language-decoder precision boundary with focused,
+  dependency-isolated MLX CPU primitives for the reference RMSNorm reduction,
+  fixed-prefix RoPE, attention softmax, and SwiGLU SiLU activation. GPU paths
+  retain the normal MLX kernels; the compatibility primitives are selected only
+  for the CPU reference stream.
+- Arithmetic evidence: the 177-token RoPE transform, masked 177-wide attention
+  softmax, and 2,560-wide SiLU activation are each elementwise equal to the
+  pinned PyTorch 2.11.0 CPU result. The softmax implementation uses PyTorch's
+  four-lane pairwise reduction tree rather than a hardware horizontal-add
+  shortcut, which removes the last one-ULP probability drift.
+- Golden evidence: `uv run --extra reference pytest tests/test_rmsnorm.py
+  tests/test_rope.py tests/test_softmax.py tests/test_silu.py
+  tests/test_prefix.py tests/test_language.py tests/test_import_isolation.py -q`
+  passed **57/57** in 7.62 seconds. The original prefix/language reproduction
+  now passes all 50 cases under the unchanged Section 6 tolerances; no test was
+  skipped, xfailed, or relaxed.
+- Licensing: the compact ARM exponential adaptation is documented in `NOTICE`
+  under SLEEF's Boost Software License 1.0. `REUSE_DECISIONS.md` records the
+  bounded CPU-compatibility use case.
+- Decision: the prefix decoder and KV cache are unblocked for the remaining
+  policy implementation. `FAILURE_language.md` is retained as a resolved
+  historical diagnosis rather than an active blocker.
+- Commit: `phase-3: match CPU decoder arithmetic (decoder tests pass)`.
+- Next: implement the SmolVLA action expert, flow-matching Euler loop, action
+  queue, and public policy API against the already generated golden traces.

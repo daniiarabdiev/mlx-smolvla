@@ -15,4 +15,23 @@ NB_MODULE(_rmsnorm_native, module) {
       "eps"_a,
       nb::kw_only(),
       "stream"_a = nb::none());
+  module.def(
+      "reference_rope",
+      &smolvla_mlx::native::reference_rope,
+      "states"_a,
+      "position_ids"_a,
+      nb::kw_only(),
+      "stream"_a = nb::none());
+  module.def(
+      "reference_softmax",
+      &smolvla_mlx::native::reference_softmax,
+      "input"_a,
+      nb::kw_only(),
+      "stream"_a = nb::none());
+  module.def(
+      "reference_silu",
+      &smolvla_mlx::native::reference_silu,
+      "input"_a,
+      nb::kw_only(),
+      "stream"_a = nb::none());
 }

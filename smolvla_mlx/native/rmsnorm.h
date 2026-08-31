@@ -14,4 +14,17 @@ mx::array rms_norm(
     float eps,
     mx::StreamOrDevice stream_or_device = {});
 
+mx::array reference_rope(
+    const mx::array& states,
+    const mx::array& position_ids,
+    mx::StreamOrDevice stream_or_device = {});
+
+mx::array reference_softmax(
+    const mx::array& input,
+    mx::StreamOrDevice stream_or_device = {});
+
+mx::array reference_silu(
+    const mx::array& input,
+    mx::StreamOrDevice stream_or_device = {});
+
 } // namespace smolvla_mlx::native

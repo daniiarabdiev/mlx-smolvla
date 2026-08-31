@@ -16,6 +16,7 @@ import math
 import mlx.core as mx
 import mlx.nn as nn
 
+from smolvla_mlx.rmsnorm import ReferenceRMSNorm, reference_rope, reference_silu, reference_softmax
 from smolvla_mlx.types import PrefixCache, PrefixInputs, ProcessedObservation
 
 
@@ -71,6 +72,8 @@ def _apply_reference_rope(states: mx.array, position_ids: mx.array) -> mx.array:
 
     half = dimension // 2
     states = states.astype(mx.float32)
+    if mx.default_device() == mx.cpu:
+        return reference_rope(states, position_ids.astype(mx.int32))
     exponents = (2.0 / dimension) * mx.arange(half, dtype=mx.float32)
     timescale = mx.power(mx.array(_ROPE_BASE, dtype=mx.float32), exponents)
     radians = position_ids.astype(mx.float32)[..., None] / timescale[None, None, :]
@@ -130,7 +133,8 @@ class LanguageAttention(nn.Module):
             scores,
             mx.array(-3.4028234663852886e38, dtype=mx.float32),
         )
-        probabilities = mx.softmax(scores.astype(mx.float32), axis=-1)
+        scores = scores.astype(mx.float32)
+        probabilities = reference_softmax(scores) if mx.default_device() == mx.cpu else mx.softmax(scores, axis=-1)
         output = mx.matmul(probabilities, expanded_values)
         output = output.transpose(0, 2, 1, 3).reshape(batch_size, sequence_length, _HIDDEN_SIZE)
         return self.o_proj(output), keys.transpose(0, 2, 1, 3), values.transpose(0, 2, 1, 3)
@@ -146,7 +150,9 @@ class LanguageMLP(nn.Module):
         self.up_proj = nn.Linear(_HIDDEN_SIZE, _INTERMEDIATE_SIZE, bias=False)
 
     def __call__(self, hidden_states: mx.array) -> mx.array:
-        return self.down_proj(nn.silu(self.gate_proj(hidden_states)) * self.up_proj(hidden_states))
+        gate = self.gate_proj(hidden_states)
+        gate = reference_silu(gate) if mx.default_device() == mx.cpu else nn.silu(gate)
+        return self.down_proj(gate * self.up_proj(hidden_states))
 
 
 class LanguageLayer(nn.Module):
@@ -156,8 +162,8 @@ class LanguageLayer(nn.Module):
         super().__init__()
         self.self_attn = LanguageAttention()
         self.mlp = LanguageMLP()
-        self.input_layernorm = nn.RMSNorm(_HIDDEN_SIZE, eps=_RMS_NORM_EPS)
-        self.post_attention_layernorm = nn.RMSNorm(_HIDDEN_SIZE, eps=_RMS_NORM_EPS)
+        self.input_layernorm = ReferenceRMSNorm(_HIDDEN_SIZE, eps=_RMS_NORM_EPS)
+        self.post_attention_layernorm = ReferenceRMSNorm(_HIDDEN_SIZE, eps=_RMS_NORM_EPS)
 
     def __call__(
         self,
@@ -184,7 +190,7 @@ class TruncatedLanguageModel(nn.Module):
         # SmolVLA checkpoint stores exactly its used 0..15 subset. Keeping this
         # tree at 16 makes strict converted-weight loading meaningful.
         self.layers = [LanguageLayer() for _ in range(_USED_LAYERS)]
-        self.norm = nn.RMSNorm(_HIDDEN_SIZE, eps=_RMS_NORM_EPS)
+        self.norm = ReferenceRMSNorm(_HIDDEN_SIZE, eps=_RMS_NORM_EPS)
         self.lm_head = nn.Linear(_HIDDEN_SIZE, _VOCAB_SIZE, bias=False)
 
     def embed_language_tokens(self, input_ids: mx.array) -> mx.array:
