@@ -420,7 +420,7 @@ git commit -m "phase-2: convert checkpoint weights (conversion tests pass)"
 - Consumes: `SmolVLAConfig`, converted weights, batched `pixel_values`, pixel masks, and vision/connector goldens.
 - Produces: `VisionEncoder.__call__(pixels, mask) -> mx.array` and `Connector.__call__(features) -> mx.array`.
 
-- [ ] **Step 1: Write failing fp32/bf16 golden tests**
+- [x] **Step 1: Write failing fp32/bf16 golden tests**
 
 ```python
 @pytest.mark.parametrize("dtype,rel_l2,max_abs", [(mx.float32, 1e-3, 1e-3), (mx.bfloat16, 3e-2, None)])
@@ -429,23 +429,23 @@ def test_vision_matches_golden(dtype, rel_l2, max_abs, model_parts, golden):
     assert_error(actual, golden.array("vision_features"), rel_l2=rel_l2, max_abs=max_abs)
 ```
 
-- [ ] **Step 2: Prove vision and connector interfaces are absent**
+- [x] **Step 2: Prove vision and connector interfaces are absent**
 
 Run: `uv run pytest tests/test_vision.py tests/test_connector.py -v`
 
 Expected: collection failures for the new modules.
 
-- [ ] **Step 3: Reuse or vendor the audited vision implementation and add connector logic**
+- [x] **Step 3: Reuse or vendor the audited vision implementation and add connector logic**
 
 Implement the exact patch embedding, positional handling, attention, normalization epsilon, activation, layer order, pixel shuffle, and projection found in Task 3. Batch all cameras in one MLX call. Preserve license headers for every vendored source file and enumerate it in `NOTICE`.
 
-- [ ] **Step 4: Run focused parity tests in both dtypes**
+- [x] **Step 4: Run focused parity tests in both dtypes**
 
 Run: `uv run pytest tests/test_vision.py tests/test_connector.py -v`
 
 Expected: fp32 relative L2 and max absolute error at most `1e-3`; bf16 relative L2 at most `3e-2` for all golden samples.
 
-- [ ] **Step 5: Commit the passing model boundary**
+- [x] **Step 5: Commit the passing model boundary**
 
 ```bash
 git add smolvla_mlx/vision.py smolvla_mlx/connector.py tests/test_vision.py tests/test_connector.py NOTICE REUSE_DECISIONS.md PROGRESS.md

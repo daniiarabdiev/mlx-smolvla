@@ -177,3 +177,40 @@
 - Next: vendor/adapt the MIT MLX vision and connector primitives under the
   documented license boundary, load converted weights, and prove their outputs
   against the vision/connector goldens.
+
+## 2026-08-31 — Phase 3 vision encoder and connector
+
+- What: added dependency-isolated native MLX `VisionEncoder` and scale-4
+  `Connector`, with the complete 12-layer 768-wide SigLIP-style tower,
+  tanh-GELU, 1e-6 layer normalization, 32x32 patch positions, and the audited
+  1024-to-64 pixel shuffle followed by the 960-wide projection. Both modules
+  strictly load their canonical converted weight subtrees.
+- Licensing: focused adaptations retain the mlx-vlm 0.6.4 MIT attribution in
+  their source headers; `NOTICE` and `REUSE_DECISIONS.md` enumerate their
+  upstream source paths and adaptations.
+- Golden evidence: the original Section 6 thresholds remain unchanged. The
+  32-case suite (eight real observations × fp32/bf16 storage × vision and
+  connector) passed 32/32 in 42.10 seconds on MLX CPU, the same execution
+  domain as the CPU/fp32 PyTorch goldens. fp32 sample-000 vision error was
+  relative L2 `6.996e-06`, max absolute `3.338e-04`; connector output was
+  elementwise equal. bf16 retains compact weights but uses fp32 activations,
+  matching the reference's checkpoint-upcast golden methodology.
+- Regression evidence: `make test` collected 61 tests and passed 61/61 in
+  107.05 seconds, including reference, golden reproducibility, conversion,
+  preprocessing, and dependency-isolation coverage after the new runtime
+  modules were imported in a clean subprocess.
+- Metal evidence: default GPU execution is functional but cannot meet the
+  immutable CPU-reference threshold due to reproducible reduction-order
+  differences. The verified envelopes and three ruled-out implementation
+  hypotheses are recorded in `FAILURE_vision.md` and `FAILURE_connector.md`;
+  no tolerance was relaxed and no test was skipped.
+- Decision: use the MLX CPU backend for strict deterministic module parity
+  while retaining GPU-capable native modules for later Phase 5 investigation.
+  Future decoder/expert golden tests will follow the same CPU/fp32 reference
+  contract until a Metal precision control or exact custom kernel is found.
+- Open questions: Metal numerical parity remains open for performance work;
+  it does not block correctness-path implementation on the audited reference
+  device.
+- Commit: `phase-3: port vision and connector (vision tests pass)`.
+- Next: port the truncated language decoder, prefix assembly, and KV cache
+  against the saved layer-by-layer goldens.
