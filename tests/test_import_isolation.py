@@ -10,6 +10,7 @@ import sys
 
 import smolvla_mlx
 import smolvla_mlx.config
+import smolvla_mlx.benchmark
 import smolvla_mlx.connector
 import smolvla_mlx.expert
 import smolvla_mlx.flow
