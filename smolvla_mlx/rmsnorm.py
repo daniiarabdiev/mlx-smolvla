@@ -29,8 +29,8 @@ class ReferenceRMSNorm(nn.Module):
 
     def __init__(self, width: int, eps: float) -> None:
         super().__init__()
-        if width != 960:
-            raise ValueError(f"ReferenceRMSNorm only supports width 960, got {width}")
+        if width not in (720, 960):
+            raise ValueError(f"ReferenceRMSNorm only supports audited widths 720 and 960, got {width}")
         self.width = width
         self.eps = eps
         self.weight = mx.ones((width,), dtype=mx.float32)

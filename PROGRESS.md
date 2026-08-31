@@ -318,3 +318,16 @@
 - Commit: `phase-3: match CPU decoder arithmetic (decoder tests pass)`.
 - Next: implement the SmolVLA action expert, flow-matching Euler loop, action
   queue, and public policy API against the already generated golden traces.
+
+## 2026-08-31 — Phase 3 expert-width CPU RMSNorm
+
+- What: extended the dependency-isolated CPU RMSNorm compatibility primitive
+  from the VLM's 960 channels to the action expert's audited 720 channels. The
+  primitive remains deliberately bounded to those two checkpoint widths and
+  retains the same PyTorch-compatible cascade reduction.
+- Test evidence: `uv run --extra reference pytest tests/test_rmsnorm.py -q`
+  passed **3/3** in 1.02 seconds. The new 720-wide test uses the captured
+  timestep/action embedding and an actual expert norm weight, and matches
+  `torch.rms_norm` element-for-element.
+- Next: load the expert weights into a native action-expert tree and add the
+  first red projection, attention, and flow tests against the saved traces.

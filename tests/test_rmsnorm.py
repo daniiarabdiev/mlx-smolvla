@@ -55,3 +55,29 @@ def test_cpu_reference_rmsnorm_upcasts_bfloat16_storage_weight() -> None:
         mx.eval(actual)
 
     np.testing.assert_array_equal(np.array(actual), expected)
+
+
+def test_cpu_reference_rmsnorm_matches_pytorch_cpu_on_expert_width() -> None:
+    """The 720-wide action expert needs the same source CPU reduction contract."""
+
+    from smolvla_mlx.rmsnorm import ReferenceRMSNorm
+
+    suffix = np.load("tests/golden/sample_000/flow/step_00/suffix_embeddings.npy").astype(
+        np.float32, copy=False
+    )
+    checkpoint = Path(".cache/smolvla_mlx/language-prefix-float32/model.float32.safetensors")
+    weight = load_file(checkpoint)["expert.layers.0.input_layernorm.weight"]
+    expected = torch.rms_norm(
+        torch.from_numpy(suffix.copy()),
+        (suffix.shape[-1],),
+        torch.from_numpy(weight.copy()),
+        1e-5,
+    ).numpy()
+
+    with mx.stream(mx.cpu):
+        normalizer = ReferenceRMSNorm(suffix.shape[-1], eps=1e-5)
+        normalizer.weight = mx.array(weight)
+        actual = normalizer(mx.array(suffix))
+        mx.eval(actual)
+
+    np.testing.assert_array_equal(np.array(actual), expected)
