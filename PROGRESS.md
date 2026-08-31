@@ -331,3 +331,31 @@
   `torch.rms_norm` element-for-element.
 - Next: load the expert weights into a native action-expert tree and add the
   first red projection, attention, and flow tests against the saved traces.
+
+## 2026-08-31 — Phase 3 action expert and Euler flow
+
+- What: implemented the dependency-isolated 720-wide `ActionExpert` and the
+  native flow-matching sampler. The tree strictly loads all action/timestep
+  projections, 16 expert blocks, final norm, and velocity head from the
+  converted checkpoint.
+- Architecture evidence: even-numbered blocks append 50 RoPE-positioned action
+  K/V states to the corresponding frozen VLM cache for causal self-attention.
+  Odd-numbered blocks project only the frozen 177-token VLM K/V cache for
+  cross-attention, with query positions reset to zero exactly as in the
+  reference. The cache is never mutated by denoising, which is the native
+  equivalent of the reference cache crop after each step.
+- Flow evidence: the native schedule is the ten fp32 values `1.0` through
+  `0.1`; each update uses `x_t = x_t + (-0.1) * v_t`. The final 32-wide state
+  is sliced only at the policy boundary, preserving the reference's padded
+  velocity domain during all expert steps.
+- Golden evidence: `uv run --extra reference pytest tests/test_rmsnorm.py
+  tests/test_expert.py tests/test_flow.py tests/test_import_isolation.py -q`
+  passed **39/39** in 15.44 seconds. This includes every action/timestep
+  embedding across 8 real observations × 2 storage precisions, plus all 16
+  expert-layer outputs, final expert norms, velocities, Euler states, and final
+  normalized action chunks at all 10 steps for every sample. The Section 6
+  tolerances remain unchanged.
+- Isolation evidence: the clean subprocess now imports the expert and flow
+  runtime modules and still loads none of `torch`, `lerobot`, or `transformers`.
+- Next: assemble preprocessing, vision, prefix-cache, expert, unnormalization,
+  and the 50-action FIFO into the public `SmolVLAMLX` API.
