@@ -73,10 +73,10 @@ to `origin/main`.
 
 **Dependency:** T1. **State:** ready.
 
-- [ ] Add configurable LoRA to the used VLM attention/MLP linears and expert.
+- [x] Add configurable LoRA to the used VLM attention/MLP linears and expert.
 - [ ] Train on Metal/bf16 using a fixed whole-episode held-out split of at least
   15%, with metrics kept locally as CSV.
-- [ ] Fit the run into the two-hour budget using measured step time and record
+- [x] Fit the run into the two-hour budget using measured step time and record
   any step-count reduction from the 3,000-step/batch-8 default.
 - [ ] Export a merged standard safetensors checkpoint loadable by MLX and the
   PyTorch reference.

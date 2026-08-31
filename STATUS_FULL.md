@@ -37,7 +37,7 @@ import isolation remains green, and **542 GiB** remains free.
 | T0 — Training-readiness | Complete | 155/155 gradients finite and nonzero over 99,880,992 trainable scalars; 196.799 ms forward+backward and 2,509,594,126-byte peak MLX memory. See `TRAINING_FEASIBILITY.md`. |
 | T1 — Gradient parity | Complete | Identical real batch/draws; loss and all 155 gradients pass immutable gates. See `GRADIENT_PARITY.md`. |
 | T2 — Optimizer lockstep | Complete | 25/25 losses and 155/155 final tensors pass immutable gates. See `OPTIMIZER_LOCKSTEP.md`. |
-| T3 — LoRA fine-tune | Ready | T1 passed; eligible independently of T2's eventual result. |
+| T3 — LoRA fine-tune | In progress | Exact LoRA/data/export machinery is green; measured 1.637650 s/update keeps the frozen run at 3,000 updates, effective batch 8. |
 | T4 — Training UX/full fine-tune | Pending | Depends on T3. |
 | T5 — Training docs/benchmark | Pending | Depends on T3. |
 | Q — Quality extras | Blocked | Depends on Stage R and the missing normative package definitions. |
@@ -54,6 +54,7 @@ Neither `RELEASE READY` nor `TRAINING ALPHA` has been reached.
 | `.cache/training/t1-parity.json` | 52 KiB | SHA-256 `f4da0c16771a462e45bd615728bc02a059633db19eb77883342203426cb4d634` |
 | `.cache/training/optimizer_goldens` | 381.329 MiB | manifest SHA-256 `88c3febc7da3e553bcb7c26f261721369ed1f56efd457887b7d43d50a077807c` |
 | `.cache/training/t2-lockstep.json` | 60 KiB | SHA-256 `da8cabf5eecf4379065771b3a74407c47290b8aee9c2d0a9756893b6dd87a6a4` |
+| `.cache/training/t3-benchmark.json` | JSON | SHA-256 `3598214cecd083cd3d5d143edd3edbe614dc899d30622152573e87dd104fe442` |
 | `.cache/hf` | 965 MiB | repository-local source cache |
 | `.cache/smolvla_mlx` | 67 GiB | repository-local conversion/golden cache; T1 fp32 policy subset is 4.2 GiB |
 

@@ -989,3 +989,54 @@
 - Next: audit LoRA insertion/export and whole-episode data split mechanics,
   benchmark a real Metal training step, then freeze the Stage T3 design and
   time-bounded run plan.
+
+## 2026-09-01 — Stage T3 Packages 1-3 LoRA, data, and export boundaries
+
+- Design: froze rank 8 / alpha 16 / dropout 0 adapters on exactly **229**
+  linears: 112 used VLM attention/MLP projections, 116 expert projections, and
+  the state projection. Only **458** fp32 adapter tensors are trainable over a
+  frozen bf16 base. Install, gradients, and merge are count-checked.
+- Gradient evidence: all adapter gradients are finite on the full native loss.
+  Zero-B initialization makes all A gradients zero on update zero. Exactly five
+  terminal VLM-layer B gradients are also structurally zero because SmolVLA
+  consumes layer 15 K/V but not its final query/output/MLP hidden result; all
+  other **224/229** B tensors receive signal.
+- Data: seed `20260901` fixes held-out episodes
+  `(2, 7, 21, 28, 31, 34, 35, 41)`, exactly **8/50 = 16%**. The remaining 42
+  episodes contribute **10,011** train rows; 1,928 held-out rows contribute
+  nothing to state/action statistics. Train-stat SHA-256 is
+  `5aa5ab85e0c71c0adee97782be37907b0918050a8539bb3aab88fe392953948e`.
+- Bridge: LeRobot's pinned delta timestamps, episode-aware sampler, collator,
+  processors, video backend, and tokenizer produce owned NumPy microbatches.
+  The fixed episode/frame `0/100` case matches every T1 model-ready tensor
+  byte-for-byte; independent bridges reproduce the same shuffled identities.
+- Export: merged native tensors reverse-map into all **500** standard LeRobot
+  fp32 tensors (**450,046,176** scalars), reverse the patch-convolution layout,
+  and save native processor files with train-only stats. A real temporary export
+  loaded strictly in both MLX and Torch/LeRobot.
+- Green evidence: Package 1's LoRA plus protected T1/T2 focus passed **40/40 in
+  37.84 seconds**; Package 2's data/reference focus passed **19/19 in 6.88
+  seconds**; Package 3's real export/conversion/inference focus passed **23/23
+  in 14.50 seconds**. No base-package source changed.
+
+## 2026-09-01 — Stage T3 Package 4 measured Metal trainer
+
+- Trainer: added exact fp32 averaging over eight distinct one-sample
+  microbatches, one global clip and AdamW update per effective batch, native
+  Gaussian/Beta flow draws, durable per-update CSV metrics, atomic run state,
+  local adapter checkpoint, fp32 merge, and standard export.
+- Red/green evidence: all five initial contracts failed on the absent module;
+  the implementation then passed **5/5 in 0.10 seconds**.
+- Required real benchmark: three warm-up plus ten measured Metal updates at
+  effective batch 8 had median **1.6376500835176557 seconds/update** (range
+  **1.6308664999669418–1.69344437494874**), with peak MLX memory
+  **2,478,791,461 bytes**.
+- Frozen budget: `min(3000, floor(6900 / 1.6376500835176557))` is **3,000**,
+  so no reduction is required. Estimated training time is **4,912.95 seconds
+  (81.88 minutes)**, leaving approximately five minutes inside the two-hour
+  envelope for export/evaluation. Benchmark report SHA-256 is
+  `3598214cecd083cd3d5d143edd3edbe614dc899d30622152573e87dd104fe442`.
+- Resource evidence: more than **539 GiB** remains free, above the 40 GiB
+  floor. The run budget is now immutable; the held-out outcome cannot extend it.
+- Next: execute the fresh 3,000-update run, export, and apply all three frozen
+  held-out/round-trip/stats-active parity gates.
