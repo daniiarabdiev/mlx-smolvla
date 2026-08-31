@@ -11,3 +11,4 @@ dist/
 tests/golden/
 *.npy
 *.safetensors
+smolvla_mlx/*.so

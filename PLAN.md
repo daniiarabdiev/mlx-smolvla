@@ -1,7 +1,8 @@
 # Execution Plan
 
-The detailed test-first implementation plan is
-`docs/superpowers/plans/2026-08-31-smolvla-mlx-v0.1.md`.
+The detailed test-first implementation plans are
+`docs/superpowers/plans/2026-08-31-smolvla-mlx-v0.1.md` and
+`docs/superpowers/plans/2026-08-31-native-rmsnorm-extension.md`.
 
 Execution order follows the phases in `BRIEF.md`: bootstrap and deterministic
 reference goldens, architecture audit, conversion, module parity, end-to-end

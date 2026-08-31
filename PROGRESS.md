@@ -271,3 +271,22 @@
   part of its forbidden-framework check.
 - Next: preserve this checkpointed native implementation and resolve the
   documented RMS-reduction precision boundary before integrating the expert.
+
+## 2026-08-31 — Phase 3 native CPU RMSNorm boundary
+
+- What: added a dependency-isolated MLX C++ extension with a lazy CPU
+  `Primitive` that reproduces PyTorch 2.11's four-level cascade reduction over
+  the model's fixed 960-wide RMSNorm dimension. `ReferenceRMSNorm` selects it
+  only for an active CPU stream and keeps GPU execution on `mx.fast.rms_norm`.
+- Arithmetic evidence: an isolated Apple-clang source translation matches all
+  177 real prefix-row squared means bit-for-bit with PyTorch CPU. The packaged
+  primitive then matched the complete weighted `torch.rms_norm` output for all
+  169,920 real prefix values exactly.
+- Build evidence: the MLX extension uses the project's supported CMake route
+  with MLX 0.32.2 and its matching nanobind 2.15.0 ABI. The direct boundary
+  test `tests/test_rmsnorm.py` collected 1 test and passed 1/1 in 0.63 seconds.
+- Isolation evidence: a clean subprocess imports `smolvla_mlx.rmsnorm` with
+  the rest of the runtime and leaves `torch`, `lerobot`, and `transformers`
+  absent. The direct and isolation checks passed 2/2 in 0.74 seconds.
+- Next: replace the decoder's three RMSNorm construction sites and rerun the
+  immutable focused decoder suite.
