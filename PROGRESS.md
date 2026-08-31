@@ -704,4 +704,8 @@
   repository artifact; official evidence will come from the manifest-backed T1
   scripts.
 - Design: `docs/superpowers/specs/2026-08-31-gradient-parity-design.md`.
-- Next: write and execute the red/green Stage T1 implementation plan.
+- Plan: `docs/superpowers/plans/2026-08-31-gradient-parity.md` fixes six
+  independently testable and pushable packages from artifact IO through the
+  official immutable gate and protected regression.
+- Next: execute Package 1 with a failing manifest test, then progress through
+  the plan without changing the pinned thresholds.
