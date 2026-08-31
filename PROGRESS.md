@@ -920,3 +920,33 @@
   **23.311 seconds**, with more than **542 GiB** disk free.
 - Next: execute the same 25 draws and update order in MLX, compare every loss
   and all 155 final parameters, and emit the immutable lockstep report.
+
+## 2026-09-01 — Stage T2 Package 3 native optimizer lockstep
+
+- Red evidence: all **3** threshold/link/full-gate cases failed because
+  `training.lockstep` did not exist.
+- What: added strict T1/T2 artifact linkage, exact per-step draw loading, native
+  MLX CPU/fp32 value/grad/global-clip/AdamW updates, all 25 loss comparisons,
+  all 155 final-parameter comparisons, worst-five views, and an atomic
+  standalone report. Names, pins, counts, initial values, dtypes, shapes,
+  devices, and learning rates are hard pre-threshold gates.
+- Immutable result: all **25/25** loss comparisons pass; the maximum relative
+  difference is **1.3529624562582406e-6** at step 7 versus `1e-3`. All
+  **155/155** final tensors pass; maximum relative-L2 drift is
+  **2.8499913470883435e-8**
+  (`expert.layers.1.self_attn.q_proj.weight`) versus `5e-3`.
+- Supporting optimizer evidence: maximum gradient-norm relative difference is
+  **4.9728077828962536e-5** and maximum clip-coefficient absolute difference is
+  **3.2007518114496314e-5** across the 25 real full-model steps.
+- Artifact evidence: `make optimizer-lockstep` wrote
+  `.cache/training/t2-lockstep.json` with SHA-256
+  `99076dabe396ef65086d7cae7e2edaa1ab9b7b16c356a3e9a49c49eec8312eae`,
+  binding the expected T1 and optimizer manifests.
+- Resource evidence: synchronized updates took **32.999 seconds**, total strict
+  validation took **33.982 seconds**, peak MLX memory was **3,373,751,277
+  bytes**, and disk free remained above **542 GiB**.
+- Green evidence: the complete focused T2/T1 optimizer, artifact, parity,
+  differentiable-primitive, and import-isolation set passed **21/21 in 37.11
+  seconds**; `git diff --check` passed.
+- Next: write `OPTIMIZER_LOCKSTEP.md`, update stage state, rerun the standalone
+  report and full 236-test protected suite, then close and push T2.

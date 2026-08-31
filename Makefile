@@ -4,7 +4,7 @@ export SMOLVLA_MLX_CACHE := $(CURDIR)/.cache/smolvla_mlx
 
 TESTS ?= tests
 
-.PHONY: goldens test bench training-audit training-goldens training-parity optimizer-goldens
+.PHONY: goldens test bench training-audit training-goldens training-parity optimizer-goldens optimizer-lockstep
 
 goldens:
 	uv run --extra reference python scripts/make_goldens.py --cache-dir $(HF_HOME) --output tests/golden
@@ -26,3 +26,6 @@ training-parity:
 
 optimizer-goldens:
 	uv run --extra reference python scripts/make_optimizer_goldens.py --cache-dir $(HF_HOME) --t1-goldens $(CURDIR)/.cache/training/gradient_goldens --output $(CURDIR)/.cache/training/optimizer_goldens
+
+optimizer-lockstep:
+	uv run python scripts/check_optimizer_lockstep.py --t1-goldens $(CURDIR)/.cache/training/gradient_goldens --optimizer-goldens $(CURDIR)/.cache/training/optimizer_goldens --native-cache $(CURDIR)/.cache/smolvla_mlx/policy-float32 --output $(CURDIR)/.cache/training/t2-lockstep.json
