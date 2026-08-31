@@ -555,3 +555,27 @@
   model, cache, hardware, or package changes.
 - Next: wait for an explicitly scoped follow-on request; do not start deferred
   Phase 7 robot integration, training parity, or quantization autonomously.
+
+## 2026-08-31 — Full-scope kickoff, protected baseline, and origin
+
+- Authority: the operator supplied `BRIEF_FULL.md`, explicitly expanded the
+  scope to release, training, quality, and hardware-readiness documentation,
+  and requested autonomous execution. The attached brief is now preserved at
+  the repository root.
+- Baseline evidence: `make test` passed **179/179** in **158.71 seconds** on
+  Python 3.12.13 before continuation changes. Disk free was **553 GiB**, above
+  the 40 GiB floor.
+- GitHub evidence: `git ls-remote git@github.com:daniiarabdiev/smolvla_mlx.git`
+  returned no refs. The remote was added as `origin`, and the existing verified
+  `main` history through `458042b` was pushed without reinitializing the repo,
+  replacing README, or force-pushing.
+- Release-spec blocker: `BRIEF_RELEASE.md` is absent from the worktree, Git
+  history, available attachments, Downloads, inspected unreachable trees, and
+  the initially empty remote. `FAILURE_RELEASE_SPEC.md` records the searches;
+  `HUMAN_TASKS.md` requests the exact file. The package gates are not guessed.
+- Design decision: preserve v0.1 as an immutable inference baseline and add a
+  thin, optional training compatibility layer under `training/`; detailed
+  decomposition and the first T0 design are committed under
+  `docs/superpowers/specs/`.
+- Next: create the detailed test-first Stage T0 implementation plan, execute
+  its differentiability/resource audit, then rerun the protected suite.
