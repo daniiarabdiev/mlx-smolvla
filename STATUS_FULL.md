@@ -1,6 +1,6 @@
 # Full-Scope Status
 
-IN PROGRESS
+STOP CONDITION REACHED — REMAINING STAGES BLOCKED
 
 The protected SmolVLA MLX v0.1 inference baseline is intact. At full-scope
 kickoff on 2026-08-31, `make test` passed **179/179** in **158.71 seconds** on
@@ -35,6 +35,18 @@ seconds**. A full 458-trainable-tensor rebuild/restore proof reproduced update
 The dependency lock still resolves all **103 packages**, and **580 GiB**
 remains free.
 
+The fixed Stage T3 run completed all **3,000** Metal updates in
+**4,956.693033957996 seconds** and exported all **500** fp32 tensors. Held-out
+MLX MAE improved from **4.639846293521779** to **2.1164464077779224**, and the
+Torch/MLX MAE ratio was **0.9927553940871358**; both gates passed. The unchanged
+all-56-case stats-active parity gate failed at raw physical max absolute
+**6.632053375244141** (normalized max **0.17762404680252075**) versus **0.005**. See
+`FAILURE_LORA_FINETUNE.md`. `TRAINING ALPHA` was not reached.
+
+The outcome-evidence-hardened tree passes **308/308 tests in 205.10 seconds**.
+The current repository has **570 GiB** free, above the
+mandatory 40 GiB floor.
+
 ## Stage state
 
 | Stage | State | Evidence / next action |
@@ -43,9 +55,9 @@ remains free.
 | T0 — Training-readiness | Complete | 155/155 gradients finite and nonzero over 99,880,992 trainable scalars; 196.799 ms forward+backward and 2,509,594,126-byte peak MLX memory. See `TRAINING_FEASIBILITY.md`. |
 | T1 — Gradient parity | Complete | Identical real batch/draws; loss and all 155 gradients pass immutable gates. See `GRADIENT_PARITY.md`. |
 | T2 — Optimizer lockstep | Complete | 25/25 losses and 155/155 final tensors pass immutable gates. See `OPTIMIZER_LOCKSTEP.md`. |
-| T3 — LoRA fine-tune | In progress | Exact LoRA/data/export machinery is green; measured 1.637650 s/update keeps the frozen run at 3,000 updates, effective batch 8. Atomic last-three checkpoints now preserve model, optimizer, sampler, and RNG continuation state. |
-| T4 — Training UX/full fine-tune | Pending | Depends on T3. |
-| T5 — Training docs/benchmark | Pending | Depends on T3. |
+| T3 — LoRA fine-tune | Failure-documented | The 3,000-update run, merge, held-out improvement, and Torch round trip completed. All 56 frozen cases were parity-checked; raw physical max was `6.632053375244141` versus the unchanged `0.005` gate; see `FAILURE_LORA_FINETUNE.md`. |
+| T4 — Training UX/full fine-tune | Blocked | Depends on a passing T3 outcome. |
+| T5 — Training docs/benchmark | Blocked | Depends on a passing T3 outcome. |
 | Q — Quality extras | Blocked | Depends on Stage R and the missing normative package definitions. |
 | H — Hardware readiness | Blocked | Depends on Stage R P1-4; documents only unless the exact live-session confirmation is supplied. |
 
@@ -61,10 +73,12 @@ Neither `RELEASE READY` nor `TRAINING ALPHA` has been reached.
 | `.cache/training/optimizer_goldens` | 381.329 MiB | manifest SHA-256 `88c3febc7da3e553bcb7c26f261721369ed1f56efd457887b7d43d50a077807c` |
 | `.cache/training/t2-lockstep.json` | 60 KiB | SHA-256 `da8cabf5eecf4379065771b3a74407c47290b8aee9c2d0a9756893b6dd87a6a4` |
 | `.cache/training/t3-benchmark.json` | JSON | SHA-256 `3598214cecd083cd3d5d143edd3edbe614dc899d30622152573e87dd104fe442` |
-| `.cache/training/t3-evaluation` | 100 MiB | Manifest SHA-256 `9cabca6cd21e8658a94e42980af3e91ecd8ff5ed5daca5f75eb7a1ebd1d261a3` |
+| `.cache/training/t3-evaluation` | 100 MiB | Tensor-manifest SHA-256 `9cabca6cd21e8658a94e42980af3e91ecd8ff5ed5daca5f75eb7a1ebd1d261a3`; full metadata SHA-256 `f49ee54aead7ce3ede7b94d5638864afd2e12ef57ae2622eb6574333820cd107` |
 | `.cache/training/t3-base-evaluation.json` | JSON | SHA-256 `211d6778b0530208ca2e81abe6f4002cc683e24d496a09ddbe39c100ebd4f7ce`; base MAE `4.639846293521779` |
-| `.cache/hf` | 965 MiB | repository-local source cache |
-| `.cache/smolvla_mlx` | 67 GiB | repository-local conversion/golden cache; T1 fp32 policy subset is 4.2 GiB |
+| `.cache/training/t3` | 1.8 GiB | Completed run SHA-256 `c7c3b86361c0872e26f2088cbd33ada865cf450b6711a9b737ece933c1868c82`; adapter/final-model SHA-256 `814e6f4b2a78a46b609aa7b48a28b4509f709d3e851e588dcd9a4bd2ca1408dc`; final optimizer SHA-256 `c9440be75315e04c1812ba18da0e0daccd2990fb0f6fdb1841d40ef7b01ffb5a`; retained checkpoints 2,800/2,900/3,000; export audit manifest SHA-256 `55ad6834cbb3acb9dd565a57296a274d78e7cdc863aa81c3e6ef25da8b66ba03` |
+| `.cache/training/t3-outcome.json` | JSON | SHA-256 `8b74faf8f9cc96341090f91cfa795ed874c838026416944e4b77a550ad91bc44`; 15 source digests include the validated native conversion; improvement and round-trip pass, all-56-case parity fails |
+| `.cache/hf` | 1.8 GiB | repository-local source cache |
+| `.cache/smolvla_mlx` | 73 GiB | repository-local conversion/golden cache; T1 fp32 policy subset is 4.2 GiB |
 
 Training evidence is intentionally ignored by Git and has not been uploaded.
 
@@ -74,5 +88,6 @@ Training evidence is intentionally ignored by Git and has not been uploaded.
 - No PyPI or Hugging Face uploads were made.
 - No credentials, robot environment, vendor fork, serial ports, or hardware
   were accessed.
-- The required release brief is the only open human-supplied input; independent
-  training work continues.
+- The required release brief is the only open human-supplied input. T4/T5 are
+  independently blocked by the failed T3 gate, so no remaining in-scope stage
+  can proceed on the current evidence.

@@ -4,7 +4,7 @@ export SMOLVLA_MLX_CACHE := $(CURDIR)/.cache/smolvla_mlx
 
 TESTS ?= tests
 
-.PHONY: goldens test bench training-audit training-goldens training-parity optimizer-goldens optimizer-lockstep lora-benchmark lora-evaluation lora-finetune
+.PHONY: goldens test bench training-audit training-goldens training-parity optimizer-goldens optimizer-lockstep lora-benchmark lora-evaluation lora-finetune lora-finetune-check
 
 goldens:
 	uv run --extra reference python scripts/make_goldens.py --cache-dir $(HF_HOME) --output tests/golden
@@ -38,3 +38,6 @@ lora-evaluation:
 
 lora-finetune:
 	uv run --extra reference python scripts/finetune_lora.py --resume --checkpoint-interval 100 --cache-dir $(HF_HOME) --native-cache $(CURDIR)/.cache/smolvla_mlx/policy-float32 --output $(CURDIR)/.cache/training/t3
+
+lora-finetune-check:
+	uv run --extra reference python scripts/check_lora_finetune.py --cache-dir $(HF_HOME) --native-cache $(CURDIR)/.cache/smolvla_mlx/policy-float32 --run-dir $(CURDIR)/.cache/training/t3 --evaluation-dir $(CURDIR)/.cache/training/t3-evaluation --base-report $(CURDIR)/.cache/training/t3-base-evaluation.json --output $(CURDIR)/.cache/training/t3-outcome.json

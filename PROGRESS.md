@@ -1135,3 +1135,143 @@
   targeted, **48/48** broader, and **278/278** full-suite cases on this tree.
 - Next: commit/push this resilience package, then launch the frozen run and
   inspect checkpoints 1 and 100.
+
+## 2026-09-01 — Stage T3 fixed 3,000-update run and exact finalization recovery
+
+- Run: completed all **3,000** effective-batch-8 Metal updates in
+  **4,956.693033957996 seconds**. Final loss is **0.15556271374225616**, final
+  smoothed loss is **0.15856251862136114**, and peak MLX memory is
+  **2,478,803,693 bytes**.
+- Checkpoints: step 1 and every 100-step boundary were published; retention
+  leaves complete steps **2,800, 2,900, and 3,000**. The step-3,000 model hash
+  is `814e6f4b2a78a46b609aa7b48a28b4509f709d3e851e588dcd9a4bd2ca1408dc`
+  and optimizer hash is
+  `c9440be75315e04c1812ba18da0e0daccd2990fb0f6fdb1841d40ef7b01ffb5a`.
+- Finalization recovery: the first final adapter save failed after training
+  because MLX appended `.safetensors` to a temporary path ending in `.tmp`.
+  The complete step-3,000 checkpoint protected the run. A regression test
+  reproduced the suffix behavior, and the temporary path now ends in
+  `.adapter.tmp.safetensors` before atomic replacement.
+- Exact resume evidence: resume restored completed step 3,000, replayed no
+  optimizer update, and exported successfully. The regenerated adapter is
+  byte-identical to the pre-failure archived adapter, SHA-256
+  `814e6f4b2a78a46b609aa7b48a28b4509f709d3e851e588dcd9a4bd2ca1408dc`.
+  The run, metrics, and export-manifest SHA-256 values are respectively
+  `c7c3b86361c0872e26f2088cbd33ada865cf450b6711a9b737ece933c1868c82`,
+  `7f3a8c070f8102d7edc0afe5a9f4e5088321d1cdd21548fc21e9c772dbfafc2c`,
+  and `70e8e6d33a52356ae873942a9569f619a9831e8ee3a90d0fcc594a3b6d17b0bb`.
+- Export: all **500** tensors and **450,046,176** parameters are fp32 and load
+  strictly in MLX and Torch/LeRobot. Reconstructing the adapter merge on the
+  MLX GPU reproduced every exported source-layout tensor byte-for-byte:
+  **0** mismatches and maximum absolute difference **0.0**.
+- Next: apply all three immutable outcome gates to the frozen 56-case
+  population without changing the run or selecting a checkpoint by result.
+
+## 2026-09-01 — Stage T3 outcome failure preserved after three-hypothesis diagnosis
+
+- Outcome report: `.cache/training/t3-outcome.json`, SHA-256
+  `69c60ffd139543aa42258a7fdd86f9c0c71cbe700f9e9756d455917b98823bb5`,
+  binds the frozen population, train statistics, adapter, run, metrics, and
+  export manifest by SHA-256.
+- Improvement passed: base MLX physical first-action MAE
+  **4.639846293521779** fell to **2.1164464077779224**, ratio
+  **0.4561458017979897** versus the immutable maximum **0.9**.
+- Round trip passed: the strict Torch export scored MAE
+  **2.101113587617874**, ratio **0.9927553940871358** to MLX versus required
+  `[0.95, 1.05]`.
+- Parity failed: preprocessing max absolute is only
+  **3.5762786865234375e-7**, but normalized action-chunk max absolute is
+  **0.0915878415107727** and standardized physical max absolute is
+  **0.09158781915903091**, both above the unchanged **0.005** gate. The worst
+  fixed case is episode 31, frame 0.
+- Hypothesis 1 ruled out data/stat/preprocessing identity: tokens and masks are
+  exact; forcing exact Torch preprocessed or connector arrays leaves the worst
+  final difference at about **0.0916**. The original fp32 base passes the same
+  stats-active evaluator at **8.996715223474894e-6**.
+- Hypothesis 2 ruled out adapter merge/name/layout: all 500 GPU-merged tensors
+  match the export byte-for-byte, and both framework loaders consume it
+  strictly.
+- Hypothesis 3 found no localized implementation defect: injecting the exact
+  Torch prefix K/V reduces the final error to **0.008952289819717407**.
+  Teacher-forced layer traces show small distributed framework reduction-order
+  drift; the last two Euler steps amplify velocity differences from
+  **0.2628980875015259** and **0.7516704201698303** into the final
+  **0.0915878415107727** action difference.
+- Decision: preserve the failed gate and write `FAILURE_LORA_FINETUNE.md`.
+  `TRAINING ALPHA` is not written. T4 and T5 are dependency-blocked on T3; R,
+  Q, and H remain blocked on the absent normative release brief. The remaining
+  work has reached the full-scope stop condition after final verification,
+  commit, and push.
+- Fresh regression evidence: the outcome-evaluator and failure-closure tree
+  passed **281/281 tests in 207.42 seconds** with zero failures, skips, or
+  xfails reported. Current disk free is **571 GiB**.
+- Fresh immutable-gate evidence: `make lora-finetune-check` re-evaluated all
+  56 MLX cases, all 56 strict Torch cases, and the eight-episode parity set.
+  It reproduced report SHA-256
+  `69c60ffd139543aa42258a7fdd86f9c0c71cbe700f9e9756d455917b98823bb5`
+  and exited nonzero as required because only the parity gate is false.
+
+## 2026-09-01 — Stage T3 outcome-evidence hardening and full-manifest rerun
+
+- Independent review demonstrated four integrity gaps in the first evaluator:
+  case task/identity metadata was outside the recorded tensor-manifest hash;
+  a modified baseline could be accepted with its new hash; parity selected one
+  post-run case per episode and excluded raw physical P2 from the gate; and CSV
+  plus symlink validation was structural rather than complete. Each fix began
+  with a regression that failed on the prior implementation.
+- The tensor manifest `9cabca6c...`, baseline `211d6778...`, and train-stat
+  `5aa5ab85...` identities were frozen before update one. The full metadata
+  digest `f49ee54a...` was first recorded during this post-run hardening pass;
+  it is therefore treated as a retrospective file-integrity check, not a
+  prospective commitment. Every metadata field is independently reconstructed
+  from the precommitted selection algorithm and pinned dataset revision before
+  acceptance; consumed dataset files must match the audited HF revision tree.
+  Base, fine-MLX, Torch, and parity records must contain all 56 identities in
+  order with internally consistent error sums and counts. Symlinked ancestors,
+  nested dataset symlinks, and paths outside this repository's `.cache` are
+  rejected.
+- Training evidence validation now recomputes the run-configuration digest from
+  every trajectory-affecting run field, reads metrics from one immutable byte
+  snapshot, and verifies every row's frozen learning-rate schedule, nonnegative
+  domains, smoothed-loss recurrence, derived throughput, and monotonic
+  elapsed/peak values. The final row, optimizer LR, gradient norm, clip
+  coefficient, and all 24,000 sample/draw counters are reconciled to the
+  step-3,000 checkpoint. Adapter metadata, complete model/optimizer checkpoint,
+  and processor statistics recomputed from the 42 frozen training episodes are
+  also hash-validated. Evaluation now enforces the 40 GiB free-space floor
+  before loading models.
+- The export audit manifest now carries the run-config, evaluation tensor and
+  metadata, frozen baseline, dataset revision, split, train-stat, and adapter
+  hashes. Updating that JSON-only audit manifest changed its SHA-256 to
+  `55ad6834cbb3acb9dd565a57296a274d78e7cdc863aa81c3e6ef25da8b66ba03`;
+  all model, processor, adapter, optimizer, and checkpoint bytes remained
+  unchanged.
+- A final independent review found that MLX's path-keyed conversion cache could
+  otherwise be stale while preserving valid tensor names. The outcome evaluator
+  now validates all **500** cached native tensors against the hash-validated
+  export before each MLX scoring pass: **499** fp32 tensors match by raw tensor
+  checksum and the vision patch convolution matches the exact OIHW-to-OHWI
+  transpose. The converted model and canonical name-map hashes are recorded in
+  the outcome source chain. The generic BF16 validator also derives every
+  rounded target value from the fp32 source and rejects a tampered cache even
+  when its name-map checksum is rewritten.
+- The fresh real gate evaluated 56 MLX MAE cases, the exact 56 Torch cases, and
+  all 56 stats-active parity cases. Improvement remains **0.4561458017979897**
+  and Torch/MLX remains **0.9927553940871358**, both passing. Parity remains a
+  failure: image preprocessing max is **3.5762786865234375e-7** against
+  **1e-5**, state preprocessing is **0.0** against **1e-6**, normalized max is
+  **0.17762404680252075**, raw physical max is **6.632053375244141**, and
+  standardized physical max is **0.17762437462806702** against the unchanged
+  **0.005** action-parity gate.
+- The new complete outcome report is
+  `.cache/training/t3-outcome.json`, SHA-256
+  `8b74faf8f9cc96341090f91cfa795ed874c838026416944e4b77a550ad91bc44`.
+  It binds 15 exact source digests, including the dataset-revision tree, native
+  conversion/model map, and final checkpoint metadata/model/optimizer. `make
+  lora-finetune-check` exits nonzero only because the immutable parity gate is
+  false; no threshold or population was changed to obtain a pass.
+- Fresh full regression: **308/308 tests passed in 205.10 seconds**. The
+  standalone runtime import-isolation proof passed **1/1**, `uv lock --check`
+  resolved **103** packages, `git diff --check` passed, **570 GiB** is free,
+  and local `HEAD` still matches `origin/main` at the prior durable checkpoint
+  `f6099583d2c3538b52c520dd110b02a786834299` before this package is committed.

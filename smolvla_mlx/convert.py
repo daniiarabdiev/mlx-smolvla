@@ -11,6 +11,8 @@ from pathlib import Path
 from typing import Mapping
 
 import mlx.core as mx
+import numpy as np
+from safetensors import safe_open
 
 
 _NAME_PREFIX_RULES = (
@@ -37,6 +39,18 @@ class ConversionReport:
     checksums: Mapping[str, str]
     output_path: Path
     name_map_path: Path
+    dtype: str
+
+
+@dataclass(frozen=True)
+class ConversionValidationReport:
+    """Digests and inventory for a conversion proven to match its source."""
+
+    tensor_count: int
+    parameter_count: int
+    source_model_sha256: str
+    converted_model_sha256: str
+    name_map_sha256: str
     dtype: str
 
 
@@ -106,6 +120,14 @@ def _parameter_count(shape: object) -> int:
     for dimension in shape:
         count *= int(dimension)
     return count
+
+
+def _file_sha256(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
 
 
 def _target_dtype(dtype: str) -> tuple[mx.Dtype, str]:
@@ -231,5 +253,182 @@ def convert_checkpoint(source_dir: Path, output_dir: Path, dtype: str) -> Conver
         checksums=target_checksums,
         output_path=output_path,
         name_map_path=name_map_path,
+        dtype=dtype_name,
+    )
+
+
+def validate_converted_checkpoint(
+    source_dir: str | Path,
+    output_path: str | Path,
+    name_map_path: str | Path,
+    *,
+    dtype: str,
+    expected_tensor_count: int | None = None,
+) -> ConversionValidationReport:
+    """Prove cached converted tensor bytes derive from the current source export."""
+
+    source_path = Path(source_dir) / "model.safetensors"
+    output_path = Path(output_path)
+    name_map_path = Path(name_map_path)
+    for label, path in (
+        ("source checkpoint", source_path),
+        ("converted checkpoint", output_path),
+        ("conversion name map", name_map_path),
+    ):
+        if path.is_symlink() or not path.is_file():
+            raise FileNotFoundError(f"{label} is missing or unsafe: {path}")
+    _, dtype_name = _target_dtype(dtype)
+    target_dtype = {"float32": "F32", "bfloat16": "BF16"}[dtype_name]
+    source_header, source_data_start = _read_header(source_path)
+    target_header, target_data_start = _read_header(output_path)
+    source_names = tuple(sorted(source_header))
+    target_names = tuple(sorted(target_header))
+    mapping = build_name_map(source_names, target_names)
+    if expected_tensor_count is not None and len(source_names) != expected_tensor_count:
+        raise ValueError(
+            f"converted tensor count changed: {len(source_names)} != {expected_tensor_count}"
+        )
+
+    name_map_payload = name_map_path.read_bytes()
+    name_map = json.loads(name_map_payload)
+    expected_rules = [
+        {"source_prefix": source_prefix, "target_prefix": target_prefix}
+        for source_prefix, target_prefix in _NAME_PREFIX_RULES
+    ]
+    if (
+        not isinstance(name_map, dict)
+        or set(name_map) != {"format_version", "dtype", "rules", "tensors"}
+        or name_map.get("format_version") != 1
+        or name_map.get("dtype") != dtype_name
+        or name_map.get("rules") != expected_rules
+        or not isinstance(name_map.get("tensors"), list)
+        or len(name_map["tensors"]) != len(source_names)
+    ):
+        raise ValueError("conversion name map differs from the canonical schema")
+    records = {}
+    for record in name_map["tensors"]:
+        if (
+            not isinstance(record, dict)
+            or set(record)
+            != {
+                "source",
+                "target",
+                "source_shape",
+                "target_shape",
+                "transform",
+                "source_sha256",
+                "target_sha256",
+            }
+            or not isinstance(record.get("source"), str)
+            or record["source"] in records
+        ):
+            raise ValueError("conversion name map tensor records are invalid")
+        records[record["source"]] = record
+    if set(records) != set(source_names):
+        raise ValueError("conversion name map tensor inventory changed")
+
+    source_values = None
+    target_values = None
+    if dtype_name == "bfloat16":
+        source_values = mx.load(str(source_path))
+        target_values = mx.load(str(output_path))
+        if set(source_values) != set(source_names) or set(target_values) != set(
+            target_names
+        ):
+            raise ValueError("MLX loaded a different tensor set than the safetensors headers")
+
+    parameter_count = 0
+    patch_present = False
+    for source_name in source_names:
+        target_name = mapping[source_name]
+        source_spec = source_header[source_name]
+        target_spec = target_header[target_name]
+        source_shape = source_spec.get("shape")
+        expected_target_shape = source_shape
+        transform = "identity"
+        if source_name == _PATCH_CONV_SOURCE:
+            if not isinstance(source_shape, list) or len(source_shape) != 4:
+                raise ValueError("source patch convolution shape is invalid")
+            expected_target_shape = [
+                source_shape[0],
+                source_shape[2],
+                source_shape[3],
+                source_shape[1],
+            ]
+            transform = "OIHW_to_OHWI"
+        source_checksum = _sha256_source_slice(
+            source_path,
+            source_data_start,
+            source_spec.get("data_offsets"),
+        )
+        target_checksum = _sha256_source_slice(
+            output_path,
+            target_data_start,
+            target_spec.get("data_offsets"),
+        )
+        expected_record_identity = {
+            "source": source_name,
+            "target": target_name,
+            "source_shape": source_shape,
+            "target_shape": expected_target_shape,
+            "transform": transform,
+        }
+        record = records[source_name]
+        if (
+            source_spec.get("dtype") != "F32"
+            or target_spec.get("dtype") != target_dtype
+            or target_spec.get("shape") != expected_target_shape
+            or any(
+                record.get(name) != value
+                for name, value in expected_record_identity.items()
+            )
+        ):
+            raise ValueError(f"converted tensor metadata differs from source export: {source_name}")
+        if (
+            record.get("source_sha256") != source_checksum
+            or record.get("target_sha256") != target_checksum
+        ):
+            raise ValueError(f"converted tensor differs from source export: {source_name}")
+        if dtype_name == "bfloat16":
+            if source_values is None or target_values is None:
+                raise RuntimeError("BF16 conversion values were not loaded")
+            expected_value = source_values[source_name]
+            if transform == "OIHW_to_OHWI":
+                expected_value = expected_value.transpose(0, 2, 3, 1)
+            expected_value = expected_value.astype(mx.bfloat16)
+            target_value = target_values[target_name]
+            expected_bytes = np.asarray(expected_value.astype(mx.float32)).tobytes()
+            target_bytes = np.asarray(target_value.astype(mx.float32)).tobytes()
+            if target_bytes != expected_bytes:
+                raise ValueError(
+                    f"converted tensor differs from source export: {source_name}"
+                )
+        elif transform == "identity":
+            if source_checksum != target_checksum:
+                raise ValueError(
+                    f"converted tensor differs from source export: {source_name}"
+                )
+        elif transform == "OIHW_to_OHWI":
+            patch_present = True
+        parameter_count += _parameter_count(source_shape)
+
+    if patch_present:
+        patch_target_name = mapping[_PATCH_CONV_SOURCE]
+        with safe_open(source_path, framework="np") as source_tensors:
+            source_patch = source_tensors.get_tensor(_PATCH_CONV_SOURCE)
+        with safe_open(output_path, framework="np") as target_tensors:
+            target_patch = target_tensors.get_tensor(patch_target_name)
+        expected_patch = np.transpose(source_patch, (0, 2, 3, 1))
+        if not np.array_equal(target_patch, expected_patch):
+            raise ValueError(
+                f"converted tensor differs from source export: {_PATCH_CONV_SOURCE}"
+            )
+
+    return ConversionValidationReport(
+        tensor_count=len(source_names),
+        parameter_count=parameter_count,
+        source_model_sha256=_file_sha256(source_path),
+        converted_model_sha256=_file_sha256(output_path),
+        name_map_sha256=hashlib.sha256(name_map_payload).hexdigest(),
         dtype=dtype_name,
     )

@@ -47,6 +47,7 @@ from training.optimizer import (
     SmolVLAOptimizerConfig,
     clip_gradients_by_global_norm,
 )
+from training.t3_contract import frozen_export_audit_metadata
 
 
 METRICS_FIELDS = (
@@ -1484,6 +1485,7 @@ def run_lora_finetune(
         "train_episodes": list(split.train_episodes),
         "holdout_episodes": list(split.holdout_episodes),
         "merge_adapter_count": merge_report.adapter_count,
+        **frozen_export_audit_metadata(run_config_sha256),
     }
     export_dir = output_dir / "export"
     if export_dir.exists() or export_dir.is_symlink():
