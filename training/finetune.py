@@ -1146,12 +1146,18 @@ def _save_adapter_checkpoint(
     }
     if tuple(tensors) != lora_report.trainable_names:
         raise RuntimeError("final adapter tensor names changed during training")
-    temporary = path.with_name(f".{path.name}.tmp")
-    if temporary.exists():
+    temporary = path.with_name(f".{path.stem}.tmp{path.suffix}")
+    if temporary.exists() or temporary.is_symlink():
         temporary.unlink()
-    mx.save_safetensors(str(temporary), tensors)
-    temporary.replace(path)
-    digest = hashlib.sha256(path.read_bytes()).hexdigest()
+    try:
+        mx.save_safetensors(str(temporary), tensors)
+        _sync_file(temporary)
+        temporary.replace(path)
+        _sync_directory(path.parent)
+    finally:
+        if temporary.exists():
+            temporary.unlink()
+    digest = _file_sha256(path)
     write_run_state(
         path.with_suffix(".json"),
         {

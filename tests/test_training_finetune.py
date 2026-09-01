@@ -6,6 +6,7 @@ import csv
 import json
 import math
 from pathlib import Path
+from types import SimpleNamespace
 
 import mlx.core as mx
 import mlx.nn as nn
@@ -736,3 +737,29 @@ def test_atomic_run_state_replaces_complete_json(tmp_path: Path) -> None:
     assert first_hash != second_hash
     assert json.loads(path.read_text(encoding="utf-8")) == {"status": "complete", "step": 7}
     assert len(second_hash) == 64
+
+
+def test_adapter_checkpoint_uses_a_real_safetensors_temporary_suffix(
+    tmp_path: Path,
+) -> None:
+    module = __import__("training.finetune", fromlist=["_save_adapter_checkpoint"])
+    model = TinyRegressor()
+    names = tuple(name for name, _ in tree_flatten(model.trainable_parameters()))
+    report = SimpleNamespace(
+        rank=1,
+        alpha=1.0,
+        dropout=0.0,
+        adapter_count=1,
+        trainable_names=names,
+        trainable_scalar_count=2,
+    )
+    path = tmp_path / "adapter.safetensors"
+
+    digest = module._save_adapter_checkpoint(model, path, lora_report=report)
+
+    assert path.is_file()
+    assert set(mx.load(str(path))) == {"proj.weight"}
+    assert json.loads(path.with_suffix(".json").read_text(encoding="utf-8"))[
+        "sha256"
+    ] == digest
+    assert list(tmp_path.glob(".adapter*")) == []
