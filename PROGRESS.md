@@ -1625,6 +1625,12 @@
   run in its CLI, and cannot name training/checkpoint/evidence roots. Tests will
   cover root/path traversal, symlink, and retained-evidence refusal before any
   deletion. No cache entry was removed during this baseline or while T3B runs.
+- The deletion allowlist is now intentionally narrower than the inventory:
+  top-level directories matching `debug-*` plus the exact directory
+  `benchmark-debug`, and nothing else. Small `*_probe` files are not worth
+  broadening destructive scope; all non-debug conversions, policy/source
+  caches, goldens, Hugging Face data, and every training/evidence path remain
+  outside the cleanup command by construction.
 
 ## 2026-09-02 — Stage R P1-2/P1-3 static release audit
 
@@ -1653,6 +1659,13 @@
   available; matrix builds will still use `UV_PYTHON_INSTALL_DIR` under this
   repository and deliberately select the macOS-14 dependency wheels so the
   host's newer wheel cannot raise the linked binary minimum.
+- Dependency matrix: every pinned base dependency declares Python 3.11–3.13
+  support, and MLX has a macOS-14 wheel for each ABI. LeRobot 0.6.1 itself
+  requires Python 3.12, so the Python-3.11 artifact smoke must not pretend the
+  optional dataset bridge can install there. The public `predict` command will
+  gain a dependency-free saved-observation input alongside `--dataset`; every
+  base wheel can then perform a real installed prediction, while dataset-backed
+  prediction remains an explicitly Python-3.12+ reference-extra smoke.
 - Documentation boundary: the current README contains the basic API, CLI,
   strict-golden evidence, and the original Metal table, but it still states
   Python 3.12 only, identity-only postprocessing, and inference-only scope. It
