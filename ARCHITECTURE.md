@@ -23,6 +23,29 @@ identity used for every golden and conversion test.
   state `[6]`, action `[6]`,
   language task table `True`.
 
+## Fine-tuning freeze policy
+
+T3B inspected the installed LeRobot `0.6.1` dataclass defaults and the code
+that applies them before freezing its adapter topology. The configuration
+source SHA-256 is
+`2fb637cb428fa2fdf1d114646dcffaf4728216bfe5b7039d5d0cac4857ffc4e0`;
+the VLM-with-expert implementation source SHA-256 is
+`996d3b0c713c0ed42b383aa2cf89b2e6f9868e337747c480a64adaecdc1073cf`.
+The installed defaults are `freeze_vision_encoder=True`,
+`train_expert_only=True`, and `train_state_proj=True`. In the reference code,
+`train_expert_only` freezes the complete VLM/prefix side and leaves the action
+expert trainable; the vision flag freezes the vision tower explicitly. The
+state projection is a separately controlled trainable path in the reference.
+
+`BRIEF_T3B.md` narrows the adapter topology further and takes precedence for
+the MLX run: only the 16 action-expert layers' four attention projections and
+three MLP projections receive LoRA. Vision, connector, language/prefix layers,
+state projection, and the action/time input and output projections remain
+frozen. At rank 8 this is exactly **112 adapters**, **224 fp32 trainable
+tensors**, and **1,708,032 trainable scalars**. The historical 229-adapter
+scope remains available only as the explicit `legacy_full` mode so the original
+T3 artifacts and configuration digest remain reproducible.
+
 ## Verified architecture
 
 ```text

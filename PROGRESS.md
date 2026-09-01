@@ -1421,3 +1421,80 @@
 - Milestone: **T3B-2 COMPLETE — PROSPECTIVE PARITY PROCEDURE FROZEN**. See
   `PARITY_PROCEDURE_TRAINED.md`. Next is T3B-3 expert-only LoRA configuration,
   full-suite verification, and background launch.
+
+## 2026-09-01 — T3B-3a expert-only LoRA pre-launch checkpoint
+
+- Reference freeze audit: the installed LeRobot `0.6.1` defaults are
+  `freeze_vision_encoder=True`, `train_expert_only=True`, and
+  `train_state_proj=True`. The inspected configuration source SHA-256 is
+  `2fb637cb428fa2fdf1d114646dcffaf4728216bfe5b7039d5d0cac4857ffc4e0`;
+  the VLM-with-expert implementation source SHA-256 is
+  `996d3b0c713c0ed42b383aa2cf89b2e6f9868e337747c480a64adaecdc1073cf`.
+  `ARCHITECTURE.md` records how the T3B amendment deliberately excludes the
+  separately controlled state projection while matching the frozen
+  vision/prefix and trainable-expert boundary.
+- Topology: the historical `legacy_full` path remains 229 adapters / 458
+  tensors. The new `expert_only` path is exactly the four attention and three
+  MLP linears in each of 16 expert layers: **112 adapters, 224 fp32 tensors,
+  and 1,708,032 trainable scalars**. Tests prove the excluded vision,
+  language/prefix, state, and action/time projection paths remain plain frozen
+  linears; optimizer initialization validates state coverage for every adapter
+  tensor; merge restores the plain model tree.
+- Prospective commitment: `fixed_steps` mode commits exactly 3,000 updates at
+  effective batch 8 and records `timing_measurements=false`; it cannot call the
+  legacy budget benchmark. `launch.json` is self-hashed, atomically installed
+  without clobbering, and binds the seeds, split/statistics, checkpoint and base
+  conversion, optimizer schedule, all LoRA names/counts, reference-source
+  hashes, direct/transitive training implementation plus native-extension
+  hashes, and the fixed 56-case export/evaluation audit chain. The training
+  process descriptor-reads the file without following symlinks, reconstructs
+  it from live components, binds both file and semantic hashes into `run.json`,
+  and repeats physical plus semantic validation immediately before update 1.
+- Resume and launch safety: fixed expert-only training requires the exact
+  prepared `OUTPUT/launch.json`; a fresh directory may contain only that file,
+  `training.log`, and JSON `training.pid` identity. Existing checkpoint
+  retention, interrupted-metrics recovery, sampler/flow-state restoration, and
+  exact optimizer resume contracts remain covered. CLI prepare mode cannot
+  enter training; fixed mode refuses budget-selection timing; background mode
+  can bind PID, executable, working directory, and both launch digests before
+  the run begins.
+- Runtime and checkpoint hardening: the executable POSIX launcher now enters
+  the repository virtual environment with `python -I -S` before Python startup
+  can execute user-site hooks, preserves the caller's working directory and
+  argument bytes, and is part of the implementation hash. Direct unisolated
+  invocation is rejected. Runtime provenance binds guarded source/extension
+  generations plus the installed-package inventory, then fails closed on any
+  later guarded import. Retained-checkpoint namespace evidence binds every
+  retained directory and file, not only the newest checkpoint, across
+  publication and finalization.
+- Real path preflight: the first disposable isolated run correctly stopped
+  before update 1 when PyAV lazily requested `av.subtitles` after provenance
+  freeze. The semantic audit now decodes and preprocesses one batch on its
+  independent disposable bridge before freezing, revalidates every physical
+  input afterward, and leaves the live bridge unconsumed. A freshly prepared
+  run then completed **29 real Metal updates** before an intentional SIGINT.
+  It published and bound step 1 with metadata SHA-256
+  `30d9964b87df8bfefc9cbe14902fa36cc567aac7d6b71cdc23d7228c8853feaf`,
+  model SHA-256
+  `3aa626d834715474a243a29e050d63db9949730edf6d5880599dad0bc4f5832e`,
+  and optimizer SHA-256
+  `9a64a2512441eaf0076f642f1833bf849aa5436efe42cd2c79094652882a351a`.
+  Its launch/configuration/run-configuration hashes are respectively
+  `8cdec8fbfaaac5b9d0fd6ebb8e67f257ef976961a4982b695a42eb6a1fe7818f`,
+  `83725054c498f78027aab840222921bb13f6ffe56d90b581a3e57e8ca8529ddc`,
+  and `09895b216aff79ea3e26294aa4ef0484e5d316ee88eef7733782f95a9da62350`.
+  Independent review rechecked the stopped PID, 29 metrics rows, run state,
+  latest pointer, and checkpoint hashes and found no remaining source blocker.
+- Final pre-launch verification: byte-compilation passed; the focused runtime,
+  fine-tune, and dataset set passed **142/142 in 235.70 seconds**. With no
+  training or floor process active at `2026-09-01T22:44:56Z`, `make test`
+  collected and passed **536/536 tests in 490.35 seconds**. The two additional
+  cases prove that a copied launcher preserves its caller's working directory
+  under `-I -S` and that semantic reconstruction materializes the disposable
+  decode path without consuming the live bridge.
+- Protected evidence: `FAILURE_LORA_FINETUNE.md` remains byte-for-byte
+  unchanged at SHA-256
+  `d6654131c4acf86de13206f210f1ea1a82e3aad18871e5b64428bdf1dbeed7c6`.
+  No budget-selection timing benchmark, floor computation, hardware access, or
+  upload occurred. Next: commit and push these exact implementation bytes,
+  then generate/hash and launch the canonical T3B run.

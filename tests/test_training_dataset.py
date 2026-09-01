@@ -181,6 +181,21 @@ def test_bridge_sampler_is_reproducible_and_microbatches_are_distinct() -> None:
         stats=stats.processor_stats,
     )
 
+    first_evidence = first.semantic_evidence()
+    second_evidence = second.semantic_evidence()
+    assert first_evidence == second_evidence
+    assert first_evidence["format_version"] == 1
+    assert len(first_evidence["sha256"]) == 64
+    assert set(first_evidence["components"]) == {
+        "bridge",
+        "config",
+        "dataset",
+        "loader",
+        "metadata",
+        "preprocessor",
+        "sampler",
+    }
+
     first_batches = [first.next_batch() for _ in range(8)]
     second_batches = [second.next_batch() for _ in range(8)]
     first_ids = [(item.episode, item.frame_index, item.absolute_index) for item in first_batches]
@@ -226,3 +241,57 @@ def test_bridge_sampler_state_resumes_at_the_exact_next_microbatch() -> None:
         expected.absolute_index,
     )
     np.testing.assert_array_equal(actual.actions, expected.actions)
+
+
+def test_bridge_semantic_evidence_hashes_materialized_behavior_rows() -> None:
+    module = __import__("training.dataset", fromlist=["TrainingDataBridge"])
+    from datasets import Dataset
+    import pyarrow as pa
+
+    first = module.TrainingDataBridge(
+        cache_dir=_CACHE_DIR,
+        episodes=(0,),
+        sampler_seed=20260901,
+    )
+    second = module.TrainingDataBridge(
+        cache_dir=_CACHE_DIR,
+        episodes=(0,),
+        sampler_seed=20260901,
+    )
+    clean = first.semantic_evidence()
+    assert second.semantic_evidence() == clean
+
+    source = second.dataset.reader.hf_dataset
+    table = source.data.table
+    timestamp_index = table.column_names.index("timestamp")
+    timestamps = table.column(timestamp_index).combine_chunks().to_numpy().copy()
+    timestamps[0] += 1.0
+    poisoned_table = table.set_column(
+        timestamp_index,
+        "timestamp",
+        pa.chunked_array([pa.array(timestamps, type=table.schema.field("timestamp").type)]),
+    )
+    second.dataset.reader.hf_dataset = Dataset(poisoned_table)
+    poisoned = second.semantic_evidence()
+
+    assert poisoned["sha256"] != clean["sha256"]
+    assert poisoned["components"]["dataset"] != clean["components"]["dataset"]
+    assert poisoned["components"]["metadata"] == clean["components"]["metadata"]
+    assert poisoned["components"]["config"] == clean["components"]["config"]
+
+
+def test_bridge_semantic_evidence_rejects_a_replaced_live_iterator() -> None:
+    module = __import__("training.dataset", fromlist=["TrainingDataBridge"])
+    bridge = module.TrainingDataBridge(
+        cache_dir=_CACHE_DIR,
+        episodes=(0,),
+        sampler_seed=20260901,
+    )
+    bridge._iterator = iter(())
+
+    try:
+        bridge.semantic_evidence()
+    except RuntimeError as error:
+        assert "iterator" in str(error)
+    else:
+        raise AssertionError("replaced bridge iterator was accepted")

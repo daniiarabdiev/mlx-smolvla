@@ -4,7 +4,7 @@ export SMOLVLA_MLX_CACHE := $(CURDIR)/.cache/smolvla_mlx
 
 TESTS ?= tests
 
-.PHONY: goldens test bench training-audit training-goldens training-parity optimizer-goldens optimizer-lockstep lora-benchmark lora-evaluation lora-finetune lora-finetune-check
+.PHONY: goldens test bench training-audit training-goldens training-parity optimizer-goldens optimizer-lockstep lora-benchmark lora-evaluation lora-finetune lora-finetune-resume lora-finetune-check
 
 goldens:
 	uv run --extra reference python scripts/make_goldens.py --cache-dir $(HF_HOME) --output tests/golden
@@ -31,13 +31,16 @@ optimizer-lockstep:
 	uv run python scripts/check_optimizer_lockstep.py --t1-goldens $(CURDIR)/.cache/training/gradient_goldens --optimizer-goldens $(CURDIR)/.cache/training/optimizer_goldens --native-cache $(CURDIR)/.cache/smolvla_mlx/policy-float32 --output $(CURDIR)/.cache/training/t2-lockstep.json
 
 lora-benchmark:
-	uv run --extra reference python scripts/finetune_lora.py --benchmark-only --cache-dir $(HF_HOME) --native-cache $(CURDIR)/.cache/smolvla_mlx/policy-float32 --benchmark-output $(CURDIR)/.cache/training/t3-benchmark.json
+	scripts/finetune_lora --benchmark-only --cache-dir $(HF_HOME) --native-cache $(CURDIR)/.cache/smolvla_mlx/policy-float32 --benchmark-output $(CURDIR)/.cache/training/t3-benchmark.json
 
 lora-evaluation:
 	uv run --extra reference python scripts/make_lora_evaluation.py --cache-dir $(HF_HOME) --native-cache $(CURDIR)/.cache/smolvla_mlx/policy-float32 --evaluation-dir $(CURDIR)/.cache/training/t3-evaluation --output $(CURDIR)/.cache/training/t3-base-evaluation.json
 
 lora-finetune:
-	uv run --extra reference python scripts/finetune_lora.py --resume --checkpoint-interval 100 --cache-dir $(HF_HOME) --native-cache $(CURDIR)/.cache/smolvla_mlx/policy-float32 --output $(CURDIR)/.cache/training/t3
+	scripts/finetune_lora --checkpoint-interval 100 --cache-dir $(HF_HOME) --native-cache $(CURDIR)/.cache/smolvla_mlx/policy-float32 --output $(CURDIR)/.cache/training/t3b --lora-scope expert_only --budget-mode fixed_steps --launch-config $(CURDIR)/.cache/training/t3b/launch.json --log-file $(CURDIR)/.cache/training/t3b/training.log
+
+lora-finetune-resume:
+	scripts/finetune_lora --resume --checkpoint-interval 100 --cache-dir $(HF_HOME) --native-cache $(CURDIR)/.cache/smolvla_mlx/policy-float32 --output $(CURDIR)/.cache/training/t3b --lora-scope expert_only --budget-mode fixed_steps --launch-config $(CURDIR)/.cache/training/t3b/launch.json --log-file $(CURDIR)/.cache/training/t3b/training.log
 
 lora-finetune-check:
 	uv run --extra reference python scripts/check_lora_finetune.py --cache-dir $(HF_HOME) --native-cache $(CURDIR)/.cache/smolvla_mlx/policy-float32 --run-dir $(CURDIR)/.cache/training/t3 --evaluation-dir $(CURDIR)/.cache/training/t3-evaluation --base-report $(CURDIR)/.cache/training/t3-base-evaluation.json --output $(CURDIR)/.cache/training/t3-outcome.json

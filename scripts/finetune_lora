@@ -1,0 +1,23 @@
+#!/bin/sh
+set -eu
+
+case "$0" in
+    /*) launcher_path=$0 ;;
+    *) launcher_path=$PWD/$0 ;;
+esac
+launcher_dir=${launcher_path%/*}
+launcher_dir=$(CDPATH= cd -P -- "$launcher_dir" && pwd)
+repository_root=${launcher_dir%/*}
+python_path=$repository_root/.venv/bin/python
+entrypoint=$launcher_dir/finetune_lora.py
+
+if [ ! -x "$python_path" ]; then
+    echo "missing repository virtual-environment Python: $python_path" >&2
+    exit 1
+fi
+if [ ! -f "$entrypoint" ] || [ -L "$entrypoint" ]; then
+    echo "missing or unsafe fine-tune Python entrypoint: $entrypoint" >&2
+    exit 1
+fi
+
+exec "$python_path" -I -S "$entrypoint" "$@"

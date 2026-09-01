@@ -37,6 +37,7 @@ def resolve_tokenizer_snapshot(cache_dir: str | Path) -> Path:
             revision=BASE_VLM_REVISION,
             cache_dir=Path(cache_dir),
             allow_patterns=list(_BASE_VLM_PROCESSOR_FILES),
+            local_files_only=True,
         )
     )
 

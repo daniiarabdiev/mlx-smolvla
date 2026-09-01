@@ -21,7 +21,13 @@ _ACTION_PROJECTIONS = (
 )
 _EXPECTED_LANGUAGE_LAYERS = 16
 _EXPECTED_EXPERT_LAYERS = 16
-_EXPECTED_ADAPTERS = 229
+LEGACY_FULL_SCOPE = "legacy_full"
+EXPERT_ONLY_SCOPE = "expert_only"
+_VALID_SCOPES = {LEGACY_FULL_SCOPE, EXPERT_ONLY_SCOPE}
+_EXPECTED_ADAPTERS = {
+    LEGACY_FULL_SCOPE: 229,
+    EXPERT_ONLY_SCOPE: 112,
+}
 
 
 @dataclass(frozen=True)
@@ -31,6 +37,7 @@ class LoRAConfig:
     rank: int = 8
     alpha: float = 16.0
     dropout: float = 0.0
+    scope: str = LEGACY_FULL_SCOPE
 
     def __post_init__(self) -> None:
         if self.rank <= 0:
@@ -39,6 +46,10 @@ class LoRAConfig:
             raise ValueError(f"LoRA alpha must be finite and positive, got {self.alpha}")
         if not math.isfinite(self.dropout) or not 0.0 <= self.dropout < 1.0:
             raise ValueError(f"LoRA dropout must be in [0, 1), got {self.dropout}")
+        if self.scope not in _VALID_SCOPES:
+            raise ValueError(
+                f"LoRA scope must be one of {sorted(_VALID_SCOPES)}, got {self.scope!r}"
+            )
 
 
 class LoRALinear(nn.Module):
@@ -104,6 +115,7 @@ class LoRAInstallationReport:
     trainable_names: tuple[str, ...]
     trainable_tensor_count: int
     trainable_scalar_count: int
+    scope: str
     rank: int
     alpha: float
     dropout: float
@@ -115,11 +127,12 @@ class LoRAMergeReport:
 
     adapter_count: int
     target_names: tuple[str, ...]
+    scope: str
     dtype: str
 
 
-def _target_slots(model: nn.Module) -> Iterator[tuple[str, nn.Module, str]]:
-    """Yield the frozen, audited SmolVLA LoRA target slots in stable order."""
+def _all_target_slots(model: nn.Module) -> Iterator[tuple[str, nn.Module, str]]:
+    """Yield every historical SmolVLA LoRA target slot in stable order."""
 
     language_layers = getattr(getattr(model, "language", None), "layers", None)
     expert = getattr(model, "expert", None)
@@ -160,10 +173,25 @@ def _target_slots(model: nn.Module) -> Iterator[tuple[str, nn.Module, str]]:
     yield "state_proj", model, "state_proj"
 
 
+def _target_slots(
+    model: nn.Module,
+    *,
+    scope: str,
+) -> Iterator[tuple[str, nn.Module, str]]:
+    """Yield exactly the target set frozen for one explicit LoRA scope."""
+
+    if scope not in _VALID_SCOPES:
+        raise ValueError(f"unsupported LoRA scope: {scope!r}")
+    for name, parent, attribute in _all_target_slots(model):
+        if scope == EXPERT_ONLY_SCOPE and not name.startswith("expert.layers."):
+            continue
+        yield name, parent, attribute
+
+
 def iter_lora(model: nn.Module) -> Iterator[tuple[str, LoRALinear]]:
     """Yield installed adapters at only the committed SmolVLA target slots."""
 
-    for name, parent, attribute in _target_slots(model):
+    for name, parent, attribute in _all_target_slots(model):
         value = getattr(parent, attribute)
         if isinstance(value, LoRALinear):
             yield name, value
@@ -173,13 +201,15 @@ def install_lora(
     model: nn.Module,
     config: LoRAConfig | None = None,
 ) -> LoRAInstallationReport:
-    """Freeze a SmolVLA model and install exactly 229 fp32 adapters."""
+    """Freeze SmolVLA and install one exact, explicitly scoped adapter set."""
 
     config = LoRAConfig() if config is None else config
-    slots = tuple(_target_slots(model))
-    if len(slots) != _EXPECTED_ADAPTERS:
+    slots = tuple(_target_slots(model, scope=config.scope))
+    expected_adapters = _EXPECTED_ADAPTERS[config.scope]
+    if len(slots) != expected_adapters:
         raise RuntimeError(
-            f"SmolVLA LoRA target count changed: {len(slots)} != {_EXPECTED_ADAPTERS}"
+            "SmolVLA LoRA target count changed: "
+            f"{len(slots)} != {expected_adapters} for {config.scope}"
         )
     if any(isinstance(getattr(parent, attribute), LoRALinear) for _, parent, attribute in slots):
         raise ValueError("LoRA is already installed on at least one target")
@@ -215,15 +245,16 @@ def install_lora(
         )
 
     target_names = tuple(name for name, _ in iter_lora(model))
-    if len(target_names) != _EXPECTED_ADAPTERS:
+    if len(target_names) != expected_adapters:
         raise RuntimeError(
-            f"installed {len(target_names)} LoRA adapters, expected {_EXPECTED_ADAPTERS}"
+            f"installed {len(target_names)} LoRA adapters, expected {expected_adapters}"
         )
     trainable = tuple(tree_flatten(model.trainable_parameters()))
     trainable_names = tuple(name for name, _ in trainable)
-    if len(trainable_names) != 2 * _EXPECTED_ADAPTERS:
+    if len(trainable_names) != 2 * expected_adapters:
         raise RuntimeError(
-            f"LoRA exposed {len(trainable_names)} tensors, expected {2 * _EXPECTED_ADAPTERS}"
+            "LoRA exposed "
+            f"{len(trainable_names)} tensors, expected {2 * expected_adapters}"
         )
     if not all(name.endswith((".lora_a", ".lora_b")) for name in trainable_names):
         raise RuntimeError(f"LoRA trainable set contains base parameters: {trainable_names}")
@@ -235,6 +266,7 @@ def install_lora(
         trainable_names=trainable_names,
         trainable_tensor_count=len(trainable),
         trainable_scalar_count=sum(value.size for _, value in trainable),
+        scope=config.scope,
         rank=config.rank,
         alpha=config.alpha,
         dropout=config.dropout,
@@ -249,12 +281,21 @@ def merge_lora(
     """Merge every installed adapter and restore the plain checkpoint tree."""
 
     adapters = tuple(iter_lora(model))
-    if len(adapters) != _EXPECTED_ADAPTERS:
+    adapter_names = tuple(name for name, _ in adapters)
+    matching_scopes = [
+        scope
+        for scope in sorted(_VALID_SCOPES)
+        if adapter_names
+        == tuple(name for name, _, _ in _target_slots(model, scope=scope))
+    ]
+    if len(matching_scopes) != 1:
         raise RuntimeError(
-            f"merge requires {_EXPECTED_ADAPTERS} adapters, found {len(adapters)}"
+            "merge adapter topology differs from every frozen LoRA scope: "
+            f"{len(adapters)} adapters"
         )
+    scope = matching_scopes[0]
     target_names: list[str] = []
-    for name, parent, attribute in _target_slots(model):
+    for name, parent, attribute in _target_slots(model, scope=scope):
         adapter = getattr(parent, attribute)
         if not isinstance(adapter, LoRALinear):
             raise RuntimeError(f"LoRA target {name} is not installed")
@@ -267,5 +308,6 @@ def merge_lora(
     return LoRAMergeReport(
         adapter_count=len(target_names),
         target_names=tuple(target_names),
+        scope=scope,
         dtype=dtype_name,
     )

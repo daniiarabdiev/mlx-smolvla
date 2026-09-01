@@ -12,7 +12,6 @@ from typing import Mapping
 
 import mlx.core as mx
 import numpy as np
-from safetensors import safe_open
 
 
 _NAME_PREFIX_RULES = (
@@ -277,7 +276,7 @@ def validate_converted_checkpoint(
     ):
         if path.is_symlink() or not path.is_file():
             raise FileNotFoundError(f"{label} is missing or unsafe: {path}")
-    _, dtype_name = _target_dtype(dtype)
+    target_mx_dtype, dtype_name = _target_dtype(dtype)
     target_dtype = {"float32": "F32", "bfloat16": "BF16"}[dtype_name]
     source_header, source_data_start = _read_header(source_path)
     target_header, target_data_start = _read_header(output_path)
@@ -327,18 +326,15 @@ def validate_converted_checkpoint(
     if set(records) != set(source_names):
         raise ValueError("conversion name map tensor inventory changed")
 
-    source_values = None
-    target_values = None
-    if dtype_name == "bfloat16":
-        source_values = mx.load(str(source_path))
-        target_values = mx.load(str(output_path))
-        if set(source_values) != set(source_names) or set(target_values) != set(
-            target_names
-        ):
-            raise ValueError("MLX loaded a different tensor set than the safetensors headers")
+    source_values = mx.load(str(source_path))
+    target_values = mx.load(str(output_path))
+    if set(source_values) != set(source_names) or set(target_values) != set(
+        target_names
+    ):
+        raise ValueError("MLX loaded a different tensor set than the safetensors headers")
+    mx.eval(source_values, target_values)
 
     parameter_count = 0
-    patch_present = False
     for source_name in source_names:
         target_name = mapping[source_name]
         source_spec = source_header[source_name]
@@ -375,7 +371,7 @@ def validate_converted_checkpoint(
         }
         record = records[source_name]
         if (
-            source_spec.get("dtype") != "F32"
+            source_spec.get("dtype") not in {"F32", "BF16"}
             or target_spec.get("dtype") != target_dtype
             or target_spec.get("shape") != expected_target_shape
             or any(
@@ -389,40 +385,18 @@ def validate_converted_checkpoint(
             or record.get("target_sha256") != target_checksum
         ):
             raise ValueError(f"converted tensor differs from source export: {source_name}")
-        if dtype_name == "bfloat16":
-            if source_values is None or target_values is None:
-                raise RuntimeError("BF16 conversion values were not loaded")
-            expected_value = source_values[source_name]
-            if transform == "OIHW_to_OHWI":
-                expected_value = expected_value.transpose(0, 2, 3, 1)
-            expected_value = expected_value.astype(mx.bfloat16)
-            target_value = target_values[target_name]
-            expected_bytes = np.asarray(expected_value.astype(mx.float32)).tobytes()
-            target_bytes = np.asarray(target_value.astype(mx.float32)).tobytes()
-            if target_bytes != expected_bytes:
-                raise ValueError(
-                    f"converted tensor differs from source export: {source_name}"
-                )
-        elif transform == "identity":
-            if source_checksum != target_checksum:
-                raise ValueError(
-                    f"converted tensor differs from source export: {source_name}"
-                )
-        elif transform == "OIHW_to_OHWI":
-            patch_present = True
-        parameter_count += _parameter_count(source_shape)
-
-    if patch_present:
-        patch_target_name = mapping[_PATCH_CONV_SOURCE]
-        with safe_open(source_path, framework="np") as source_tensors:
-            source_patch = source_tensors.get_tensor(_PATCH_CONV_SOURCE)
-        with safe_open(output_path, framework="np") as target_tensors:
-            target_patch = target_tensors.get_tensor(patch_target_name)
-        expected_patch = np.transpose(source_patch, (0, 2, 3, 1))
-        if not np.array_equal(target_patch, expected_patch):
+        expected_value = source_values[source_name]
+        if transform == "OIHW_to_OHWI":
+            expected_value = expected_value.transpose(0, 2, 3, 1)
+        expected_value = expected_value.astype(target_mx_dtype)
+        target_value = target_values[target_name]
+        expected_bytes = np.asarray(expected_value.astype(mx.float32)).tobytes()
+        target_bytes = np.asarray(target_value.astype(mx.float32)).tobytes()
+        if target_bytes != expected_bytes:
             raise ValueError(
-                f"converted tensor differs from source export: {_PATCH_CONV_SOURCE}"
+                f"converted tensor differs from source export: {source_name}"
             )
+        parameter_count += _parameter_count(source_shape)
 
     return ConversionValidationReport(
         tensor_count=len(source_names),

@@ -137,10 +137,15 @@ wheel suite passes 97/97, and the exact package tree passes 402/402.
 
 ## Task 3 — T3B-3a: expert-only LoRA configuration and background launch
 
+**Status:** implementation, isolated-launch hardening, a real disposable
+update-1 checkpoint probe, independent review, and the pre-launch full-suite
+checkpoint are complete. Commit/push, canonical configuration generation, and
+the background-process launch remain.
+
 **Files:**
 
-- Update `smolvla_mlx/training/lora.py`, `finetune.py`, configuration schemas, and
-  `scripts/finetune_lora.py`.
+- Update `smolvla_mlx/training/lora.py`, `finetune.py`, configuration schemas,
+  the isolated `scripts/finetune_lora` launcher, and its Python entrypoint.
 - Add or update focused LoRA topology, configuration-hash, checkpoint, and resume
   tests.
 - Update `ARCHITECTURE.md`, `PROGRESS.md`, and `STATUS_FULL.md`.
@@ -159,9 +164,27 @@ wheel suite passes 97/97, and the exact package tree passes 402/402.
    the precommitted update count cannot change.
 4. Prove trainable tensor names/counts, optimizer coverage, adapter merge, last-
    three checkpoint retention, interrupted checkpoint recovery, and exact resume.
-5. Start the real T3B run with `nohup`, repository-local caches, a run-directory
-   log, PID/identity metadata, and no timing collection. Record the immutable
-   configuration digest and launch evidence before proceeding.
+5. Start the real T3B run from the repository root with the exact committed
+   launcher below. It starts Python with `-I -S` before Python startup can load
+   site hooks, uses repository-local caches, binds the run-directory log and
+   PID/identity metadata, and performs no budget-selection benchmark or timing.
+   Required per-update, wall-clock, throughput, and peak-memory evidence remains
+   enabled. Record the immutable configuration digest and launch evidence before
+   proceeding.
+
+   ```sh
+   nohup scripts/finetune_lora --checkpoint-interval 100 \
+     --cache-dir .cache/hf \
+     --native-cache .cache/smolvla_mlx/policy-float32 \
+     --output .cache/training/t3b \
+     --lora-scope expert_only --budget-mode fixed_steps \
+     --launch-config .cache/training/t3b/launch.json \
+     --log-file .cache/training/t3b/training.log \
+     </dev/null >/dev/null 2>&1 &
+   ```
+
+   Only after a `run.json` exists, restart an interrupted run with the same
+   command plus `--resume` (equivalently, `make lora-finetune-resume`).
 
 **Verification:**
 

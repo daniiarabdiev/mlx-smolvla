@@ -168,3 +168,34 @@ def test_conversion_validation_derives_bfloat16_values_from_source(
             dtype="bfloat16",
             expected_tensor_count=2,
         )
+
+
+def test_conversion_validation_accepts_the_pinned_mixed_source_dtypes(
+    tmp_path: Path,
+) -> None:
+    from smolvla_mlx.convert import (
+        convert_checkpoint,
+        validate_converted_checkpoint,
+    )
+
+    source_dir = tmp_path / "source"
+    source_dir.mkdir()
+    source_tensors = {
+        "model.state_proj.weight": mx.arange(12, dtype=mx.float32).reshape(3, 4),
+        "model.vlm_with_expert.lm_expert.layers.0.input_layernorm.weight": (
+            mx.arange(4, dtype=mx.float32).astype(mx.bfloat16)
+        ),
+    }
+    mx.save_safetensors(str(source_dir / "model.safetensors"), source_tensors)
+    report = convert_checkpoint(source_dir, tmp_path / "converted", dtype="bfloat16")
+
+    validation = validate_converted_checkpoint(
+        source_dir,
+        report.output_path,
+        report.name_map_path,
+        dtype="bfloat16",
+        expected_tensor_count=2,
+    )
+
+    assert validation.tensor_count == 2
+    assert validation.parameter_count == 16

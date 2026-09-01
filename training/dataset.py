@@ -3,7 +3,8 @@
 from __future__ import annotations
 
 from copy import deepcopy
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass, is_dataclass
+from enum import Enum
 import hashlib
 import json
 import math
@@ -85,6 +86,89 @@ def make_episode_split(
 def _stable_json_sha256(value: object) -> str:
     payload = json.dumps(value, sort_keys=True, separators=(",", ":")).encode("utf-8")
     return hashlib.sha256(payload).hexdigest()
+
+
+def _semantic_value(value: object) -> object:
+    """Convert materialized bridge state into deterministic JSON evidence."""
+
+    if value is None or isinstance(value, (str, bool, int)):
+        return value
+    if isinstance(value, float):
+        if not math.isfinite(value):
+            raise ValueError("bridge semantic state contains a non-finite float")
+        return value
+    if isinstance(value, Path):
+        return str(value)
+    if isinstance(value, Enum):
+        return _semantic_value(value.value)
+    if is_dataclass(value) and not isinstance(value, type):
+        return _semantic_value(asdict(value))
+    if isinstance(value, Mapping):
+        return {
+            str(_semantic_value(key)): _semantic_value(item)
+            for key, item in sorted(value.items(), key=lambda pair: str(pair[0]))
+        }
+    if isinstance(value, (list, tuple)):
+        return [_semantic_value(item) for item in value]
+    if isinstance(value, np.ndarray):
+        contiguous = np.ascontiguousarray(value)
+        return {
+            "dtype": str(contiguous.dtype),
+            "shape": list(contiguous.shape),
+            "sha256": hashlib.sha256(contiguous.tobytes()).hexdigest(),
+        }
+    module_name = type(value).__module__
+    if module_name.startswith("torch") and hasattr(value, "detach"):
+        tensor = value.detach().cpu()
+        dtype = str(tensor.dtype)
+        if dtype == "torch.bfloat16":
+            array = tensor.float().numpy()
+        else:
+            array = tensor.numpy()
+        return {"torch_dtype": dtype, **_semantic_value(array)}
+    if module_name.startswith("pandas") and hasattr(value, "to_dict"):
+        return _semantic_value(value.to_dict(orient="split"))
+    if module_name.startswith("datasets") and hasattr(value, "column_names"):
+        return {
+            "columns": list(value.column_names),
+            "values": {
+                name: _semantic_value(list(value[name])) for name in value.column_names
+            },
+        }
+    if callable(value):
+        callable_name = getattr(
+            value,
+            "__qualname__",
+            getattr(value, "__name__", type(value).__qualname__),
+        )
+        return {
+            "callable": f"{getattr(value, '__module__', type(value).__module__)}.{callable_name}"
+        }
+    raise TypeError(f"unsupported bridge semantic value: {type(value)!r}")
+
+
+def _materialized_hf_dataset_evidence(value: object) -> dict[str, object]:
+    """Hash the Arrow schema and every materialized behavior-row value."""
+
+    import pyarrow as pa
+
+    data = getattr(value, "data", None)
+    table = getattr(data, "table", None)
+    if not isinstance(table, pa.Table):
+        raise RuntimeError("training bridge has no materialized Arrow behavior table")
+    sink = pa.BufferOutputStream()
+    with pa.ipc.new_stream(sink, table.schema) as writer:
+        writer.write_table(table)
+    payload = sink.getvalue().to_pybytes()
+    schema_payload = table.schema.serialize().to_pybytes()
+    return {
+        "row_count": table.num_rows,
+        "column_count": table.num_columns,
+        "column_names": list(table.column_names),
+        "schema_sha256": hashlib.sha256(schema_payload).hexdigest(),
+        "rows_sha256": hashlib.sha256(payload).hexdigest(),
+        "serialized_bytes": len(payload),
+    }
 
 
 @dataclass(frozen=True)
@@ -276,6 +360,7 @@ class TrainingDataBridge:
             CHECKPOINT_ID,
             revision=CHECKPOINT_REVISION,
             cache_dir=cache_dir,
+            local_files_only=True,
         )
         config.device = "cpu"
         tokenizer_snapshot = Path(
@@ -284,6 +369,7 @@ class TrainingDataBridge:
                 revision=BASE_VLM_REVISION,
                 cache_dir=cache_dir,
                 allow_patterns=list(_BASE_VLM_PROCESSOR_FILES),
+                local_files_only=True,
             )
         )
         delta_timestamps = resolve_delta_timestamps(config, metadata)
@@ -344,6 +430,114 @@ class TrainingDataBridge:
         self.loader = loader
         self._iterator: Iterator[dict[str, Any]] = iter(loader)
         self._samples_consumed = 0
+
+    def semantic_evidence(self) -> dict[str, object]:
+        """Fingerprint every materialized object that controls bridge semantics."""
+
+        reader = getattr(self.dataset, "reader", None)
+        reader_hf_dataset = getattr(reader, "hf_dataset", None)
+        if reader_hf_dataset is None or self.dataset.hf_dataset is not reader_hf_dataset:
+            raise RuntimeError("training bridge materialized dataset binding changed")
+        if self.loader.dataset is not self.dataset:
+            raise RuntimeError("training bridge loader dataset binding changed")
+        if self.loader.sampler is not self.sampler:
+            raise RuntimeError("training bridge loader sampler binding changed")
+        if getattr(self.loader.batch_sampler, "sampler", None) is not self.sampler:
+            raise RuntimeError("training bridge batch sampler binding changed")
+        if getattr(self._iterator, "_dataset", None) is not self.dataset:
+            raise RuntimeError("training bridge iterator dataset binding changed")
+        if getattr(self._iterator, "_index_sampler", None) is not getattr(
+            self.loader, "_index_sampler", None
+        ):
+            raise RuntimeError("training bridge iterator sampler binding changed")
+        if self._samples_consumed != 0 or getattr(self._iterator, "_num_yielded", None) != 0:
+            raise RuntimeError("training bridge semantic evidence requires a fresh iterator")
+        tokenizer_steps = [
+            step
+            for step in self.preprocessor.steps
+            if getattr(step.__class__, "_registry_name", None)
+            == "tokenizer_processor"
+        ]
+        if len(tokenizer_steps) != 1:
+            raise RuntimeError("training bridge tokenizer topology changed")
+        tokenizer = tokenizer_steps[0].input_tokenizer
+        if tokenizer is None or not hasattr(tokenizer, "backend_tokenizer"):
+            raise RuntimeError("training bridge has no materialized tokenizer")
+        tokenizer_backend = tokenizer.backend_tokenizer.to_str().encode("utf-8")
+        processor_steps = []
+        for step in self.preprocessor.steps:
+            item: dict[str, object] = {
+                "type": f"{type(step).__module__}.{type(step).__qualname__}",
+                "registry_name": getattr(step.__class__, "_registry_name", None),
+                "config": _semantic_value(step.get_config()),
+            }
+            if hasattr(step, "_tensor_stats"):
+                item["tensor_stats"] = _semantic_value(step._tensor_stats)
+            processor_steps.append(item)
+        components = {
+            "bridge": {
+                "cache_dir": str(self.cache_dir),
+                "episodes": list(self.episodes),
+                "sampler_seed": self.sampler_seed,
+            },
+            "config": _semantic_value(vars(self.config)),
+            "metadata": {
+                "repo_id": self.dataset.meta.repo_id,
+                "revision": self.dataset.meta.revision,
+                "info": _semantic_value(self.dataset.meta.info),
+                "episodes": _semantic_value(self.dataset.meta.episodes),
+                "tasks": _semantic_value(self.dataset.meta.tasks),
+                "total_episodes": self.dataset.meta.total_episodes,
+                "camera_keys": list(self.dataset.meta.camera_keys),
+                "has_language_columns": self.dataset.meta.has_language_columns,
+            },
+            "dataset": {
+                "repo_id": self.dataset.repo_id,
+                "revision": self.dataset.revision,
+                "episodes": list(self.dataset.episodes),
+                "delta_timestamps": _semantic_value(self.dataset.delta_timestamps),
+                "absolute_to_relative_idx": _semantic_value(
+                    self.dataset.absolute_to_relative_idx
+                ),
+                "video_backend": self.dataset._video_backend,
+                "return_uint8": self.dataset._return_uint8,
+                "materialized_rows": _materialized_hf_dataset_evidence(
+                    reader_hf_dataset
+                ),
+            },
+            "sampler": _semantic_value(vars(self.sampler)),
+            "preprocessor": {
+                "name": self.preprocessor.name,
+                "steps": processor_steps,
+                "tokenizer_type": (
+                    f"{type(tokenizer).__module__}.{type(tokenizer).__qualname__}"
+                ),
+                "tokenizer_backend_sha256": hashlib.sha256(
+                    tokenizer_backend
+                ).hexdigest(),
+                "tokenizer_special_tokens": _semantic_value(
+                    tokenizer.special_tokens_map
+                ),
+                "tokenizer_vocab_size": len(tokenizer),
+            },
+            "loader": {
+                "batch_size": self.loader.batch_size,
+                "num_workers": self.loader.num_workers,
+                "drop_last": self.loader.drop_last,
+                "pin_memory": self.loader.pin_memory,
+                "sampler_is_bound": self.loader.sampler is self.sampler,
+                "collate_fn": _semantic_value(self.loader.collate_fn),
+            },
+        }
+        component_hashes = {
+            name: _stable_json_sha256(value)
+            for name, value in sorted(components.items())
+        }
+        return {
+            "format_version": 1,
+            "sha256": _stable_json_sha256(component_hashes),
+            "components": component_hashes,
+        }
 
     def _prepare(self, batch: dict[str, Any]) -> BridgeBatch:
         import torch

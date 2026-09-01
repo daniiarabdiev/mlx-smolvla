@@ -85,6 +85,55 @@ def test_install_lora_targets_exact_full_smolvla_topology() -> None:
     assert "state_proj" in report.target_names
 
 
+def test_expert_only_lora_targets_only_expert_attention_and_mlp() -> None:
+    lora = __import__("training.lora", fromlist=["install_lora", "merge_lora"])
+    model_module = __import__("training.model", fromlist=["SmolVLATrainingModel"])
+    optimizer_module = __import__(
+        "training.optimizer", fromlist=["SmolVLAAdamW", "SmolVLAOptimizerConfig"]
+    )
+    mx.random.seed(20260901)
+    model = model_module.SmolVLATrainingModel()
+    model.set_dtype(mx.bfloat16)
+
+    report = lora.install_lora(
+        model,
+        lora.LoRAConfig(scope=lora.EXPERT_ONLY_SCOPE),
+    )
+    trainable = tuple(tree_flatten(model.trainable_parameters()))
+
+    assert report.scope == "expert_only"
+    assert report.adapter_count == 112
+    assert report.trainable_tensor_count == 224
+    assert report.trainable_scalar_count == 1_708_032
+    assert tuple(name for name, _ in trainable) == report.trainable_names
+    assert all(name.startswith("expert.layers.") for name in report.target_names)
+    assert all(
+        ".self_attn." in name or ".mlp." in name
+        for name in report.target_names
+    )
+    assert not any(name.startswith("language.") for name in report.target_names)
+    assert not any(name.startswith("vision.") for name in report.target_names)
+    assert not any(name.startswith("state_proj") for name in report.target_names)
+    assert not any("action_" in name for name in report.target_names)
+    assert all(name.endswith((".lora_a", ".lora_b")) for name, _ in trainable)
+    assert all(value.dtype == mx.float32 for _, value in trainable)
+    optimizer = optimizer_module.SmolVLAAdamW(
+        optimizer_module.SmolVLAOptimizerConfig(training_horizon=3000)
+    )
+    optimizer.initialize(model.trainable_parameters())
+    optimizer.validate_state_for(model.trainable_parameters())
+
+    merged = lora.merge_lora(model, dtype=mx.float32)
+    assert merged.scope == "expert_only"
+    assert merged.target_names == report.target_names
+    assert merged.adapter_count == 112
+    assert tuple(lora.iter_lora(model)) == ()
+    assert tuple(tree_flatten(model.trainable_parameters())) == ()
+    assert isinstance(model.language.layers[0].self_attn.q_proj, nn.Linear)
+    assert isinstance(model.expert.layers[15].mlp.down_proj, nn.Linear)
+    assert isinstance(model.state_proj, nn.Linear)
+
+
 def test_lora_gradients_cover_every_adapter_tensor_on_full_training_path() -> None:
     lora = __import__("training.lora", fromlist=["install_lora"])
     model_module = __import__("training.model", fromlist=["SmolVLATrainingModel"])
@@ -157,6 +206,7 @@ def test_lora_config_rejects_invalid_rank_alpha_and_dropout() -> None:
         {"alpha": 0.0},
         {"dropout": -0.1},
         {"dropout": 1.0},
+        {"scope": "language_only"},
     ):
         try:
             module.LoRAConfig(**kwargs)
