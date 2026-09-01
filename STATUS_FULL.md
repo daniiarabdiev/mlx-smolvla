@@ -1,6 +1,8 @@
 # Full-Scope Status
 
-STOP CONDITION REACHED — REMAINING STAGES BLOCKED
+ACTIVE — T3B AND RELEASE EXECUTION
+
+T3B-1 COMPLETE — SELF-CONSISTENCY FLOOR RECORDED
 
 The protected SmolVLA MLX v0.1 inference baseline is intact. At full-scope
 kickoff on 2026-08-31, `make test` passed **179/179** in **158.71 seconds** on
@@ -44,22 +46,35 @@ all-56-case stats-active parity gate failed at raw physical max absolute
 `FAILURE_LORA_FINETUNE.md`. `TRAINING ALPHA` was not reached.
 
 The outcome-evidence-hardened tree passes **308/308 tests in 205.10 seconds**.
-The current repository has **570 GiB** free, above the
+The current repository has **573 GiB** free, above the
 mandatory 40 GiB floor.
+
+The operator supplied the normative release specification and the T3B
+amendment, closing the prior stop condition. The protected kickoff baseline
+passed **308/308 tests in 226.41 seconds**. T3B-1 measured the failed T3
+checkpoint's PyTorch self-consistency envelope with nine fresh workers on all
+56 frozen cases:
+`F = 0.00003549918286283038`, with `F64 = 0.00003549918286283038`. This result is
+diagnostic only and does not alter the original T3 failure. See
+`SELF_CONSISTENCY_T3.md`. The final v3 T3B-1 tree passes **347/347 tests in
+244.83 seconds**; its floor-focused suite passes **39/39**.
 
 ## Stage state
 
 | Stage | State | Evidence / next action |
 | --- | --- | --- |
-| R — Release | Blocked | `BRIEF_RELEASE.md` is absent after four recovery searches; see `FAILURE_RELEASE_SPEC.md`. The operator-supplied empty GitHub repository is now `origin`, and the verified v0.1 history was pushed. |
+| R — Release | Ready; ordered after T3B launch | The operator supplied `BRIEF_RELEASE.md`; the historical missing-spec blocker is resolved. Non-timing packages begin while T3B-3 trains. |
 | T0 — Training-readiness | Complete | 155/155 gradients finite and nonzero over 99,880,992 trainable scalars; 196.799 ms forward+backward and 2,509,594,126-byte peak MLX memory. See `TRAINING_FEASIBILITY.md`. |
 | T1 — Gradient parity | Complete | Identical real batch/draws; loss and all 155 gradients pass immutable gates. See `GRADIENT_PARITY.md`. |
 | T2 — Optimizer lockstep | Complete | 25/25 losses and 155/155 final tensors pass immutable gates. See `OPTIMIZER_LOCKSTEP.md`. |
 | T3 — LoRA fine-tune | Failure-documented | The 3,000-update run, merge, held-out improvement, and Torch round trip completed. All 56 frozen cases were parity-checked; raw physical max was `6.632053375244141` versus the unchanged `0.005` gate; see `FAILURE_LORA_FINETUNE.md`. |
-| T4 — Training UX/full fine-tune | Blocked | Depends on a passing T3 outcome. |
-| T5 — Training docs/benchmark | Blocked | Depends on a passing T3 outcome. |
-| Q — Quality extras | Blocked | Depends on Stage R and the missing normative package definitions. |
-| H — Hardware readiness | Blocked | Depends on Stage R P1-4; documents only unless the exact live-session confirmation is supplied. |
+| T3B-1 — Reference floor | Complete | Nine PyTorch workers, including a fixed five-process MPS empirical envelope, evaluated 56 cases each; `F = F64 = 0.00003549918286283038`; report SHA-256 `cba4a856...f0585`; informational only, with no statistical-bound claim. |
+| T3B-2 — Prospective evaluator | In progress | Implement the fixed/derived gate contract and reject any post-comparison floor by timestamp. |
+| T3B-3 — Expert-only LoRA | Pending T3B-2 | Freeze/hash the exact 3,000-update configuration, then launch in the background. |
+| T4 — Training UX/full fine-tune | Pending T3B-3 fixed gates | Full fine-tune is code plus a 100-update smoke only. |
+| T5 — Training docs/benchmark | Pending T3B-3 fixed gates | Run only after training/floor processes are absent and idle state is recorded. |
+| Q — Quality extras | Pending Stage R | Normative package definitions are now available in `BRIEF_RELEASE.md`. |
+| H — Hardware readiness | Pending Stage R P1-4 | Documents and loopback-safe tooling only; no hardware access is authorized. |
 
 Neither `RELEASE READY` nor `TRAINING ALPHA` has been reached.
 
@@ -77,6 +92,7 @@ Neither `RELEASE READY` nor `TRAINING ALPHA` has been reached.
 | `.cache/training/t3-base-evaluation.json` | JSON | SHA-256 `211d6778b0530208ca2e81abe6f4002cc683e24d496a09ddbe39c100ebd4f7ce`; base MAE `4.639846293521779` |
 | `.cache/training/t3` | 1.8 GiB | Completed run SHA-256 `c7c3b86361c0872e26f2088cbd33ada865cf450b6711a9b737ece933c1868c82`; adapter/final-model SHA-256 `814e6f4b2a78a46b609aa7b48a28b4509f709d3e851e588dcd9a4bd2ca1408dc`; final optimizer SHA-256 `c9440be75315e04c1812ba18da0e0daccd2990fb0f6fdb1841d40ef7b01ffb5a`; retained checkpoints 2,800/2,900/3,000; export audit manifest SHA-256 `55ad6834cbb3acb9dd565a57296a274d78e7cdc863aa81c3e6ef25da8b66ba03` |
 | `.cache/training/t3-outcome.json` | JSON | SHA-256 `8b74faf8f9cc96341090f91cfa795ed874c838026416944e4b77a550ad91bc44`; 15 source digests include the validated native conversion; improvement and round-trip pass, all-56-case parity fails |
+| `.cache/training/t3/floor.json` | JSON | SHA-256 `cba4a856f9c907d986ffc8703789673611e54bad983c2afd0a987830466f0585`; all nine worker artifacts and every input file hash; combined input SHA-256 `d31a0835867116d7bfbe63f6cd23666eecfdc0a660aba620730cd09320295299`; `F = F64 = 0.00003549918286283038`; retrospective diagnostic only |
 | `.cache/hf` | 1.8 GiB | repository-local source cache |
 | `.cache/smolvla_mlx` | 73 GiB | repository-local conversion/golden cache; T1 fp32 policy subset is 4.2 GiB |
 
@@ -88,6 +104,5 @@ Training evidence is intentionally ignored by Git and has not been uploaded.
 - No PyPI or Hugging Face uploads were made.
 - No credentials, robot environment, vendor fork, serial ports, or hardware
   were accessed.
-- The required release brief is the only open human-supplied input. T4/T5 are
-  independently blocked by the failed T3 gate, so no remaining in-scope stage
-  can proceed on the current evidence.
+- The release brief and T3B amendment are committed. Execution is proceeding in
+  the mandated order without additional operator input.

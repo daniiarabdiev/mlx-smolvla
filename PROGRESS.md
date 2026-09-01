@@ -1299,3 +1299,70 @@
   Stage Q → documentation-only Stage H sequence, package checkpoints, idle
   timing guards, and final verification. Next is T3B-1 test-first, without
   editing or reinterpreting the original T3 failure record.
+
+## 2026-09-01 — T3B-1 failed-checkpoint PyTorch self-consistency floor
+
+- Safety/order: no training or floor process was active at launch, **572 GiB**
+  was free, and no benchmark or timing measurement ran during the floor. The
+  original `FAILURE_LORA_FINETUNE.md` and every original tolerance remained
+  byte-for-byte unchanged.
+- Procedure: the prospectively frozen v3 plan launched nine fresh processes on
+  the retained merged fp32 T3 export and exact 56 frozen cases/stored
+  `1×50×32` noise: CPU fp32 baseline (default 6 threads), CPU fp32 at 1 and 18
+  threads, five fixed MPS fp32 fallback slots, and CPU float64. Each complete
+  `56×50×6` normalized action result was persisted and independently hashed
+  before aggregation. All documented MPS and CPU thread-control variables were
+  cleared before NumPy/Torch import; only fallback was enabled for MPS. Every
+  worker used seed `20260901`, ordinary nondeterministic-algorithm mode, and
+  `highest` float32 matmul precision.
+- Result: single-thread CPU max-abs was
+  **0.000024199485778808594**; 18-thread CPU was
+  **0.000023752450942993164**; each of the five MPS fallback slots was
+  **0.000022813677787780762**; float64 was
+  **0.00003549918286283038**. Therefore the Section 1 envelope is
+  **F = 0.00003549918286283038**, and the separately reported component is
+  **F64 = 0.00003549918286283038**. The original MLX-versus-baseline value
+  **0.17762404680252075** is present only as context; no new verdict was made.
+- Evidence: `.cache/training/t3/floor.json` was atomically created at
+  `2026-09-01T13:40:46.946734+00:00` with embedded timestamp
+  `1788270046946734000` ns and later file mtime `1788270046951823007` ns.
+  Its SHA-256 is
+  `cba4a856f9c907d986ffc8703789673611e54bad983c2afd0a987830466f0585`.
+  The combined input SHA-256 is
+  `d31a0835867116d7bfbe63f6cd23666eecfdc0a660aba620730cd09320295299`;
+  it binds 7 export files, 282 evaluation files, 5 pinned-dataset validation
+  inputs, 10 tokenizer files, and 33 direct implementation, runtime-package,
+  distribution-record, and lock inputs. The implementation tree SHA-256 is
+  `1b73640f406b751cfd8bccb1061673d4f6888dbec69cb9ce7d8444175cceaad6`.
+- Review hardening: a read-only checkpoint review identified incomplete
+  runtime/provenance validation, a trusted group-tree digest, lexical-only
+  cache containment, output/input overlap risk, and missing restart coverage.
+  Regression tests first reproduced those gaps. The validator now reconstructs
+  every group tree and variant artifact, enforces all nine fixed worker
+  identities and exact runtime/environment evidence, resolves path ancestors
+  and rejects overlaps/worker escapes, checks timestamp identity, and can
+  atomically assemble completed workers without loading a model or restarting
+  them. The hidden-worker bootstrap is import-safe for both `--worker NAME` and
+  `--worker=NAME`, and CLI option abbreviations are disabled.
+- Historical disclosure: preserved MPS observations span an uncontrolled v1
+  result of **0.35390492528676987**, six clean v1 follow-ups at
+  **0.000022813677787780762**, a sanitized v2 single-process result of
+  **1.7168622612953186**, and a separate nondefault fast-math diagnostic of
+  **1.8492990136146545**. They use different hashed procedures and are not
+  included in v3 `F`. The five v3 MPS outputs were byte-identical, but the
+  processes share one driver/device and are not treated as statistically
+  independent or as establishing an upper bound.
+- Test-first evidence: the new contract suite first failed **6/6** because the
+  module and CLI did not exist, then its two added integrity cases failed until
+  tree and variant-artifact hashing were implemented. The pre-v3 hardened tree
+  passed **328/328 tests in 224.96 seconds**. The final floor-focused suite now
+  passes **39/39**, including real model-free assembly from all nine artifacts.
+  Independent post-write validation reloaded every artifact, recomputed `F` and
+  `F64`, rehashed every current input, and proved creation-time/file-mtime order.
+  The final exact tree passes **347/347 tests in 244.83 seconds**. `git diff
+  --check`, byte-compilation, and the protected failure-document check pass;
+  `FAILURE_LORA_FINETUNE.md` remains byte-for-byte unchanged. **573 GiB** remains
+  free.
+- Milestone: **T3B-1 COMPLETE — SELF-CONSISTENCY FLOOR RECORDED**. See
+  `SELF_CONSISTENCY_T3.md`. Next is the prospective T3B-2 procedure and
+  timestamp-enforcing evaluator, before any T3B checkpoint exists.

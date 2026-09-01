@@ -28,9 +28,22 @@ _BASE_VLM_PROCESSOR_FILES = (
 )
 
 
+def resolve_tokenizer_snapshot(cache_dir: str | Path) -> Path:
+    """Resolve the exact pinned tokenizer files used by exported checkpoints."""
+
+    return Path(
+        snapshot_download(
+            BASE_VLM_ID,
+            revision=BASE_VLM_REVISION,
+            cache_dir=Path(cache_dir),
+            allow_patterns=list(_BASE_VLM_PROCESSOR_FILES),
+        )
+    )
+
+
 @dataclass(frozen=True)
 class TorchExportPolicy:
-    """A strict fp32 CPU policy and its stats-active saved processors."""
+    """A strict policy and its stats-active saved processors."""
 
     policy: SmolVLAPolicy
     preprocessor: object
@@ -43,19 +56,20 @@ class TorchExportPolicy:
         checkpoint_dir: str | Path,
         *,
         cache_dir: str | Path,
+        device: str = "cpu",
+        dtype: torch.dtype = torch.float32,
     ) -> "TorchExportPolicy":
         checkpoint_dir = Path(checkpoint_dir).resolve()
         cache_dir = Path(cache_dir)
-        tokenizer_snapshot = Path(
-            snapshot_download(
-                BASE_VLM_ID,
-                revision=BASE_VLM_REVISION,
-                cache_dir=cache_dir,
-                allow_patterns=list(_BASE_VLM_PROCESSOR_FILES),
-            )
-        )
+        if dtype not in {torch.float32, torch.float64}:
+            raise ValueError("Torch export evaluation supports only float32 or float64")
+        if device not in {"cpu", "mps"}:
+            raise ValueError("Torch export evaluation supports only cpu or mps")
+        if device == "mps" and dtype != torch.float32:
+            raise ValueError("MPS export evaluation supports only float32")
+        tokenizer_snapshot = resolve_tokenizer_snapshot(cache_dir)
         config = SmolVLAConfig.from_pretrained(checkpoint_dir)
-        config.device = "cpu"
+        config.device = device
         config.load_vlm_weights = False
         config.push_to_hub = False
         config.vlm_model_name = str(tokenizer_snapshot)
@@ -64,15 +78,18 @@ class TorchExportPolicy:
             config=config,
             strict=True,
         )
-        policy.to(device="cpu", dtype=torch.float32)
+        policy.to(device=device, dtype=dtype)
         policy.eval()
+        dtype_name = str(dtype).removeprefix("torch.")
+        device_override = {"device": device, "float_dtype": dtype_name}
         preprocessor, postprocessor = make_pre_post_processors(
             config,
             pretrained_path=checkpoint_dir,
             preprocessor_overrides={
-                "device_processor": {"device": "cpu"},
+                "device_processor": device_override,
                 "tokenizer_processor": {"tokenizer_name": str(tokenizer_snapshot)},
             },
+            postprocessor_overrides={"device_processor": device_override},
         )
         return cls(
             policy=policy,

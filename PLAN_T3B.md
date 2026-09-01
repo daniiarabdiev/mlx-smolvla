@@ -48,12 +48,16 @@ of this plan.
 
 ## Task 1 — T3B-1: failed-checkpoint self-consistency floor
 
+**Status: complete.** The authoritative v3 report is written and hashed before
+any new MLX comparison; `SELF_CONSISTENCY_T3.md` records the evidence and the
+historical MPS variability disclosure.
+
 **Files:**
 
-- Add `smolvla_mlx/training/self_consistency.py`.
+- Add `training/self_consistency.py`.
 - Add `scripts/compute_self_consistency_floor.py`.
-- Add `tests/test_self_consistency.py` and CLI coverage.
-- Generate `.cache/training/t3/self_consistency_floor.json`.
+- Add `tests/test_training_self_consistency.py` and CLI coverage.
+- Generate `.cache/training/t3/floor.json`.
 - Add `SELF_CONSISTENCY_T3.md`; update `PROGRESS.md` and `STATUS_FULL.md`.
 
 **Implementation:**
@@ -67,11 +71,20 @@ of this plan.
 3. Run each PyTorch perturbation in an isolated worker process so thread settings,
    MPS fallback state, and dtype cannot leak between runs:
    CPU fp32 golden path; CPU fp32 one thread; CPU fp32 maximum threads; MPS with
-   fallback enabled; and CPU float64.
-4. Compare every non-golden fp32 action chunk with the golden result using the
+   fallback enabled; and CPU float64. Because repeated clean MPS launches showed
+   materially different backend outcomes, execute perturbation (d) in a fixed,
+   prospectively frozen five-process empirical envelope. All five slots are
+   required, share one driver/device, and make no statistical-independence or
+   upper-bound claim; the count does not change in response to results.
+4. Compare every non-golden action chunk with the golden result using the
    existing normalized action metric. Define `F` as the maximum across cases and
-   fp32 perturbations, and report float64 separately as `F64`.
-5. Write the machine-readable artifact atomically, hash it, then write
+   all perturbations (b)–(e), including all five (d) process slots, and also
+   report the float64-only component as `F64`.
+5. Before NumPy or Torch import, clear and record the documented MPS and CPU
+   thread-control variable sets, enable only MPS fallback for (d), and
+   seed Python, NumPy, Torch, and MPS with the fixed worker seed. Keep ordinary
+   deterministic-algorithm mode disabled and record the matmul-precision mode.
+6. Write the machine-readable artifact atomically, hash it, then write
    `SELF_CONSISTENCY_T3.md`. Include the original trained-checkpoint MLX
    discrepancy (`0.17762404680252075`) only as context and make no new verdict
    about the historical T3 outcome.
