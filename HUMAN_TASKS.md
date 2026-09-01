@@ -1,8 +1,9 @@
 # Human Tasks
 
-## Open — provide the normative release brief
+## Done — provide the normative release brief
 
-- **Status:** open
+- **Status:** done — supplied by the operator and committed as
+  `BRIEF_RELEASE.md` on 2026-09-01.
 - **Needed file:** `BRIEF_RELEASE.md`, exactly as approved during the release
   planning work.
 - **Action:** place the file at
@@ -12,6 +13,5 @@
   specifications and explicitly forbids re-deriving them. Searches of the
   repository, Git history, attachments, Downloads, unreachable objects, and
   the initially empty GitHub remote did not recover it.
-- **Current impact:** Stage R cannot earn `RELEASE READY`, and Stage Q / Stage H
-  remain dependency-blocked. Independent Stage T0 and T1 are complete; T2-T5
-  work continues.
+- **Resolution:** the specification blocker is closed. Stage R, then Stage Q
+  and Stage H, may proceed in the order amended by `BRIEF_T3B.md`.

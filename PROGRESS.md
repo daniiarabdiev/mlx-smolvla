@@ -1275,3 +1275,27 @@
   resolved **103** packages, `git diff --check` passed, **570 GiB** is free,
   and local `HEAD` still matches `origin/main` at the prior durable checkpoint
   `f6099583d2c3538b52c520dd110b02a786834299` before this package is committed.
+
+## 2026-09-01 — T3B and release-scope kickoff
+
+- Specification checkpoint: the operator-supplied normative
+  `BRIEF_RELEASE.md` and amendment `BRIEF_T3B.md` were committed before they
+  were read as commit `ab14dbe` (`phase-11: add release and T3B
+  specifications`).
+- Required-read evidence: `AGENTS.md`, `BRIEF.md`, `BRIEF_FULL.md`,
+  `BRIEF_RELEASE.md`, `BRIEF_T3B.md`, `STATUS_FULL.md`,
+  `FAILURE_LORA_FINETUNE.md`, `FAILURE_RELEASE_SPEC.md`, `PLAN.md`,
+  `PLAN_FULL.md`, the recent progress entries, and `HUMAN_TASKS.md` were read
+  completely before execution planning.
+- Blocker resolution: `FAILURE_RELEASE_SPEC.md` now preserves the historical
+  failure while marking it resolved by operator supply; the corresponding
+  `HUMAN_TASKS.md` entry is closed. Stage R, Q, and H are no longer blocked by
+  an absent specification.
+- Protected baseline: `make test` collected and passed **308/308 tests in
+  226.41 seconds** (`real 231.59`, `user 196.93`, `sys 35.01`) with no T3B
+  training or self-consistency-floor process running. Disk free is **570
+  GiB**, above the mandatory 40 GiB floor.
+- Execution plan: `PLAN_T3B.md` fixes the mandated T3B → Stage R → T4 → T5 →
+  Stage Q → documentation-only Stage H sequence, package checkpoints, idle
+  timing guards, and final verification. Next is T3B-1 test-first, without
+  editing or reinterpreting the original T3 failure record.

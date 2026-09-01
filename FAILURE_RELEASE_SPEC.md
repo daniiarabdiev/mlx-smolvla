@@ -1,10 +1,19 @@
 # Stage R Blocker — Missing `BRIEF_RELEASE.md`
 
+## Resolution
+
+**Resolved 2026-09-01.** The operator supplied the complete normative
+`BRIEF_RELEASE.md` at the repository root, together with `BRIEF_T3B.md`. The
+missing-specification blocker is closed. This file remains as the historical
+record of why Stage R, Q, and H previously stopped; Stage R is now eligible to
+proceed under the supplied package definitions.
+
 ## Status
 
-Stage R cannot be certified because its normative package specification,
-`BRIEF_RELEASE.md`, was not supplied with `BRIEF_FULL.md` and is absent from
-the project. The release requirements must not be reconstructed from guesses.
+At the time of this failure record, Stage R could not be certified because its
+normative package specification, `BRIEF_RELEASE.md`, had not been supplied with
+`BRIEF_FULL.md` and was absent from the project. The release requirements were
+not reconstructed from guesses.
 
 The operator-provided remote setup was completed safely because the GitHub
 repository was empty: the existing verified `main` history was pushed to
