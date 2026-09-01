@@ -1575,6 +1575,18 @@
   six-element `observation.state.mean/std` and `action.mean/std`; each records
   44,900 samples. This simultaneously exercises non-base camera names, active
   statistics, Hub-ID loading, and a real public fine-tune.
+- Header-only verification at the pinned revision found exactly **500** model
+  tensors and **450,046,176** parameters, matching the canonical architecture
+  already handled by the strict converter without downloading the 1.2 GB
+  payload. Its saved preprocessor explicitly requests right-side,
+  `max_length=48` token padding and MEAN_STD for state/action; both processor
+  safetensors expose float32 six-element state/action vectors. Extra dataset
+  statistics are present and must be ignored rather than treated as an error.
+- The linked revision is a LeRobot v3 dataset with **100 episodes**, **44,900
+  frames**, **2 tasks**, and 30 fps observations. It provides exactly the two
+  configured 480×640 cameras as AV1/PyAV video plus six-element state/action
+  columns, so the planned frozen evaluation corpus can cover both tasks without
+  inventing feature renames or sourcing inputs from a different dataset.
 - Rejected examples: the exact-dataset candidate
   `lerobot-edinburgh-white-team/smolvla_svla_so101_pickplace` and the tagged
   `rancheng222/smolvla_so101_tie_bag` each fit below 1 GiB but omit all saved
