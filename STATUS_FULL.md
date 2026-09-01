@@ -8,6 +8,8 @@ T3B-2 COMPLETE — PROSPECTIVE PARITY PROCEDURE FROZEN
 
 T3B-3A PRE-LAUNCH VERIFIED — REAL UPDATE-1 GATE PASSED
 
+T3B-3 RUNNING — CANONICAL STEP-1 CHECKPOINT BOUND
+
 The protected SmolVLA MLX v0.1 inference baseline is intact. At full-scope
 kickoff on 2026-08-31, `make test` passed **179/179** in **158.71 seconds** on
 the M5 Pro. The repository had **553 GiB** free, above the mandatory 40 GiB
@@ -86,22 +88,24 @@ was intentionally interrupted. Independent review validated its PID, run,
 metrics, pointer, metadata, model, and optimizer evidence and found no source
 blocker. The focused exact-byte suite passes **142/142 in 235.70 seconds**.
 With no training or floor process active at `2026-09-01T22:44:56Z`, the full
-repository passed **536/536 tests in 490.35 seconds**. The canonical launch
-artifact has intentionally not been created yet: its digests will be recorded
-only after these exact code bytes are committed and pushed.
+repository passed **536/536 tests in 490.35 seconds**. Those exact bytes were
+committed and pushed as `75b5361`. The canonical launch file is now frozen at
+SHA-256 `95f76513...bea81` / configuration `fe8a937e...748fb3`, and PID 69355
+is running detached with parent 1. Its step-1 checkpoint is atomically bound;
+the model and optimizer SHA-256 values exactly match the disposable preflight.
 
 ## Stage state
 
 | Stage | State | Evidence / next action |
 | --- | --- | --- |
-| R — Release | Ready; ordered after T3B launch | The operator supplied `BRIEF_RELEASE.md`; the historical missing-spec blocker is resolved. Non-timing packages begin while T3B-3 trains. |
+| R — Release | P0-1 implemented during T3B | Origin mirrors the canonical pushed history; canonical Apache-2.0 `LICENSE` and existing third-party `NOTICE` are linked and packaged. Full-suite validation waits for an idle machine; P0-2 investigation is next. |
 | T0 — Training-readiness | Complete | 155/155 gradients finite and nonzero over 99,880,992 trainable scalars; 196.799 ms forward+backward and 2,509,594,126-byte peak MLX memory. See `TRAINING_FEASIBILITY.md`. |
 | T1 — Gradient parity | Complete | Identical real batch/draws; loss and all 155 gradients pass immutable gates. See `GRADIENT_PARITY.md`. |
 | T2 — Optimizer lockstep | Complete | 25/25 losses and 155/155 final tensors pass immutable gates. See `OPTIMIZER_LOCKSTEP.md`. |
 | T3 — LoRA fine-tune | Failure-documented | The 3,000-update run, merge, held-out improvement, and Torch round trip completed. All 56 frozen cases were parity-checked; raw physical max was `6.632053375244141` versus the unchanged `0.005` gate; see `FAILURE_LORA_FINETUNE.md`. |
 | T3B-1 — Reference floor | Complete | Nine PyTorch workers, including a fixed five-process MPS empirical envelope, evaluated 56 cases each; `F = F64 = 0.00003549918286283038`; report SHA-256 `cba4a856...f0585`; informational only, with no statistical-bound claim. |
 | T3B-2 — Prospective evaluator | Complete | Fixed gates unchanged; derived `max(0.005, 3F)` gate, chronology, complete input provenance, semantic conversion validation, and no-clobber output are frozen and pass 52 focused tests. |
-| T3B-3 — Expert-only LoRA | Ready to launch | 112 expert attention/MLP adapters, isolated runtime provenance, full retained-checkpoint binding, and a real update-1 checkpoint probe pass; the exact tree passes 536/536 tests. Commit/push, canonical configuration hashing, and background launch remain. |
+| T3B-3 — Expert-only LoRA | Running | Commit `75b5361` is pushed; canonical launch/configuration/run hashes are bound; detached PID 69355 has published and bound step 1 and continues toward 3,000 updates. Only allowed non-timing Stage R work may overlap it. |
 | T4 — Training UX/full fine-tune | Pending T3B-3 fixed gates | Full fine-tune is code plus a 100-update smoke only. |
 | T5 — Training docs/benchmark | Pending T3B-3 fixed gates | Run only after training/floor processes are absent and idle state is recorded. |
 | Q — Quality extras | Pending Stage R | Normative package definitions are now available in `BRIEF_RELEASE.md`. |

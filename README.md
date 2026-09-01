@@ -108,4 +108,5 @@ breakdown and the precise measured commit.
   arithmetic exactly; Metal uses native MLX kernels and is the performance path.
 - Robot I/O, serial ports, training, and quantization are deliberately out of
   scope.
-- License and source-attribution details are in [NOTICE](NOTICE).
+- The project is licensed under [Apache License 2.0](LICENSE). Third-party
+  source attribution and license notices are in [NOTICE](NOTICE).

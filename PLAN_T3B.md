@@ -138,9 +138,10 @@ wheel suite passes 97/97, and the exact package tree passes 402/402.
 ## Task 3 — T3B-3a: expert-only LoRA configuration and background launch
 
 **Status:** implementation, isolated-launch hardening, a real disposable
-update-1 checkpoint probe, independent review, and the pre-launch full-suite
-checkpoint are complete. Commit/push, canonical configuration generation, and
-the background-process launch remain.
+update-1 checkpoint probe, independent review, pre-launch full-suite
+verification, commit/push, canonical configuration generation, and the
+background launch are complete. The 3,000-update run is active; Task 5 owns
+post-training floor/evaluation and gates.
 
 **Files:**
 

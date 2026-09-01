@@ -1498,3 +1498,54 @@
   No budget-selection timing benchmark, floor computation, hardware access, or
   upload occurred. Next: commit and push these exact implementation bytes,
   then generate/hash and launch the canonical T3B run.
+
+## 2026-09-02 — T3B-3 canonical launch and concurrent Stage R start
+
+- Published implementation: the reviewed pre-launch tree was committed as
+  `75b5361` (`phase-14: harden T3B launch and checkpoint integrity (536 tests
+  pass)`) and pushed normally. Local `HEAD`, `origin/main`, and
+  `git ls-remote origin refs/heads/main` all resolve to
+  `75b5361b8269d0e8a946c3bc00c77560e472957a`.
+- Canonical commitment: `.cache/training/t3b/launch.json` was created only
+  after that push. Its file SHA-256 is
+  `95f765137fe0f70c034561cf96e7f845f18ab31285f2051c945264f3ccdbea81`;
+  configuration SHA-256 is
+  `fe8a937e26b29b2914097ce652c1685d616eaa17f9193369e7c0df1770748fb3`;
+  run-configuration SHA-256 remains
+  `09895b216aff79ea3e26294aa4ef0484e5d316ee88eef7733782f95a9da62350`.
+- Background ownership: this command host reaped a direct `nohup` child before
+  it opened any artifact, so a detached `tmux` bootstrap was used to establish
+  the documented `nohup` command as an orphaned process. An initial supervised
+  attempt spelled cache paths absolutely and failed closed before `run.json`
+  because the bridge commitment preserves literal cache-path spelling. Its
+  valid prestart log was automatically preserved as
+  `startup-recoveries/training-log-prestart-000001`. A diagnostic comparison
+  proved the normal and supervised isolated manifests identical at **3,922
+  implementation hashes / 3,763 guarded modules**. Relaunching the exact
+  repository-relative command matched the prospective commitment.
+- Running evidence: PID **69355**, parent PID **1**, working directory the
+  repository root, isolated repository interpreter, and training-log inode
+  **23558994** are bound in `training.pid` and `run.json`; process-identity
+  SHA-256 is
+  `49fb4fd9cfeacfff92c82b89e388c97bbc52d991761b5958d03fc63d36534b06`.
+  The run passed update 1, published `checkpoints/step-000001`, and atomically
+  bound metadata SHA-256
+  `b17fb2415c96782587e7ae710526e35afbcd90596153b67c7a0e2a2e9fde8f44`,
+  model SHA-256
+  `3aa626d834715474a243a29e050d63db9949730edf6d5880599dad0bc4f5832e`,
+  and optimizer SHA-256
+  `9a64a2512441eaf0076f642f1833bf849aa5436efe42cd2c79094652882a351a`.
+  It remained `running` and had already written metric step 10 when this
+  milestone was recorded.
+- Concurrent release P0-1: the SSH fetch/push origin is the operator-provided
+  `git@github.com:daniiarabdiev/smolvla_mlx.git`, and the remote branch mirrors
+  the canonical history. The complete canonical Apache License 2.0 text is now
+  present as `LICENSE` (SHA-256
+  `c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4`),
+  `MANIFEST.in` explicitly includes both legal files, and `README.md` links
+  both `LICENSE` and the existing third-party `NOTICE`. Static acceptance is
+  complete; the next full-suite verification is deferred until training is
+  absent so no test load contaminates training evidence.
+- Guardrails: no budget benchmark, floor computation, parity comparison,
+  hardware/serial access, or upload is running with training. The protected
+  original-T3 failure record remains unchanged.
