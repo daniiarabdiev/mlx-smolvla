@@ -176,6 +176,37 @@ def test_export_is_atomic_complete_fp32_and_standard(standard_export) -> None:
     assert (output / "config.json").read_bytes() == (source / "config.json").read_bytes()
 
 
+def test_complete_export_can_be_validated_and_reused_after_finalization_interrupt(
+    standard_export,
+) -> None:
+    output, original, _, _ = standard_export
+    module = __import__(
+        "training.export", fromlist=["validate_merged_checkpoint_export"]
+    )
+    expected_metadata = json.loads(
+        (output / "training_manifest.json").read_text(encoding="utf-8")
+    )["metadata"]
+
+    recovered = module.validate_merged_checkpoint_export(
+        output,
+        expected_metadata=expected_metadata,
+    )
+
+    assert recovered.output_dir == original.output_dir
+    assert recovered.tensor_count == original.tensor_count
+    assert recovered.parameter_count == original.parameter_count
+    assert recovered.file_sha256 == original.file_sha256
+    try:
+        module.validate_merged_checkpoint_export(
+            output,
+            expected_metadata={**expected_metadata, "split_seed": 0},
+        )
+    except ValueError as error:
+        assert "metadata" in str(error)
+    else:
+        raise AssertionError("export with different run metadata was reused")
+
+
 def test_exported_processor_contains_exact_train_only_stats(standard_export) -> None:
     output, _, _, _ = standard_export
     pre = mx.load(str(output / "policy_preprocessor_step_5_normalizer_processor.safetensors"))

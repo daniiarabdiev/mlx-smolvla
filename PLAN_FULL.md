@@ -71,13 +71,16 @@ to `origin/main`.
 
 ## Stage T3 — MLX LoRA fine-tune
 
-**Dependency:** T1. **State:** ready.
+**Dependency:** T1. **State:** in progress.
 
 - [x] Add configurable LoRA to the used VLM attention/MLP linears and expert.
 - [ ] Train on Metal/bf16 using a fixed whole-episode held-out split of at least
   15%, with metrics kept locally as CSV.
 - [x] Fit the run into the two-hour budget using measured step time and record
   any step-count reduction from the 3,000-step/batch-8 default.
+- [x] Protect the long run with atomic model/optimizer/sampler/RNG checkpoints
+  after step 1 and every 100 steps, exact continuation, and last-three
+  retention.
 - [ ] Export a merged standard safetensors checkpoint loadable by MLX and the
   PyTorch reference.
 - [ ] Gate held-out MAE at `≤ 0.9 ×` base over at least 50 unseen samples,

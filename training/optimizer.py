@@ -137,6 +137,56 @@ class SmolVLAAdamW:
     def state(self) -> dict:
         return self._optimizer.state
 
+    def initialize(self, parameters: dict) -> None:
+        """Materialize the expected optimizer-state schema without an update."""
+
+        self._optimizer.init(parameters)
+        mx.eval(self._optimizer.state)
+
+    def validate_state_for(self, parameters: dict) -> None:
+        """Reject optimizer state that cannot belong to the supplied parameters."""
+
+        parameter_tensors = dict(tree_flatten(parameters))
+        state_tensors = dict(tree_flatten(self._optimizer.state))
+        expected_names = {"step", "learning_rate"}
+        for name in parameter_tensors:
+            expected_names.update({f"{name}.m", f"{name}.v"})
+        if set(state_tensors) != expected_names:
+            raise ValueError("optimizer state tensor names differ from the model schema")
+        if (
+            state_tensors["step"].shape != ()
+            or state_tensors["step"].dtype != mx.uint64
+            or state_tensors["learning_rate"].shape != ()
+            or state_tensors["learning_rate"].dtype != mx.float32
+        ):
+            raise ValueError("optimizer state scalar shape/dtype differs from the schema")
+        if int(state_tensors["step"]) != self._step_index:
+            raise ValueError("optimizer state internal step differs from its schedule position")
+        for name, parameter in parameter_tensors.items():
+            for suffix in ("m", "v"):
+                moment = state_tensors[f"{name}.{suffix}"]
+                if moment.shape != parameter.shape or moment.dtype != parameter.dtype:
+                    raise ValueError(
+                        "optimizer state moment shape/dtype differs from the model "
+                        f"for {name}.{suffix}"
+                    )
+
+    def load_state(self, state: dict, *, step_index: int) -> None:
+        """Restore a checkpointed MLX optimizer tree and schedule position."""
+
+        if step_index < 0:
+            raise ValueError("optimizer step index must be nonnegative")
+        if "step" not in state:
+            raise ValueError("optimizer checkpoint is missing its internal step")
+        mx.eval(state)
+        internal_step = int(state["step"])
+        if internal_step != step_index:
+            raise ValueError(
+                f"optimizer step mismatch: state={internal_step}, checkpoint={step_index}"
+            )
+        self._optimizer.state = state
+        self._step_index = step_index
+
     def update(self, model: nn.Module, gradients: dict) -> float:
         """Apply one scheduled update and return the LR used for that update."""
 

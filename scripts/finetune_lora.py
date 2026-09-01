@@ -34,6 +34,12 @@ def main() -> None:
     parser.add_argument("--effective-batch-size", type=int, default=8)
     parser.add_argument("--rank", type=int, default=8)
     parser.add_argument("--alpha", type=float, default=16.0)
+    parser.add_argument("--checkpoint-interval", type=int, default=100)
+    parser.add_argument(
+        "--resume",
+        action="store_true",
+        help="resume an existing incomplete output from its latest validated checkpoint",
+    )
     parser.add_argument("--benchmark-only", action="store_true")
     parser.add_argument(
         "--benchmark-output",
@@ -49,6 +55,8 @@ def main() -> None:
         effective_batch_size=args.effective_batch_size,
         rank=args.rank,
         alpha=args.alpha,
+        checkpoint_interval=args.checkpoint_interval,
+        resume=args.resume,
     )
     if args.benchmark_only:
         result = benchmark_lora_updates(config)

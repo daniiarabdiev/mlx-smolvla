@@ -37,4 +37,4 @@ lora-evaluation:
 	uv run --extra reference python scripts/make_lora_evaluation.py --cache-dir $(HF_HOME) --native-cache $(CURDIR)/.cache/smolvla_mlx/policy-float32 --evaluation-dir $(CURDIR)/.cache/training/t3-evaluation --output $(CURDIR)/.cache/training/t3-base-evaluation.json
 
 lora-finetune:
-	uv run --extra reference python scripts/finetune_lora.py --cache-dir $(HF_HOME) --native-cache $(CURDIR)/.cache/smolvla_mlx/policy-float32 --output $(CURDIR)/.cache/training/t3
+	uv run --extra reference python scripts/finetune_lora.py --resume --checkpoint-interval 100 --cache-dir $(HF_HOME) --native-cache $(CURDIR)/.cache/smolvla_mlx/policy-float32 --output $(CURDIR)/.cache/training/t3

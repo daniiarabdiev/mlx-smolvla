@@ -95,8 +95,9 @@ SMOLVLA_MLX_CACHE="$PWD/.cache/smolvla_mlx"
    atomic run manifest, bfloat16 frozen base/fp32 adapters, and step-budget
    arithmetic.
 2. Implement the loop using the proven T2 optimizer. Add disk/memory guards,
-   exception-safe metrics flushing, periodic local adapter checkpoints, and
-   final merged export.
+   exception-safe metrics flushing, periodic atomic adapter/optimizer/sampler/
+   RNG checkpoints with exact resume and last-three retention, and final
+   merged export.
 3. Benchmark 3 warm-up plus 10 real effective-batch updates on Metal, record
    median/peak memory and freeze `min(3000, floor(6900/median))` before the
    full run. Commit/push the passing machinery and frozen budget with

@@ -29,6 +29,12 @@ The exact post-T2 source and documentation tree passed **236/236 tests in
 189.07 seconds**. The dependency lock still resolves all **103 packages**,
 import isolation remains green, and **542 GiB** remains free.
 
+The checkpoint-hardened Stage T3 tree passes **278/278 tests in 215.81
+seconds**. A full 458-trainable-tensor rebuild/restore proof reproduced update
+2 exactly, including loss, gradient norm, model bytes, and optimizer bytes.
+The dependency lock still resolves all **103 packages**, and **580 GiB**
+remains free.
+
 ## Stage state
 
 | Stage | State | Evidence / next action |
@@ -37,7 +43,7 @@ import isolation remains green, and **542 GiB** remains free.
 | T0 — Training-readiness | Complete | 155/155 gradients finite and nonzero over 99,880,992 trainable scalars; 196.799 ms forward+backward and 2,509,594,126-byte peak MLX memory. See `TRAINING_FEASIBILITY.md`. |
 | T1 — Gradient parity | Complete | Identical real batch/draws; loss and all 155 gradients pass immutable gates. See `GRADIENT_PARITY.md`. |
 | T2 — Optimizer lockstep | Complete | 25/25 losses and 155/155 final tensors pass immutable gates. See `OPTIMIZER_LOCKSTEP.md`. |
-| T3 — LoRA fine-tune | In progress | Exact LoRA/data/export machinery is green; measured 1.637650 s/update keeps the frozen run at 3,000 updates, effective batch 8. |
+| T3 — LoRA fine-tune | In progress | Exact LoRA/data/export machinery is green; measured 1.637650 s/update keeps the frozen run at 3,000 updates, effective batch 8. Atomic last-three checkpoints now preserve model, optimizer, sampler, and RNG continuation state. |
 | T4 — Training UX/full fine-tune | Pending | Depends on T3. |
 | T5 — Training docs/benchmark | Pending | Depends on T3. |
 | Q — Quality extras | Blocked | Depends on Stage R and the missing normative package definitions. |

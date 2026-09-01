@@ -93,6 +93,19 @@ noise and beta-distributed timesteps, as permitted by the brief. Metrics append
 one durable CSV row per update: step, loss, smoothed loss, LR, gradient norm,
 clip coefficient, elapsed seconds, updates/second, and peak MLX memory.
 
+The run publishes an atomic checkpoint after update 1, every 100 updates, and
+the final update. Each checkpoint binds all 458 fp32 adapter tensors, the full
+AdamW moment/step/LR tree, smoothed loss, cumulative time/peak memory, sampler
+position, flow-draw count, frozen run settings, full optimizer configuration,
+and exact converted base/name-map digests. Resume rebuilds the frozen base,
+validates every digest/name/shape/dtype, restores model and optimizer state,
+positions the episode-aware sampler, and advances MLX's seeded PRNG by the
+completed flow draws. Metrics beyond the last atomic checkpoint are copied to
+a recovery CSV before the active trace is rewound. Only the newest three
+complete checkpoints belonging to the active run and tensor schemas are
+retained; partial, unrelated-run, temporary, symlinked, and unrelated paths
+are never selected for pruning.
+
 The nominal budget is 3,000 updates. Before the real run, 3 warm-up plus 10
 measured effective-batch updates determine median update time. The selected
 count is `min(3000, floor(6900 / median_seconds))`, reserving five minutes for

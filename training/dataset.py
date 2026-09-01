@@ -343,6 +343,7 @@ class TrainingDataBridge:
         self.sampler = sampler
         self.loader = loader
         self._iterator: Iterator[dict[str, Any]] = iter(loader)
+        self._samples_consumed = 0
 
     def _prepare(self, batch: dict[str, Any]) -> BridgeBatch:
         import torch
@@ -452,4 +453,61 @@ class TrainingDataBridge:
             batch = next(self._iterator)
         if batch is None:
             raise RuntimeError("LeRobot data loader returned an empty batch")
-        return self._prepare(batch)
+        prepared = self._prepare(batch)
+        self._samples_consumed += 1
+        return prepared
+
+    def state_dict(self) -> dict[str, object]:
+        """Return enough state to reproduce the exact next sampler position."""
+
+        num_samples = len(self.sampler)
+        epoch, start_index = divmod(self._samples_consumed, num_samples)
+        return {
+            "format_version": 1,
+            "samples_consumed": self._samples_consumed,
+            "num_samples": num_samples,
+            "epoch": epoch,
+            "start_index": start_index,
+            "sampler_seed": self.sampler_seed,
+            "episodes": list(self.episodes),
+        }
+
+    def load_state_dict(self, state: Mapping[str, object]) -> None:
+        """Restore a validated sampler position without decoding skipped frames."""
+
+        required = {
+            "format_version",
+            "samples_consumed",
+            "num_samples",
+            "epoch",
+            "start_index",
+            "sampler_seed",
+            "episodes",
+        }
+        if set(state) != required:
+            raise ValueError(
+                f"bridge state fields differ; missing={sorted(required - set(state))}, "
+                f"unexpected={sorted(set(state) - required)}"
+            )
+        if state["format_version"] != 1:
+            raise ValueError(f"unsupported bridge state version {state['format_version']!r}")
+        num_samples = len(self.sampler)
+        if state["num_samples"] != num_samples:
+            raise ValueError(
+                f"bridge sample count changed: checkpoint={state['num_samples']}, current={num_samples}"
+            )
+        if state["sampler_seed"] != self.sampler_seed:
+            raise ValueError("bridge sampler seed differs from the checkpoint")
+        if tuple(state["episodes"]) != self.episodes:
+            raise ValueError("bridge episode split differs from the checkpoint")
+        samples_consumed = int(state["samples_consumed"])
+        if samples_consumed < 0:
+            raise ValueError("bridge samples consumed must be nonnegative")
+        expected_epoch, expected_start = divmod(samples_consumed, num_samples)
+        if int(state["epoch"]) != expected_epoch or int(state["start_index"]) != expected_start:
+            raise ValueError("bridge epoch/offset do not match samples consumed")
+        self.sampler.load_state_dict(
+            {"epoch": expected_epoch, "start_index": expected_start}
+        )
+        self._iterator = iter(self.loader)
+        self._samples_consumed = samples_consumed

@@ -1062,3 +1062,76 @@
   and baseline-binding cases passed in **0.17 seconds**.
 - Next: run exactly 3,000 effective-batch updates from a fresh base; no result
   may change this population, baseline, budget, or threshold.
+
+## 2026-09-01 — Stage T3 interruption recovery and exact checkpoints
+
+- Interruption evidence: the first foreground training process ended after
+  update **1,375/3,000** before a final-only adapter save. Its complete metrics
+  trace is preserved at
+  `.cache/training/t3-interrupted-20260901-step1375/metrics.csv`, SHA-256
+  `a41c8bf259e98c0ad909bf54398d4da8c3d073e056f4fea9ee92d0ad807dbca1`.
+  A deterministic replay was deliberately stopped at update **210** to avoid
+  repeating that risk; its metrics SHA-256 is
+  `b75dba66a4e6a0f8731b69da86a6d925086ebee9dcf8bd78a0b2e4b90c4eea4e`.
+- Red evidence: **5** new recovery contracts initially failed because metrics
+  could not resume, flow RNG could not be advanced, model/optimizer
+  checkpoints did not exist, cadence was absent, and the data bridge exposed
+  no sampler state. A sixth retention contract then failed on the absent
+  last-three policy.
+- Implementation: checkpoints are atomically published after update 1, every
+  100 updates, and the final update. They bind all adapter and AdamW tensors,
+  schedule step, smoothed loss, elapsed time, peak memory, sampler offset,
+  flow-draw count, and a SHA-256 of every trajectory-affecting setting. Resume
+  validates file hashes and tensor contracts, restores the sampler directly,
+  advances MLX RNG exactly, and preserves any post-checkpoint CSV tail in a
+  recovery file before continuing. Only the three newest complete checkpoints
+  are retained.
+- Exact real-model proof: checkpointing after update 1 and rebuilding the full
+  **458-trainable-tensor** LoRA model reproduced update 2 with identical loss
+  **0.980276882648468**, identical gradient norm **2.3309686183929443**, and
+  byte-identical final trainable digest
+  `3e92cc1a6b52e1036248475280ec571ac4227e4355b753798ee39479ad2a8f36`.
+- Green evidence: checkpoint, metrics, RNG, sampler, optimizer, LoRA, export,
+  evaluation, and import-isolation focus passed **41/41 in 12.04 seconds**;
+  the tighter checkpoint/data/optimizer set passed **22/22 in 0.84 seconds**;
+  `git diff --check` passed. Disk free is **587 GiB**.
+- Next: commit/push the resilience layer, launch the unchanged frozen
+  3,000-update run, verify checkpoint publication at steps 1 and 100, and
+  continue through export and all three outcome gates.
+
+## 2026-09-01 — Stage T3 checkpoint crash-window hardening
+
+- Review-driven red evidence: a valid checkpoint from a different run could
+  count toward retention and displace one of the active run's last three; a
+  finite but incorrect boundary `updates_per_second` value was also accepted.
+  Both new regression tests failed before their fixes.
+- Publication recovery: resume discovers the newest fully valid step directory
+  even when `latest.json` is stale or absent, repairs the pointer, and validates
+  config identity, file hashes, tensor names, shapes, dtypes, and optimizer
+  step before mutating live state. A complete export published before a crash
+  is checksum/inventory/metadata validated and reused.
+- Retention and identity: pruning now considers only checkpoints matching the
+  active run-config hash and current model/optimizer schemas. Valid other-run,
+  invalid, partial, symlinked, temporary, and unrelated paths remain untouched.
+  The run-config digest binds the exact converted base and name-map bytes plus
+  the complete effective optimizer configuration.
+- Metrics durability: the raw CSV is copied and fsynced before parsing; only
+  the checkpointed prefix must be complete; the active file is atomically
+  rewound; and every checkpoint boundary field, including derived throughput,
+  must match before append resumes.
+- Post-hardening real-model proof: saving update 1 and rebuilding/restoring the
+  full **458-tensor** LoRA model reproduced update 2 exactly: loss
+  **1.256011962890625**, gradient norm **1.3243852853775024**, model digest
+  `9d5feac138050a282a0c1a5014986ff337f5242680ec1ad3bc5448dd8389ad2d`,
+  and optimizer digest
+  `5ff37c17a0e887aabf1e8f5f0e38d01d4d33fa5b2b7716450170674915111266`.
+- Green evidence: checkpoint/data/optimizer/export/import-isolation focus passed
+  **36/36 in 11.31 seconds**; the complete repository passed **278/278 in
+  215.81 seconds**; `uv lock --check` resolved **103** packages; `git diff
+  --check` passed; the two interrupted metrics traces retain their recorded
+  SHA-256 values; `.cache/training/t3` remains absent; and **580 GiB** is free.
+- Independent review: the final verdict was **Ready: Yes**, with no critical,
+  important, or minor findings. The reviewer independently passed **36/36**
+  targeted, **48/48** broader, and **278/278** full-suite cases on this tree.
+- Next: commit/push this resilience package, then launch the frozen run and
+  inspect checkpoints 1 and 100.

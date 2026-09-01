@@ -193,3 +193,36 @@ def test_bridge_sampler_is_reproducible_and_microbatches_are_distinct() -> None:
     assert all(item.state.shape == (1, 32) for item in first_batches)
     assert all(item.actions.shape == (1, 50, 32) for item in first_batches)
     assert all(item.action_is_pad.shape == (1, 50) for item in first_batches)
+
+
+def test_bridge_sampler_state_resumes_at_the_exact_next_microbatch() -> None:
+    module = __import__("training.dataset", fromlist=["TrainingDataBridge"])
+    split = module.make_episode_split(num_episodes=50, seed=20260901)
+    stats = module.compute_train_statistics(_DATASET_ROOT, split.train_episodes)
+    uninterrupted = module.TrainingDataBridge(
+        cache_dir=_CACHE_DIR,
+        episodes=split.train_episodes,
+        sampler_seed=20260901,
+        stats=stats.processor_stats,
+    )
+    for _ in range(11):
+        uninterrupted.next_batch()
+    state = uninterrupted.state_dict()
+    expected = uninterrupted.next_batch()
+
+    resumed = module.TrainingDataBridge(
+        cache_dir=_CACHE_DIR,
+        episodes=split.train_episodes,
+        sampler_seed=20260901,
+        stats=stats.processor_stats,
+    )
+    resumed.load_state_dict(state)
+    actual = resumed.next_batch()
+
+    assert state["samples_consumed"] == 11
+    assert (actual.episode, actual.frame_index, actual.absolute_index) == (
+        expected.episode,
+        expected.frame_index,
+        expected.absolute_index,
+    )
+    np.testing.assert_array_equal(actual.actions, expected.actions)

@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 import hashlib
 import json
+import math
 import os
 from pathlib import Path
 import shutil
@@ -15,6 +16,7 @@ from huggingface_hub import snapshot_download
 import mlx.core as mx
 import mlx.nn as nn
 from mlx.utils import tree_flatten
+from safetensors import safe_open
 
 from reference.discovery import (
     BASE_VLM_ID,
@@ -126,6 +128,93 @@ def _sha256_file(path: Path) -> str:
 def _write_json(path: Path, value: object) -> None:
     payload = json.dumps(value, indent=2, sort_keys=True) + "\n"
     path.write_text(payload, encoding="utf-8")
+
+
+def _sync_file(path: Path) -> None:
+    with path.open("rb") as handle:
+        os.fsync(handle.fileno())
+
+
+def _sync_directory(path: Path) -> None:
+    descriptor = os.open(path, os.O_RDONLY)
+    try:
+        os.fsync(descriptor)
+    finally:
+        os.close(descriptor)
+
+
+def validate_merged_checkpoint_export(
+    output_dir: str | Path,
+    *,
+    expected_metadata: Mapping[str, object],
+) -> ExportReport:
+    """Validate and describe a completely published merged export."""
+
+    output_candidate = Path(output_dir)
+    if output_candidate.is_symlink() or not output_candidate.is_dir():
+        raise ValueError(f"merged export directory is missing or unsafe: {output_dir}")
+    output_dir = output_candidate.resolve()
+    manifest_path = output_dir / "training_manifest.json"
+    if manifest_path.is_symlink() or not manifest_path.is_file():
+        raise ValueError("merged export manifest is missing or unsafe")
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    required_manifest_fields = {
+        "format_version",
+        "artifact_type",
+        "dtype",
+        "tensor_count",
+        "parameter_count",
+        "source_checkpoint",
+        "metadata",
+        "file_sha256",
+    }
+    if set(manifest) != required_manifest_fields:
+        raise ValueError("merged export manifest fields differ from the frozen schema")
+    if (
+        manifest["format_version"] != 1
+        or manifest["artifact_type"] != "smolvla-mlx-merged-training-checkpoint"
+        or manifest["dtype"] != "float32"
+        or manifest["tensor_count"] != _EXPECTED_TENSORS
+        or manifest["parameter_count"] != _EXPECTED_PARAMETERS
+        or manifest["source_checkpoint"]
+        != {"repo_id": CHECKPOINT_ID, "revision": CHECKPOINT_REVISION}
+    ):
+        raise ValueError("merged export manifest identity is invalid")
+    if manifest["metadata"] != dict(expected_metadata):
+        raise ValueError("merged export metadata differs from the requested run")
+    hashes = manifest["file_sha256"]
+    if not isinstance(hashes, Mapping) or not set(_CHECKPOINT_FILES) <= set(hashes):
+        raise ValueError("merged export file manifest is incomplete")
+    for name, expected_digest in hashes.items():
+        if not isinstance(name, str) or Path(name).name != name:
+            raise ValueError("merged export manifest contains an unsafe filename")
+        path = output_dir / name
+        if path.is_symlink() or not path.is_file():
+            raise ValueError(f"merged export file is missing or unsafe: {name}")
+        if _sha256_file(path) != expected_digest:
+            raise ValueError(f"merged export file digest is invalid: {name}")
+
+    tensor_count = 0
+    parameter_count = 0
+    with safe_open(output_dir / "model.safetensors", framework="np") as tensors:
+        for name in tensors.keys():
+            tensor_count += 1
+            tensor = tensors.get_slice(name)
+            if tensor.get_dtype() != "F32":
+                raise ValueError(f"merged export model tensor is not fp32: {name}")
+            parameter_count += math.prod(tensor.get_shape())
+    if tensor_count != _EXPECTED_TENSORS or parameter_count != _EXPECTED_PARAMETERS:
+        raise ValueError("merged export model tensor inventory is invalid")
+    disk_free = shutil.disk_usage(output_dir.parent).free
+    return ExportReport(
+        output_dir=output_dir,
+        tensor_count=tensor_count,
+        parameter_count=parameter_count,
+        dtype="float32",
+        file_sha256=dict(hashes),
+        disk_free_before_bytes=disk_free,
+        disk_free_after_bytes=disk_free,
+    )
 
 
 def _save_processors(
@@ -240,7 +329,12 @@ def export_merged_checkpoint(
             "file_sha256": file_hashes,
         }
         _write_json(temporary / "training_manifest.json", manifest)
+        for path in temporary.iterdir():
+            if path.is_file():
+                _sync_file(path)
+        _sync_directory(temporary)
         temporary.replace(output_dir)
+        _sync_directory(output_dir.parent)
     finally:
         if temporary.exists():
             shutil.rmtree(temporary)
