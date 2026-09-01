@@ -1366,3 +1366,58 @@
 - Milestone: **T3B-1 COMPLETE — SELF-CONSISTENCY FLOOR RECORDED**. See
   `SELF_CONSISTENCY_T3.md`. Next is the prospective T3B-2 procedure and
   timestamp-enforcing evaluator, before any T3B checkpoint exists.
+
+## 2026-09-01 — T3B-2 prospective trained-checkpoint parity procedure
+
+- Prospective freeze: the procedure and constants were completed before any
+  T3B checkpoint, T3B floor, or MLX-versus-PyTorch comparison existed. The fixed
+  gates remain image preprocessing `<= 1e-5`, state preprocessing `<= 1e-6`,
+  fine/base MLX held-out MAE ratio `<= 0.9`, and Torch/fine-MLX MAE ratio within
+  `[0.95, 1.05]`. The deterministic threshold is exactly
+  `max(0.005, 3 * F(checkpoint))`; neither constant is configurable.
+- Chronology: a one-shot marker reads the real clock immediately before MLX
+  work, binds one absent comparison path, and requires
+  `floor.created <= floor.mtime < marker.created <= marker.mtime <=
+  comparison.created <= comparison.mtime <= evaluation.created`. Floor, marker,
+  comparison, and result installation are no-clobber operations. Outputs that
+  overlap the raw floor bundle or a floor-bound exact input tree are rejected.
+- Floor and input provenance: the evaluator descriptor-reads all 18 raw worker
+  files and reconstructs every variant maximum, `F`, and `F64`. It then opens
+  and rehashes every checkpoint, held-out case/noise, pinned-dataset, tokenizer,
+  processor, and implementation input. Checkpoint and evaluation relative-file
+  inventories must be exact. Hugging Face tokenizer symlinks are accepted only
+  when their captured targets remain within the declared cache root, and link
+  topology plus target bytes are revalidated before installation.
+- Comparison evidence: all 56 frozen case identities and all 56 records for base
+  MLX, fine MLX, Torch, and stats-active parity are required. Every aggregate,
+  ratio, and gate is recomputed; derived overflow is rejected. The frozen base
+  report body is checked against SHA-256 `211d6778...b5f7ce`. The exact trained
+  export must include a bound `training_manifest.json`; its file inventory and
+  tensor/scalar counts must match an actual canonical fp32 conversion. Semantic
+  conversion validation operates on owner-only private copies of already
+  descriptor-captured source/model/name-map bytes, closing path-swap races.
+- Stable artifact behavior: every input snapshot binds device, inode, size,
+  `mtime_ns`, SHA-256, and bytes within the evaluator run and is checked again
+  before an atomic hard-link install. Existing or concurrently created marker,
+  comparison, or evaluation artifacts are preserved rather than overwritten.
+  The installed result contains complete evidence, separate fixed and derived
+  decisions, and a standalone validator that recomputes all aggregates.
+- Packaging: `setup.py` now discovers the complete `smolvla_mlx`, `training`,
+  and `reference` package surfaces. A clean-source wheel test inspects the wheel,
+  installs it into an isolated target, and imports the trained-parity evaluator
+  from that installed artifact.
+- Test/review evidence: the focused evaluator suite passes **52/52**. The
+  self-consistency, distribution-wheel, and trained-parity suites pass
+  **97/97 in 18.70 seconds**. Independent read-only review iteratively closed
+  provenance, chronology, symlink, semantic-conversion, race, path-overlap, and
+  numerical fail-open findings and returned explicit approval with no remaining
+  Blocker, Important, or substantive Minor issue.
+- Full checkpoint: with no training, floor, or benchmark process active,
+  `make test` passed **402/402 tests in 230.01 seconds**. `git diff --check` and
+  byte-compilation pass. `FAILURE_LORA_FINETUNE.md` remains byte-for-byte
+  unchanged from commit `6c94ccd` with SHA-256
+  `d6654131c4acf86de13206f210f1ea1a82e3aad18871e5b64428bdf1dbeed7c6`.
+  **567 GiB** remains free.
+- Milestone: **T3B-2 COMPLETE — PROSPECTIVE PARITY PROCEDURE FROZEN**. See
+  `PARITY_PROCEDURE_TRAINED.md`. Next is T3B-3 expert-only LoRA configuration,
+  full-suite verification, and background launch.

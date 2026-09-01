@@ -4,6 +4,13 @@ from __future__ import annotations
 
 from importlib.metadata import distribution
 from importlib.util import find_spec
+import os
+from pathlib import Path
+import runpy
+import shutil
+import subprocess
+import sys
+import zipfile
 
 from packaging.requirements import Requirement
 
@@ -11,7 +18,10 @@ from packaging.requirements import Requirement
 def test_installed_runtime_does_not_require_the_vendored_mlx_vlm_stack() -> None:
     """Catch an accidental dependency on the unused MLX-VLM server/audio stack."""
 
-    requirements = [Requirement(requirement) for requirement in distribution("smolvla-mlx").requires or ()]
+    requirements = [
+        Requirement(requirement)
+        for requirement in distribution("smolvla-mlx").requires or ()
+    ]
     names = {requirement.name.lower() for requirement in requirements if requirement.marker is None}
 
     assert "mlx-vlm" not in names
@@ -23,7 +33,10 @@ def test_installed_runtime_does_not_require_the_vendored_mlx_vlm_stack() -> None
 def test_installed_runtime_requires_the_audited_dependency_versions() -> None:
     """Keep source installs on the exact dependency set validated by parity tests."""
 
-    requirements = [Requirement(requirement) for requirement in distribution("smolvla-mlx").requires or ()]
+    requirements = [
+        Requirement(requirement)
+        for requirement in distribution("smolvla-mlx").requires or ()
+    ]
     runtime = {
         requirement.name.lower(): str(requirement.specifier)
         for requirement in requirements
@@ -45,3 +58,78 @@ def test_training_package_is_shipped_as_an_optional_surface() -> None:
 
     assert find_spec("training") is not None
     assert "train" in (metadata.get_all("Provides-Extra") or [])
+
+
+def test_trained_parity_subpackage_is_in_the_wheel_package_list() -> None:
+    setup_globals = runpy.run_path("setup.py", run_name="smolvla_setup_metadata")
+
+    assert "smolvla_mlx.training" in setup_globals["PACKAGES"]
+    assert "reference" in setup_globals["PACKAGES"]
+    assert find_spec("smolvla_mlx.training.trained_parity") is not None
+
+
+def test_built_wheel_contains_and_imports_the_trained_parity_surface(
+    tmp_path: Path,
+) -> None:
+    wheel_dir = tmp_path / "wheel"
+    source = tmp_path / "source"
+    shutil.copytree(
+        Path.cwd(),
+        source,
+        ignore=shutil.ignore_patterns(".cache", ".git", ".venv", "build", "dist"),
+    )
+    environment = dict(os.environ)
+    environment["UV_CACHE_DIR"] = str((Path.cwd() / ".cache" / "uv").resolve())
+    built = subprocess.run(
+        ["uv", "build", "--wheel", "--out-dir", str(wheel_dir), str(source)],
+        env=environment,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    assert built.returncode == 0, built.stderr
+    wheels = tuple(wheel_dir.glob("*.whl"))
+    assert len(wheels) == 1
+    with zipfile.ZipFile(wheels[0]) as archive:
+        names = set(archive.namelist())
+    assert "smolvla_mlx/training/trained_parity.py" in names
+    assert "training/t3_contract.py" in names
+    assert "reference/discovery.py" in names
+
+    target = tmp_path / "installed"
+    installed = subprocess.run(
+        [
+            "uv",
+            "pip",
+            "install",
+            "--python",
+            sys.executable,
+            "--target",
+            str(target),
+            "--no-deps",
+            str(wheels[0]),
+        ],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    assert installed.returncode == 0, installed.stderr
+    environment["PYTHONPATH"] = str(target)
+    imported = subprocess.run(
+        [
+            sys.executable,
+            "-c",
+            (
+                "import pathlib; "
+                "import smolvla_mlx.training.trained_parity as p; "
+                "print(pathlib.Path(p.__file__).resolve())"
+            ),
+        ],
+        cwd=tmp_path,
+        env=environment,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    assert imported.returncode == 0, imported.stderr
+    assert str(target.resolve()) in imported.stdout

@@ -1390,7 +1390,19 @@ def _fixed_source_identity() -> dict[str, object]:
     }
 
 
+def _floor_source_identity(purpose: str) -> dict[str, object]:
+    identity = _fixed_source_identity()
+    if purpose == "prospective_gate":
+        identity["checkpoint_role"] = "prospective-trained-merged-fp32-export"
+    return identity
+
+
 def _floor_context(purpose: str) -> dict[str, object]:
+    if purpose == "prospective_gate":
+        return {
+            "comparison_status": "not_run",
+            "verdict": "prospective_floor",
+        }
     historical = None
     if purpose == "retrospective_diagnostic":
         historical = {
@@ -1534,7 +1546,7 @@ def assemble_floor_report(
         "sample_count": EVALUATION_SAMPLE_COUNT,
         "normalized_action_chunk_shape": list(NORMALIZED_ACTION_CHUNK_SHAPE),
         "metric": "max(abs(normalized_action_chunk_p - normalized_action_chunk_baseline))",
-        "source_identity": _fixed_source_identity(),
+        "source_identity": _floor_source_identity(purpose),
         "input_sha256": inputs,
         "case_identities": [dict(item) for item in identities],
         "perturbation_order": list(order),
@@ -1593,7 +1605,7 @@ def validate_floor_report(report: object) -> dict[str, object]:
         "max(abs(normalized_action_chunk_p - normalized_action_chunk_baseline))"
     ):
         raise ValueError("self-consistency floor metric changed")
-    if report["source_identity"] != _fixed_source_identity():
+    if report["source_identity"] != _floor_source_identity(str(report["purpose"])):
         raise ValueError("self-consistency source identity changed")
     _validate_timestamp(report["created_at_utc"], report["created_at_ns"])
     _validated_input_hashes(report["input_sha256"])

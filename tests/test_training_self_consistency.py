@@ -6,8 +6,10 @@ import hashlib
 import json
 import os
 from pathlib import Path
+import shutil
 import subprocess
 import sys
+import tempfile
 
 import numpy as np
 import pytest
@@ -175,6 +177,37 @@ def test_floor_envelope_includes_every_nonbaseline_perturbation() -> None:
         0.17762404680252075
     )
     assert report["context"]["verdict"] == "informational_only"
+
+
+def test_prospective_floor_uses_checkpoint_generic_identity_and_context() -> None:
+    module = __import__(
+        "training.self_consistency",
+        fromlist=["assemble_floor_report", "validate_floor_report"],
+    )
+    actions = {
+        item.name: _actions()
+        for item in module.perturbation_plan(max_threads=12)
+    }
+
+    report = module.assemble_floor_report(
+        actions=actions,
+        variant_metadata=_variant_metadata(module),
+        case_identities=_case_identities(),
+        input_sha256=_input_hashes(),
+        checkpoint_path=".cache/training/t3b/export",
+        purpose="prospective_gate",
+        created_at_utc="2026-09-01T12:00:00.000000+00:00",
+        created_at_ns=1_788_264_000_000_000_000,
+    )
+
+    assert report["source_identity"]["checkpoint_role"] == (
+        "prospective-trained-merged-fp32-export"
+    )
+    assert report["context"] == {
+        "comparison_status": "not_run",
+        "verdict": "prospective_floor",
+    }
+    module.validate_floor_report(report)
 
 
 @pytest.mark.parametrize(
@@ -596,14 +629,46 @@ def test_self_consistency_cli_exposes_the_frozen_plan_without_model_loading() ->
 
 
 def test_self_consistency_cli_assembles_completed_workers_without_rerunning_them() -> None:
-    work_dir = Path(".cache/training/t3/self-consistency")
-    variants = sorted((work_dir / "variants").glob("*/metadata.json"))
-    assert len(variants) == 9
-    before_mtimes = {path: path.stat().st_mtime_ns for path in variants}
-    output = Path(".cache/training/t3") / f"floor-cli-test-{os.getpid()}.json"
-    if output.exists():
-        output.unlink()
+    module = __import__(
+        "training.self_consistency",
+        fromlist=[
+            "collect_floor_input_hashes",
+            "perturbation_plan",
+            "write_variant_artifact",
+        ],
+    )
+    training_cache = Path(".cache/training").resolve()
+    training_cache.mkdir(parents=True, exist_ok=True)
+    work_dir = Path(
+        tempfile.mkdtemp(prefix="self-consistency-cli-test-", dir=training_cache)
+    )
+    output = work_dir.with_name(f"{work_dir.name}-floor.json")
     try:
+        inputs, _ = module.collect_floor_input_hashes(
+            checkpoint_dir=".cache/training/t3/export",
+            evaluation_dir=".cache/training/t3-evaluation",
+            cache_dir=".cache/hf",
+        )
+        (work_dir / "input_sha256.json").write_text(
+            json.dumps(inputs, indent=2, sort_keys=True) + "\n",
+            encoding="utf-8",
+        )
+        plan = module.perturbation_plan(max_threads=18)
+        for index, item in enumerate(plan):
+            dtype = np.float64 if item.dtype == "float64" else np.float32
+            actions = np.zeros((56, 50, 6), dtype=dtype)
+            if item.name != module.BASELINE_VARIANT:
+                actions[...] = index / 8
+            module.write_variant_artifact(
+                work_dir / "variants" / item.name,
+                variant=item,
+                normalized_actions=actions,
+                input_combined_sha256=inputs["combined_sha256"],
+                metadata=_runtime_metadata(item),
+            )
+        variants = sorted((work_dir / "variants").glob("*/metadata.json"))
+        assert len(variants) == 9
+        before_mtimes = {path: path.stat().st_mtime_ns for path in variants}
         completed = subprocess.run(
             [
                 sys.executable,
@@ -636,13 +701,14 @@ def test_self_consistency_cli_assembles_completed_workers_without_rerunning_them
         report = json.loads(output.read_text(encoding="utf-8"))
         assert summary["mode"] == "assemble_only"
         assert summary["workers_started"] == 0
-        assert report["F"] == 0.00003549918286283038
-        assert report["F64"] == 0.00003549918286283038
+        assert report["F"] == 1.0
+        assert report["F64"] == 1.0
         assert before_mtimes == {path: path.stat().st_mtime_ns for path in variants}
         assert not tuple(output.parent.glob(f".{output.name}.*"))
     finally:
         if output.exists():
             output.unlink()
+        shutil.rmtree(work_dir)
 
 
 def test_worker_environment_clears_every_documented_mps_switch() -> None:

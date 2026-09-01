@@ -4,6 +4,8 @@ ACTIVE — T3B AND RELEASE EXECUTION
 
 T3B-1 COMPLETE — SELF-CONSISTENCY FLOOR RECORDED
 
+T3B-2 COMPLETE — PROSPECTIVE PARITY PROCEDURE FROZEN
+
 The protected SmolVLA MLX v0.1 inference baseline is intact. At full-scope
 kickoff on 2026-08-31, `make test` passed **179/179** in **158.71 seconds** on
 the M5 Pro. The repository had **553 GiB** free, above the mandatory 40 GiB
@@ -59,6 +61,17 @@ diagnostic only and does not alter the original T3 failure. See
 `SELF_CONSISTENCY_T3.md`. The final v3 T3B-1 tree passes **347/347 tests in
 244.83 seconds**; its floor-focused suite passes **39/39**.
 
+T3B-2 froze the trained-checkpoint decision before a T3B checkpoint or MLX
+comparison existed. It retains every fixed tolerance and derives normalized
+action parity only as `max(0.005, 3 * F(C))`. The file evaluator reconstructs
+all nine raw floor workers, enforces the real-clock floor/marker/comparison
+order, rehashes every floor-bound input and complete export/evaluation tree,
+validates the canonical fp32 conversion from private descriptor snapshots, and
+installs one non-overwriting result. The focused suite passes **52/52**, the
+combined floor/distribution/evaluator suite passes **97/97**, and the complete
+repository passes **402/402 tests in 230.01 seconds**. Independent review found
+no remaining substantive issue. See `PARITY_PROCEDURE_TRAINED.md`.
+
 ## Stage state
 
 | Stage | State | Evidence / next action |
@@ -69,8 +82,8 @@ diagnostic only and does not alter the original T3 failure. See
 | T2 — Optimizer lockstep | Complete | 25/25 losses and 155/155 final tensors pass immutable gates. See `OPTIMIZER_LOCKSTEP.md`. |
 | T3 — LoRA fine-tune | Failure-documented | The 3,000-update run, merge, held-out improvement, and Torch round trip completed. All 56 frozen cases were parity-checked; raw physical max was `6.632053375244141` versus the unchanged `0.005` gate; see `FAILURE_LORA_FINETUNE.md`. |
 | T3B-1 — Reference floor | Complete | Nine PyTorch workers, including a fixed five-process MPS empirical envelope, evaluated 56 cases each; `F = F64 = 0.00003549918286283038`; report SHA-256 `cba4a856...f0585`; informational only, with no statistical-bound claim. |
-| T3B-2 — Prospective evaluator | In progress | Implement the fixed/derived gate contract and reject any post-comparison floor by timestamp. |
-| T3B-3 — Expert-only LoRA | Pending T3B-2 | Freeze/hash the exact 3,000-update configuration, then launch in the background. |
+| T3B-2 — Prospective evaluator | Complete | Fixed gates unchanged; derived `max(0.005, 3F)` gate, chronology, complete input provenance, semantic conversion validation, and no-clobber output are frozen and pass 52 focused tests. |
+| T3B-3 — Expert-only LoRA | Ready | Freeze/hash the exact 3,000-update expert-only configuration, then launch in the background. |
 | T4 — Training UX/full fine-tune | Pending T3B-3 fixed gates | Full fine-tune is code plus a 100-update smoke only. |
 | T5 — Training docs/benchmark | Pending T3B-3 fixed gates | Run only after training/floor processes are absent and idle state is recorded. |
 | Q — Quality extras | Pending Stage R | Normative package definitions are now available in `BRIEF_RELEASE.md`. |

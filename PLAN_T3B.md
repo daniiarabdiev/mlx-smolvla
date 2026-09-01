@@ -100,6 +100,12 @@ historical MPS variability disclosure.
 
 ## Task 2 — T3B-2: prospective parity procedure and evaluator
 
+**Status: complete.** The fixed and derived gate procedure, real-clock start
+marker, concrete input-evidence contract, semantic conversion audit, and
+no-clobber evaluator were frozen before any T3B checkpoint or comparison
+existed. The focused evaluator suite passes 52/52, the related contract and
+wheel suite passes 97/97, and the exact package tree passes 402/402.
+
 **Files:**
 
 - Add `smolvla_mlx/training/trained_parity.py`.
