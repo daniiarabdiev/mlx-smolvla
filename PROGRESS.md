@@ -1631,6 +1631,16 @@
   uv-available 3.11/3.12/3.13 wheel under repository-local caches, inspect its
   deployment tag, and run a fresh-environment import, isolation, and real CLI
   prediction smoke per artifact. No build or runtime test ran during T3B.
+- Artifact baseline: the existing wheel is exactly
+  `smolvla_mlx-0.0.1-cp312-cp312-macosx_26_0_arm64.whl`, and its embedded
+  `WHEEL` metadata repeats that tag. The current native module has Mach-O
+  minimum OS 26.0 because no target was declared. MLX 0.32.2 publishes
+  macOS-14 arm64 wheels for CPython 3.11, 3.12, and 3.13 (plus a matching
+  `mlx-metal` wheel), so 14.0 is the evidence-backed target rather than an
+  invented compatibility claim. All three requested interpreters are
+  available; matrix builds will still use `UV_PYTHON_INSTALL_DIR` under this
+  repository and deliberately select the macOS-14 dependency wheels so the
+  host's newer wheel cannot raise the linked binary minimum.
 - Documentation boundary: the current README contains the basic API, CLI,
   strict-golden evidence, and the original Metal table, but it still states
   Python 3.12 only, identity-only postprocessing, and inference-only scope. It
@@ -1638,6 +1648,15 @@
   strict-parity versus default-production distinction, exact LeRobot GPU
   fine-tune handoff, async server path, and troubleshooting. Final README
   claims will be written only after their packages and evidence exist.
+- GPU handoff audit: the installed pinned LeRobot 0.6.1 entry point accepts
+  `--policy.path`, `--dataset.repo_id`, `--batch_size`, `--steps`, and
+  `--output_dir`. Its SmolVLA defaults freeze the vision encoder and train the
+  expert path, while `--policy.push_to_hub=false` and
+  `--save_checkpoint_to_hub=false` keep the run local. It always saves the
+  final step and maintains `checkpoints/last`; the loadable standard artifact
+  is `checkpoints/last/pretrained_model`, suitable as this package's local
+  `from_pretrained` path. These facts came from the exact installed 0.6.1
+  sources; the documented command will be smoke-validated only after T3B.
 
 ## 2026-09-02 — T3B post-run chronology audit
 

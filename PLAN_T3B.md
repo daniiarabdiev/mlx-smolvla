@@ -247,7 +247,10 @@ execution occurs while T3B is active.
 **Status:** static audit complete; implementation waits for T3B to exit. The
 runtime imports `_rmsnorm_native` unconditionally, `setup.py` always registers
 the CMake extension, `pyproject.toml` restricts installs to Python 3.12, and no
-deployment target is declared. The implementation will add an explicitly
+deployment target is declared. The current artifact is consequently tagged
+`cp312-cp312-macosx_26_0_arm64`; MLX 0.32.2 publishes macOS-14 wheels for all
+three requested Python versions, establishing 14.0 as the target. The
+implementation will add an explicitly
 detectable pure-MLX fallback, preserve exact CPU-parity coverage whenever the
 extension is present, and prove both import modes before building the requested
 interpreter matrix.
