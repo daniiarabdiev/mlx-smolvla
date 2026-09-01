@@ -211,6 +211,12 @@ P1-4, Stage Q, or any command that reports performance timing.
 
 ### Task 4.2 — P0-2: stats-active conversion and loading
 
+**Status:** metadata discovery is complete. The selected public third target is
+`soonweihong0857/swhfypv3_smolvla_multitask_model` at revision
+`5e2491c809ec892427f54db1eb23bf8c4bbbf770`; source changes and large artifact
+downloads wait until T3B is absent because the running process revalidates its
+implementation bytes before export.
+
 - Place the true dataset statistics in the designated reference artifact tree and
   hash their provenance.
 - Build the second eight-sample golden corpus with the fixed stored noise and run
@@ -225,6 +231,10 @@ P1-4, Stage Q, or any command that reports performance timing.
 
 ### Task 4.3 — P0-3: cache audit and safe cleanup
 
+**Status:** read-only baseline captured: `.cache/smolvla_mlx` is 77,380,960
+KiB; 23 `debug-*` trees account for 37,803,716 KiB. No deletion or cleanup-code
+execution occurs while T3B is active.
+
 - Add an inventory command that reports repository cache categories, sizes,
   retention status, and whether each path is regenerable.
 - Add a narrowly scoped cleanup target that refuses paths outside the repository,
@@ -233,6 +243,14 @@ P1-4, Stage Q, or any command that reports performance timing.
   retained-evidence protections; run the full suite; commit and push.
 
 ### Task 4.4 — P1-2: portable normalization and distribution artifacts
+
+**Status:** static audit complete; implementation waits for T3B to exit. The
+runtime imports `_rmsnorm_native` unconditionally, `setup.py` always registers
+the CMake extension, `pyproject.toml` restricts installs to Python 3.12, and no
+deployment target is declared. The implementation will add an explicitly
+detectable pure-MLX fallback, preserve exact CPU-parity coverage whenever the
+extension is present, and prove both import modes before building the requested
+interpreter matrix.
 
 - Add an optional native MLX RMSNorm path with a numerically equivalent fallback,
   exercised in both modes.
@@ -243,6 +261,12 @@ P1-4, Stage Q, or any command that reports performance timing.
 - Run the full suite, update status/progress, commit, and push.
 
 ### Task 4.5 — P1-3: release documentation and LeRobot GPU training path
+
+**Status:** static gap audit complete; command validation and final prose wait
+for the relevant release packages. The current README has the core API and old
+strict-parity numbers, but still describes only Python 3.12, identity-only
+postprocessing, inference-only scope, and no cache cleanup, production/strict
+mode distinction, GPU fine-tune handoff, serving path, or troubleshooting.
 
 - Polish README installation, conversion, inference, cache, strict-parity versus
   production-mode, known-limitations, and troubleshooting sections.
@@ -257,13 +281,17 @@ P1-4, Stage Q, or any command that reports performance timing.
    updates, retained checkpoint integrity, log completeness, and final adapter.
 2. Merge/export fp32 to the exact LeRobot layout and repeat the existing export
    audit before any parity decision.
-3. Run fixed gates in order: preprocessing; held-out improvement; Torch/MLX
-   roundtrip. These are functional checks, not timing measurements.
+3. Finalize and test the comparison-artifact producer without loading or
+   evaluating the T3B checkpoint. The legacy `check_lora_finetune.py` command
+   cannot run here because it performs MLX inference before writing its outcome.
 4. With no timing process active, compute the trained T3B PyTorch-only floor using
    the T3B-1 procedure. Atomically write it, compute its SHA-256, and record the
    path, digest, timestamp, checkpoint/config digests, and idle/non-timing state in
    `PROGRESS.md` before invoking the MLX comparison command.
-5. Only then produce the MLX comparison and run the T3B-2 evaluator.
+5. Only then create the one-shot comparison marker and produce the single bound
+   comparison artifact. Run fixed gates in their required logical order inside
+   that producer: preprocessing, held-out improvement, and Torch/MLX roundtrip;
+   then run the T3B-2 evaluator for the derived deterministic gate.
 6. Write a side-by-side original-T3/T3B report containing held-out MAE, improvement
    ratio, `F`, MLX-versus-reference normalized maximum, amplification, wall time,
    and peak memory. Use already captured training resource data; do not rerun

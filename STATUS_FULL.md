@@ -98,7 +98,7 @@ the model and optimizer SHA-256 values exactly match the disposable preflight.
 
 | Stage | State | Evidence / next action |
 | --- | --- | --- |
-| R — Release | P0-1 implemented during T3B | Origin mirrors the canonical pushed history; canonical Apache-2.0 `LICENSE` and existing third-party `NOTICE` are linked and packaged. Full-suite validation waits for an idle machine; P0-2 investigation is next. |
+| R — Release | P0-1 implemented; safe audits active during T3B | Origin mirrors the canonical pushed history; canonical Apache-2.0 `LICENSE` and existing third-party `NOTICE` are linked and packaged. P0-2 has a revision-pinned public stats-active target, P0-3 has a read-only cache baseline, and P1-2/P1-3 have static gap audits. Source changes, cleanup, builds, command validation, and the full suite wait for an idle machine. |
 | T0 — Training-readiness | Complete | 155/155 gradients finite and nonzero over 99,880,992 trainable scalars; 196.799 ms forward+backward and 2,509,594,126-byte peak MLX memory. See `TRAINING_FEASIBILITY.md`. |
 | T1 — Gradient parity | Complete | Identical real batch/draws; loss and all 155 gradients pass immutable gates. See `GRADIENT_PARITY.md`. |
 | T2 — Optimizer lockstep | Complete | 25/25 losses and 155/155 final tensors pass immutable gates. See `OPTIMIZER_LOCKSTEP.md`. |

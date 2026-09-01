@@ -1549,3 +1549,105 @@
 - Guardrails: no budget benchmark, floor computation, parity comparison,
   hardware/serial access, or upload is running with training. The protected
   original-T3 failure record remains unchanged.
+
+## 2026-09-02 — Stage R P0-2 public fine-tune discovery
+
+- Search method: queried the public Hugging Face model API for `smolvla`,
+  `SmolVLA SO101 fine-tuned LeRobot`, and `SmolVLA SO100 LeRobot policy`, then
+  inspected the first 1,000 `smolvla` model records for a full standard LeRobot
+  processor file set. Numerous SO-100/SO-101 weights exist, but nearly all
+  expose only `config.json`, `model.safetensors`, and `train_config.json`; those
+  cannot independently prove active saved normalization.
+- Selected public target:
+  `soonweihong0857/swhfypv3_smolvla_multitask_model`, model revision
+  `5e2491c809ec892427f54db1eb23bf8c4bbbf770`. Its card identifies
+  `lerobot/smolvla_base` as the base and
+  `soonweihong0857/smolvla_multitask_data` as the training dataset. The model
+  repository totals **1,197,819,154 bytes**, including the complete standard
+  pre/postprocessor configs and safetensors; the linked dataset at revision
+  `ec0062a53e0ae88d46a4341ab0695dfa9f03111b` totals **471,239,739 bytes**.
+  Both are below the package's approximate 5 GiB cap.
+- Compatibility: the config uses the audited
+  `HuggingFaceTB/SmolVLM2-500M-Video-Instruct` backbone, 16 VLM layers, 0.75
+  expert-width multiplier, 32-wide state/action padding, 50-action chunks,
+  and two 480×640 inputs named `observation.images.wrist_camera` and
+  `observation.images.top_camera`. Its processor tensors contain active
+  six-element `observation.state.mean/std` and `action.mean/std`; each records
+  44,900 samples. This simultaneously exercises non-base camera names, active
+  statistics, Hub-ID loading, and a real public fine-tune.
+- Rejected examples: the exact-dataset candidate
+  `lerobot-edinburgh-white-team/smolvla_svla_so101_pickplace` and the tagged
+  `rancheng222/smolvla_so101_tie_bag` each fit below 1 GiB but omit all saved
+  processor files, so they cannot satisfy the active-normalization target.
+  `BookHou/smolvla-rgbd-unfrozen-b8-9280` has processors but no linked
+  downloadable evaluation dataset in its metadata.
+- Implementation boundary: the core inference preprocessor currently resolves
+  active stats in configuration but still returns identity transforms. The
+  training lane already contains a tested stats-aware prototype. After T3B
+  exits, P0-2 will move strict mean/std loading into the dependency-light core,
+  preserve the base checkpoint's identity behavior, improve config/observation
+  diagnostics, create the reference stats-active target and second golden set,
+  and then download/evaluate the selected public target at fixed tolerances.
+  No large model/dataset download or implementation-file mutation occurred
+  during training.
+
+## 2026-09-02 — Stage R P0-3 read-only cache baseline
+
+- Baseline sizes: `.cache/smolvla_mlx` is **77,380,960 KiB** (73.80 GiB),
+  `.cache/hf` is **1,868,928 KiB**, and `.cache/training` was **3,296,196
+  KiB** while the live T3B checkpoint tree was still growing.
+- Largest retained categories are the canonical fp32 policy/source cache
+  (**7,922,456 KiB**), general converted checkpoint cache (**3,516,584 KiB**),
+  benchmark cache (**2,637,584 KiB**), the public base-checkpoint snapshot
+  (**893,328 KiB**), and explicit inference/parity caches. Training goldens,
+  original T3 evidence, and the live T3B tree are protected evidence rather
+  than cleanup candidates.
+- Regenerable debris: **23** top-level `debug-*` experiment trees total
+  **37,803,716 KiB** (36.05 GiB). Small named scratch probes and
+  `benchmark-debug` are also candidates, but the specialized non-debug
+  conversion caches are retained because the full suite reuses them and they
+  are expensive to regenerate.
+- Planned safety contract: inventory is read-only; cleanup accepts only the
+  exact repository `.cache/smolvla_mlx` root, refuses symlinked ancestry or
+  candidates, uses a fixed basename allowlist/prefix policy, defaults to a dry
+  run in its CLI, and cannot name training/checkpoint/evidence roots. Tests will
+  cover root/path traversal, symlink, and retained-evidence refusal before any
+  deletion. No cache entry was removed during this baseline or while T3B runs.
+
+## 2026-09-02 — Stage R P1-2/P1-3 static release audit
+
+- Portability boundary: `smolvla_mlx/rmsnorm.py` currently imports
+  `_rmsnorm_native` unconditionally and all four CPU compatibility operations
+  dispatch directly to it. `setup.py` always registers the MLX CMake extension;
+  `pyproject.toml` restricts installation to `>=3.12,<3.13`; neither the build
+  metadata nor CMake declares `MACOSX_DEPLOYMENT_TARGET`. Consequently an absent
+  or unloadable extension prevents even the production Metal path from
+  importing, and the requested Python 3.11/3.13 wheel matrix is not yet
+  representable by project metadata.
+- Planned proof: force the absent-extension path in a subprocess and exercise
+  pure-MLX RMSNorm, split-half RoPE, softmax, and SiLU; retain exact
+  PyTorch-order CPU tests when the extension is available and skip them only
+  with an explicit genuine-absence reason. Then build the sdist and each
+  uv-available 3.11/3.12/3.13 wheel under repository-local caches, inspect its
+  deployment tag, and run a fresh-environment import, isolation, and real CLI
+  prediction smoke per artifact. No build or runtime test ran during T3B.
+- Documentation boundary: the current README contains the basic API, CLI,
+  strict-golden evidence, and the original Metal table, but it still states
+  Python 3.12 only, identity-only postprocessing, and inference-only scope. It
+  lacks the required stats-active evidence, cache inventory/cleanup contract,
+  strict-parity versus default-production distinction, exact LeRobot GPU
+  fine-tune handoff, async server path, and troubleshooting. Final README
+  claims will be written only after their packages and evidence exist.
+
+## 2026-09-02 — T3B post-run chronology audit
+
+- The legacy `scripts/check_lora_finetune.py` command performs MLX evaluation
+  before it writes its outcome, so invoking it ahead of the T3B floor would
+  violate the operator's floor-first rule even though the fixed gates are
+  logically reported before the derived gate. The runbook now requires the
+  comparison producer to be finalized and tested without loading T3B, followed
+  by the PyTorch-only floor and its recorded hash/timestamps, then the one-shot
+  comparison marker, then the first MLX evaluation and the bound evaluator.
+- No T3B MLX-versus-PyTorch comparison has been run. No implementation file was
+  changed during this audit because the active trainer revalidates its source
+  bytes before export.
