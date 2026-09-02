@@ -2289,3 +2289,34 @@
   object-key order; counts, values, summaries, dtype order, and every other
   protocol field remain unchanged. A corrected clean commit is required before
   rerunning timings.
+
+## 2026-09-02 — Stage Q P2-2 bf16 latency diagnosis complete
+
+- The corrected clean protocol commit
+  `adf40e62a7b652262fc08d7ed6449b4c60a0773d` produced the non-overwriting
+  profile at `2026-09-02T05:33:56.285086+00:00`; the process preflight found no
+  trainer, floor worker, pytest, or competing benchmark. `BF16_PROFILE.json`
+  has SHA-256
+  `74da9f937cb8bfeba4066d5518187490ff96a1447e4a2ad2253e2493245be1cf`.
+- The synchronized total medians are 110.7135835045483 ms fp32 and
+  130.2171044953866 ms bf16: +19.503520990838297 ms / +17.616195207010946%.
+  Component deltas are +14.51791700674221 ms expert (74.4374% of the total),
+  +2.90929050242994 ms prefix (14.9167%), +1.7123540019383654 ms vision
+  (8.7797%), +0.3240629957872443 ms connector (1.6616%), and
+  +0.013917502656113356 ms preprocessing (0.0714%). Component medians explain
+  99.87% of the total delta. Profile memory is 2.9275 GiB fp32 versus 2.4373
+  GiB bf16.
+- A direct dtype trace found bf16 checkpoint weights but fp32 preprocessed
+  pixels/state/noise and fp32 vision, connector, prefix/cache, and velocity
+  outputs. The evidence therefore identifies mixed-dtype projection-heavy
+  execution as the boundary of the slowdown and is consistent with MLX 0.32.2
+  conversion/kernel behavior; it does not prove a particular private Metal
+  kernel. Casting activations would change the protected arithmetic path, and
+  upcasting weights would erase the memory benefit, so no unproven optimization
+  or default change was made. The exact profile is designed to be rerun after
+  an MLX upgrade.
+- Artifact/publication coverage passes **10/10 in 0.24 seconds**. The complete
+  P2-2 repository suite passes **627/627 tests in 533.26 seconds**. No tolerance,
+  upload, hardware, robot directory, or serial port was touched; the original
+  T3 failure remains byte-identical at SHA-256
+  `d6654131c4acf86de13206f210f1ea1a82e3aad18871e5b64428bdf1dbeed7c6`.

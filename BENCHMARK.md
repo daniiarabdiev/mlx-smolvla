@@ -123,3 +123,51 @@ input hashes, and source hashes are committed in
 `115ad58c0c618b65a6275018614f3ee6cf17dd02a9d4ad9c94aaf7e5a9842e48`.
 Its timing implementation was frozen first in clean commit
 `e210f7b76ae8657390a8101b76ee5815df1b15ab`.
+
+## bf16 latency diagnosis
+
+Stage Q P2-2 reproduces and localizes the storage-bf16 slowdown with the same
+pinned model, `sample_000` observation/noise, 5 excluded warmups, and 50
+measurements per dtype. Unlike the end-to-end table, this diagnostic inserts a
+synchronization after every component, so its component values should be
+compared only within this table.
+
+| Synchronized component | fp32 median ms | bf16 median ms | bf16 delta ms | Share of total delta |
+| --- | ---: | ---: | ---: | ---: |
+| Preprocessing | 4.36 | 4.38 | +0.01 | 0.07% |
+| Vision encoder | 45.49 | 47.20 | +1.71 | 8.78% |
+| Connector | 0.60 | 0.93 | +0.32 | 1.66% |
+| Prefix prefill | 8.10 | 11.01 | +2.91 | 14.92% |
+| Ten-step expert loop | 52.19 | 66.71 | +14.52 | 74.44% |
+| **End-to-end total** | **110.71** | **130.22** | **+19.50** | **100.00%** |
+
+The bf16 total is **17.62%** slower. The component medians account for 99.87%
+of the 19.50 ms delta; the remaining 0.03 ms (0.13%) is boundary/Python timing
+overhead. The expert loop is the dominant source, followed by prefix prefill;
+preprocessing is effectively neutral. Profile memory is 2.93 GiB for fp32 and
+2.44 GiB for bf16, preserving bf16's compact-storage benefit.
+
+An explicit dtype trace explains the relevant execution mode: bf16 selects
+bf16 checkpoint weights, but preprocessed pixels, state, fixed flow noise,
+vision output, connector output, prefix/cache, and final velocity remain fp32.
+It is therefore mixed-dtype fp32 activation compute with compact bf16 weight
+storage, not an all-bf16 compute path. The fact that every projection-heavy
+component slows while preprocessing does not is consistent with conversion or
+mixed-dtype kernel cost in **MLX 0.32.2**. The measurements do not identify a
+specific private Metal kernel, so that narrower claim is intentionally not
+made.
+
+No inference behavior changed. Casting activations and the Euler state to bf16
+would change the numerical pathway protected by the immutable parity ladder;
+upcasting stored weights would discard the measured memory benefit. Neither is
+a justified optimization from this evidence alone. Keep the current default,
+and rerun this exact artifact after an MLX upgrade to see whether mixed-dtype
+kernel behavior changes before considering a code path change.
+
+The clean idle declaration is
+`2026-09-02T05:33:56.285086+00:00`. All 600 raw durations, summaries, delta
+attribution, inputs, environment, and source hashes are committed in
+[BF16_PROFILE.json](BF16_PROFILE.json), SHA-256
+`74da9f937cb8bfeba4066d5518187490ff96a1447e4a2ad2253e2493245be1cf`.
+The successful profile binds clean source commit
+`adf40e62a7b652262fc08d7ed6449b4c60a0773d`.

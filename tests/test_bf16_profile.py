@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import copy
+import hashlib
 import json
 from pathlib import Path
 
@@ -147,3 +148,28 @@ def test_profile_script_uses_clean_idle_coordinator_and_isolated_workers() -> No
     assert "_competing_processes()" in source
     assert 'choices=("float32", "bfloat16")' in source
     assert "subprocess.run(" in source
+
+
+def test_committed_profile_revalidates_from_all_raw_component_timings() -> None:
+    from smolvla_mlx.profile import validate_profile_document
+
+    path = Path("BF16_PROFILE.json")
+    artifact = json.loads(path.read_text(encoding="utf-8"))
+    assert validate_profile_document(artifact) == artifact
+    assert hashlib.sha256(path.read_bytes()).hexdigest() == (
+        "74da9f937cb8bfeba4066d5518187490ff96a1447e4a2ad2253e2493245be1cf"
+    )
+
+
+def test_benchmark_document_traces_profile_and_preserves_default_behavior() -> None:
+    artifact = json.loads(Path("BF16_PROFILE.json").read_text(encoding="utf-8"))
+    benchmark = Path("BENCHMARK.md").read_text(encoding="utf-8")
+    assert "## bf16 latency diagnosis" in benchmark
+    assert "74da9f937cb8bfeba4066d5518187490ff96a1447e4a2ad2253e2493245be1cf" in benchmark
+    for profile in artifact["profiles"]:
+        for stage in artifact["protocol"]["stages"]:
+            assert f"{profile['summaries_ms'][stage]['median']:.2f}" in benchmark
+    analysis = artifact["analysis"]
+    assert f"{analysis['total_slowdown_percent']:.2f}%" in benchmark
+    assert "No inference behavior changed" in benchmark
+    assert "MLX 0.32.2" in benchmark
