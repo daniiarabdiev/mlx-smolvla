@@ -5,6 +5,11 @@ plans under `docs/superpowers/plans/`. Every completed package ends in a passing
 focused test, a regression check appropriate to its risk, a commit, and a push
 to `origin/main`.
 
+> Historical stop-point plan. `PLAN_T3B.md` superseded this file after the
+> operator supplied `BRIEF_RELEASE.md`; its unchecked Stage R/Q/H items preserve
+> the earlier blocked state and are not the current completion status. Use
+> `STATUS_FULL.md` for the final result.
+
 ## Kickoff and protected baseline
 
 - [x] Read the permanent rules, v0.1 brief, full-scope brief, completion status,

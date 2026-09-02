@@ -1,10 +1,10 @@
 # Distribution artifact manifest
 
-This manifest records the Stage R P1-2 artifacts built locally from source
-commit `a50cd3b5720a061262a978130600215a30fb8fbd` on
-`2026-09-02T03:44:23Z`. Nothing was uploaded. The earlier P1-2 artifacts were
-moved intact to the ignored `.cache/release-build-backup/pre-a50cd3b` before
-this final P1-4 refresh.
+This manifest records the finished-tree distribution artifacts built locally
+from completed code commit `691ce84fd9ba740239a9c39a458b3e2cc2a375be` on
+`2026-09-02T07:23:37Z`. Nothing was uploaded. The preceding Stage R artifacts
+were moved intact to the ignored
+`.cache/release-build-backup/pre-691ce84` before this full-scope refresh.
 
 ## Build environment
 
@@ -32,15 +32,17 @@ the three environment values above and wrote to the top-level `dist/`.
 
 | Artifact | Bytes | SHA-256 | Wheel tag / contents | Native `minos` |
 | --- | ---: | --- | --- | ---: |
-| `smolvla_mlx-0.0.1.tar.gz` | 366,428 | `f778711e1cadcdf6251b4a249857281feb8c114941d1d37b93afc4739af61b35` | No `.so`/`.dylib`; includes CMake, server, tests, and all native sources | Built smoke: 14.0 |
-| `smolvla_mlx-0.0.1-cp311-cp311-macosx_14_0_arm64.whl` | 321,285 | `2a9e149025a0433829e2f7b3a150807409cf2838555b33da7ae357ce70a9014e` | `cp311-cp311-macosx_14_0_arm64`; server module included | 14.0 |
-| `smolvla_mlx-0.0.1-cp312-cp312-macosx_14_0_arm64.whl` | 320,279 | `4412160a2b6f613f237d881347d4a93d27e2c96d82c82bf3991f59e4efa612b1` | `cp312-cp312-macosx_14_0_arm64`; server module included | 14.0 |
-| `smolvla_mlx-0.0.1-cp313-cp313-macosx_14_0_arm64.whl` | 320,320 | `af93be38cd18bb3a45f94b039cd5f52a4a410fc8665d3aeb7eed3a5686a954fd` | `cp313-cp313-macosx_14_0_arm64`; server module included | 14.0 |
+| `smolvla_mlx-0.0.1.tar.gz` | 410,600 | `0b3fb295637b31eafc46439fcc7999a0c74829fc77d045ac44557c7b7684fd57` | No `.so`/`.dylib`; includes CMake, tests, native sources, quantization, server telemetry, and T4 training UX | Built smoke: 14.0 |
+| `smolvla_mlx-0.0.1-cp311-cp311-macosx_14_0_arm64.whl` | 353,483 | `1eb5ae2ab25109d43480a35d2638c4792c186b762bde998e6a33094c1961712d` | `cp311-cp311-macosx_14_0_arm64`; completed inference/server/training surfaces included | 14.0 |
+| `smolvla_mlx-0.0.1-cp312-cp312-macosx_14_0_arm64.whl` | 352,479 | `4f75223a226c69ea03f2fad26aa38df911b276ba18ef0914b5a60ac845b1932d` | `cp312-cp312-macosx_14_0_arm64`; completed inference/server/training surfaces included | 14.0 |
+| `smolvla_mlx-0.0.1-cp313-cp313-macosx_14_0_arm64.whl` | 352,516 | `ed45e8bff6448c4021543b41db043451ea44e0c8d651c2347043fe86cee7a6f2` | `cp313-cp313-macosx_14_0_arm64`; completed inference/server/training surfaces included | 14.0 |
 
 Each wheel declares `Requires-Python: >=3.11,<3.14`. Its optional LeRobot and
 Torch reference requirements are guarded by `python_version >= "3.12"`; the
 separate `serve` extra declares exactly
-`lerobot[async]==0.6.1; python_version >= "3.12"`.
+`lerobot[async]==0.6.1; python_version >= "3.12"`. The `train` extra declares
+the guarded LeRobot dataset/SmolVLA dependency and Torch 2.11.0 used by the T4
+dataset bridge.
 
 ## Fresh-environment smoke matrix
 
@@ -65,8 +67,9 @@ its `serve` extra. From outside the source checkout it imported
 `smolvla_mlx.server` from that environment, reproduced protobuf descriptor
 SHA-256 `e116fbf44dd1fc65b67ff255c04857000c28e69055211af5ef3df85ac8d81f8d`,
 bound an ephemeral loopback gRPC port, completed the reference `Ready` RPC,
-stopped cleanly, and rendered the installed `smolvla-mlx serve --help` surface.
-No model, hardware, serial port, or external service was contacted.
+stopped cleanly, and rendered the installed `smolvla-mlx serve --help` surface,
+including the quantization and no-clobber latency-log options. No model,
+hardware, serial port, or external service was contacted.
 
 The source tree also builds a genuinely extension-free `py3-none-any` wheel
 under `SMOLVLA_MLX_BUILD_NATIVE=0`; an isolated test proves that wheel contains

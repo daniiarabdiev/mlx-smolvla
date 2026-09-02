@@ -11,9 +11,9 @@ identity used for every golden and conversion test.
 
 - LeRobot `0.6.1`; PyTorch `2.11.0`;
   Transformers `5.5.4`.
-- SmolVLA policy source: `/Users/dan/Desktop/workshop/robotics-mlx-contrib/.venv/lib/python3.12/site-packages/lerobot/policies/smolvla/modeling_smolvla.py`.
-- SmolVLA configuration source: `/Users/dan/Desktop/workshop/robotics-mlx-contrib/.venv/lib/python3.12/site-packages/lerobot/policies/smolvla/configuration_smolvla.py`.
-- SmolVLA VLM-with-expert source: `/Users/dan/Desktop/workshop/robotics-mlx-contrib/.venv/lib/python3.12/site-packages/lerobot/policies/smolvla/smolvlm_with_expert.py`.
+- SmolVLA policy source: `.venv/lib/python3.12/site-packages/lerobot/policies/smolvla/modeling_smolvla.py`.
+- SmolVLA configuration source: `.venv/lib/python3.12/site-packages/lerobot/policies/smolvla/configuration_smolvla.py`.
+- SmolVLA VLM-with-expert source: `.venv/lib/python3.12/site-packages/lerobot/policies/smolvla/smolvlm_with_expert.py`.
 - Policy checkpoint: `lerobot/smolvla_base` at `c83c3163b8ca9b7e67c509fffd9121e66cb96205`.
 - Base VLM: `HuggingFaceTB/SmolVLM2-500M-Video-Instruct` at `7b375e1b73b11138ff12fe22c8f2822d8fe03467`.
 - Golden dataset: `lerobot/svla_so101_pickplace` at `f641879e22172be7e8161d5e6c1503c2d2feb657`.

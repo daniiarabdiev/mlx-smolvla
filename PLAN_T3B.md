@@ -14,7 +14,7 @@ of this plan.
 
 ## Invariants
 
-- Work only in `/Users/dan/Desktop/workshop/robotics-mlx-contrib` on `main`.
+- Work only in this repository's canonical worktree on `main`.
 - Keep Hugging Face, uv, and model caches under the repository `.cache/` tree.
 - Never access `~/robot/so101`, serial ports, credentials, or physical hardware.
 - Never upload model artifacts or datasets. The only network publication is
@@ -397,6 +397,12 @@ require a new idle-process declaration.
   hardware result. Run the full suite; update status/progress; commit and push.
 
 ## Task 11 — Final verification and handoff
+
+**Status:** Complete. Finished-tree artifacts pass the four-environment base
+matrix and serve-extra loopback smoke; repository/evidence/safety audits are
+clean within the documented historical and hardware boundaries; and the final
+suite passes 652/652 tests in 538.08 seconds. This tracked update is the closing
+handoff record.
 
 1. Confirm no background training/floor/serve test process remains.
 2. Run formatting/static checks, packaging checks, documented smoke commands, and

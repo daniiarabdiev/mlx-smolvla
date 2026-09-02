@@ -1,6 +1,10 @@
 # Full-Scope Status
 
-ACTIVE — FINAL REPOSITORY AND ARTIFACT AUDIT
+FULL-SCOPE SOFTWARE COMPLETE — FINAL AUDIT PASSED
+
+FINAL VERIFICATION COMPLETE — 652/652 TESTS PASS
+
+HARDWARE VALIDATION NOT RUN — SUPERVISED OPERATOR SESSION REQUIRED
 
 T3B-1 COMPLETE — SELF-CONSISTENCY FLOOR RECORDED
 
@@ -280,11 +284,34 @@ validation remains NOT RUN**, and no robot environment, serial port, camera,
 motor, or arm was accessed. The exact Stage H tree passes **652/652 tests in
 537.24 seconds**.
 
+Final verification is complete. The finished-tree distributions were rebuilt
+from pushed code commit `691ce84fd9ba740239a9c39a458b3e2cc2a375be` and
+contain the T4 training UX, Q3 quantization presets, and H server telemetry.
+The sdist and CPython 3.11/3.12/3.13 wheels each passed a fresh base install,
+isolated native-backend import, and offline finite-action prediction; the
+CPython 3.12 serve-extra wheel also passed the pinned descriptor and ephemeral
+loopback `Ready` RPC. Both installed quantization presets emitted finite
+actions. Exact artifact hashes are in `DIST_MANIFEST.md`; the preceding release
+artifacts remain recoverable under the ignored cache, and nothing was uploaded.
+
+The final audit found all 33 required deliverables, no tracked private home
+path, high-confidence secret pattern, model/build binary, file over 10 MiB,
+code placeholder, skip, or xfail. All 18 relative Markdown links resolve, the
+111-package lock is current, and `actionlint` passes with only its intentional
+constant-false workflow diagnostic excluded. The T3B verdict recomputes its
+embedded arithmetic and chronology; its frozen comparison implementation
+digest resolves to Git commit `54a4e0b55dbabbbfd0ecbeb5c58caf80523f02d2`,
+so the later T4 implementation is not misrepresented as historical evidence.
+Four unreachable dangling blobs are the only `git fsck` findings; reachable
+history is intact. The closing suite passes **652/652 tests in 538.08 seconds**
+with no skips. The machine had **517 GiB** free and repository caches occupied
+**122,897,608 KiB**, comfortably above the mandatory 40 GiB free-space floor.
+
 ## Stage state
 
 | Stage | State | Evidence / next action |
 | --- | --- | --- |
-| R — Release | Complete — `RELEASE READY` | All P0/P1 criteria pass. Final sdist and CPython 3.11–3.13 wheels were rebuilt from pushed source `a50cd3b`; four base smokes, one serve-extra smoke, and the 601-test closing suite pass. Metal fp32's fixed deterministic failure and pinned MLX's 26.2 dylib floor are documented limitations. |
+| R — Release | Complete — `RELEASE READY` | All P0/P1 criteria pass. The finished-tree sdist and CPython 3.11–3.13 wheels were refreshed from pushed code commit `691ce84`; four base smokes, one serve-extra loopback smoke, both installed quantization smokes, and the 652-test final suite pass. Metal fp32's fixed deterministic failure and pinned MLX's 26.2 dylib floor are documented limitations. |
 | T0 — Training-readiness | Complete | 155/155 gradients finite and nonzero over 99,880,992 trainable scalars; 196.799 ms forward+backward and 2,509,594,126-byte peak MLX memory. See `TRAINING_FEASIBILITY.md`. |
 | T1 — Gradient parity | Complete | Identical real batch/draws; loss and all 155 gradients pass immutable gates. See `GRADIENT_PARITY.md`. |
 | T2 — Optimizer lockstep | Complete | 25/25 losses and 155/155 final tensors pass immutable gates. See `OPTIMIZER_LOCKSTEP.md`. |
@@ -297,7 +324,8 @@ motor, or arm was accessed. The exact Stage H tree passes **652/652 tests in
 | Q — Quality extras | Complete | P2-1 comparison, P2-2 profile, P2-3 gated quantization, and P2-4 honestly disabled CI workflow are committed; every package closed with the full suite. |
 | H — Hardware readiness | Complete — documents/software only | Exact supervised runbook and no-clobber observation-to-chunk latency logger are committed and loopback-tested. Hardware validation is explicitly NOT RUN because the in-session gate was absent. |
 
-`TRAINING ALPHA (STATISTICAL)`, `RELEASE READY`, `T4 COMPLETE`, and `T5 COMPLETE` have been reached.
+`TRAINING ALPHA (STATISTICAL)`, `RELEASE READY`, `T4 COMPLETE`, `T5 COMPLETE`,
+and `FINAL VERIFICATION COMPLETE` have been reached.
 
 ## Current local evidence
 
@@ -329,7 +357,7 @@ motor, or arm was accessed. The exact Stage H tree passes **652/652 tests in
 | `scripts/serve_latency_smoke.py` | Tracked serve-only H entrypoint | SHA-256 `73145031b4ec65800ba5b1fe9a55a16fb1bcccec840cc700d4dc9940bde7459d`; exclusive JSONL path wired to loopback-default server |
 | `.cache/hf` | 2,614,416 KiB | repository-local pinned source/dataset cache |
 | `.cache/smolvla_mlx` | 74,751,612 KiB | native conversion/evaluation cache after isolated Q experiments |
-| `dist/` | 4 artifacts | One sdist plus CPython 3.11/3.12/3.13 `macosx_14_0_arm64` wheels; exact hashes in `DIST_MANIFEST.md` |
+| `dist/` | 4 artifacts | Finished-tree sdist plus CPython 3.11/3.12/3.13 `macosx_14_0_arm64` wheels from code commit `691ce84`; exact hashes in `DIST_MANIFEST.md` |
 | `.cache/production-deterministic.json` | 2,515 bytes | SHA-256 `3268f88be5ea854ff5162373146d1b2fd23cdbcc26bacbc060f0f8fa5b850398`; production fp32 fails fixed deterministic gate, bf16 passes |
 | `.cache/statistical-strict-production-report.json` | 13,737 bytes | SHA-256 `b292736e3ec82b3eae8702c065c7c642326d226f06d35aa2214ac83fa1c23db5`; explicit strict CPU ratios both pass |
 | `.cache/statistical-production.json` | 13,752 bytes | SHA-256 `c506ddcfdde50297e97b9905a299d55f117680a93b257e0af335ae6c9ad5fe07`; explicit production Metal ratios both pass |
@@ -342,5 +370,6 @@ Training evidence is intentionally ignored by Git and has not been uploaded.
 - No PyPI or Hugging Face uploads were made.
 - No credentials, robot environment, vendor fork, serial ports, or hardware
   were accessed.
-- The release brief and T3B amendment are committed. Execution is proceeding in
-  the mandated order without additional operator input.
+- The release brief and T3B amendment are committed. Full-scope software
+  execution is complete; only the separately gated supervised hardware
+  validation remains for an operator-present session.

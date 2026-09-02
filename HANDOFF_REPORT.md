@@ -1,5 +1,8 @@
 # SmolVLA MLX — Agent Handoff Report
 
+> Historical v0.1 checkpoint report. For the completed full-scope continuation,
+> use `STATUS_FULL.md`, `PLAN_T3B.md`, and the latest `PROGRESS.md` entries.
+
 **Status: v0.1 complete.** This report is the evidence-backed handoff for any
 agent continuing the project. It records what was built, what was verified, and
 the boundaries that must be preserved. It does **not** authorize starting the
@@ -9,15 +12,15 @@ deferred robot, training, or quantization work without a newly agreed scope.
 
 | Item | Verified value |
 | --- | --- |
-| Canonical working tree | `/Users/dan/Desktop/workshop/robotics-mlx-contrib` |
+| Canonical working tree | Repository root containing this report |
 | Branch | `main` |
 | Completion commit before this report | `f1ae9d647a6f711305aa1f8cdb534dec33e160ef` (`f1ae9d6`) |
 | Git remote | None configured |
 | Completion status | `STATUS.md` says `DEFINITION OF DONE MET` |
 
-An otherwise-empty, separately initialized Git directory exists at
-`/Users/dan/Documents/ChatGPT/robotics-mlx-contrib`. Do not work there; it is
-not the implementation repository.
+An otherwise-empty, separately initialized Git directory existed in the
+original app workspace. Do not infer a workspace from app metadata; resolve
+the implementation repository with `git rev-parse --show-toplevel`.
 
 The worktree was clean when this report was started. This document and its
 `PROGRESS.md` entry are documentation-only changes.
@@ -183,7 +186,7 @@ compatibility issue was resolved and the final decoder suite passes.
 1. Work only in the canonical repository listed above and inspect the state:
 
    ```bash
-   cd /Users/dan/Desktop/workshop/robotics-mlx-contrib
+   cd "$(git rev-parse --show-toplevel)"
    export HF_HOME="$PWD/.cache/hf"
    export UV_CACHE_DIR="$PWD/.cache/uv"
    export SMOLVLA_MLX_CACHE="$PWD/.cache/smolvla_mlx"

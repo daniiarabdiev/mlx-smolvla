@@ -1759,8 +1759,7 @@
   .cache/training/t3b/self-consistency --output
   .cache/training/t3b/floor.json --purpose prospective_gate --max-threads 18`.
   All nine raw variants completed and the report was installed atomically.
-- Floor path:
-  `/Users/dan/Desktop/workshop/robotics-mlx-contrib/.cache/training/t3b/floor.json`.
+- Floor path: `.cache/training/t3b/floor.json`.
   SHA-256:
   `28d83926a70e507671bfd694e032f81b71093d475075aad627b3c24c5b334efc`.
   Embedded creation: `2026-09-02T00:38:00.730626+00:00`,
@@ -2443,3 +2442,59 @@
   robot directory, or serial port was touched. `FAILURE_LORA_FINETUNE.md`
   remains byte-identical at SHA-256
   `d6654131c4acf86de13206f210f1ea1a82e3aad18871e5b64428bdf1dbeed7c6`.
+
+## 2026-09-02 — Final full-scope verification and artifact refresh
+
+- Rebuilt the finished-tree distribution set from clean, pushed code commit
+  `691ce84fd9ba740239a9c39a458b3e2cc2a375be` with repository-local uv and
+  Python caches and `MACOSX_DEPLOYMENT_TARGET=14.0`. The preceding Stage R
+  artifacts remain intact at `.cache/release-build-backup/pre-691ce84`; no
+  artifact was uploaded. `DIST_MANIFEST.md` records the four new exact sizes
+  and SHA-256 values.
+- Fresh environments installed the sdist on CPython 3.12.13 and the matching
+  wheels on CPython 3.11.15, 3.12.13, and 3.13.14. From outside the source
+  checkout, all four imports resolved inside their venv, reported
+  `native-reference`, kept gRPC/Torch/LeRobot/Transformers absent from the base
+  environment, and produced a finite six-component action with Hub access
+  forced offline. Every project extension reports Mach-O `minos 14.0`; the
+  pinned MLX dylib still reports the documented upstream `minos 26.2` floor.
+- A fifth CPython 3.12 environment installed the wheel's `serve` extra, matched
+  descriptor SHA-256
+  `e116fbf44dd1fc65b67ff255c04857000c28e69055211af5ef3df85ac8d81f8d`,
+  bound only an ephemeral loopback port, completed `Ready`, and stopped. The
+  installed help exposes the T4 LoRA/full/resume surface, both Q3 quantization
+  presets, and the H no-clobber latency log. Installed 8-bit and 4-bit
+  predictions each emitted a finite six-component action. The disposable
+  smoke environments were moved to macOS Trash after verification and remain
+  recoverable/reproducible.
+- The lock resolves 111 packages. Focused distribution, native/fallback,
+  CLI/server, hardware-readiness, and quantization checks pass **42/42**;
+  inference/profile/training-benchmark/production/trained-parity validators
+  pass **74/74**. `actionlint` is clean with only the deliberate constant-false
+  workflow diagnostic excluded, and all 18 tracked relative Markdown links
+  resolve.
+- The audit found all 33 required deliverables, no tracked private home path,
+  high-confidence secret pattern, credential-bearing URL, tracked model/build
+  binary, file over 10 MiB, code placeholder, skip, or xfail. Twenty-one
+  ignored retained evidence files contain absolute local provenance paths by
+  design; they were not rewritten because their hashes are frozen and they
+  remain local/unuploaded. `git fsck` found no reachable corruption and only
+  four unreachable dangling blobs.
+- The protected T3 failure and the rechecked public T5/Q/H, floor, comparison,
+  resume, benchmark, and production artifact hashes all re-match their files.
+  The persisted T3B verdict recomputes to fixed gates passing, deterministic
+  parity failing, and the unchanged threshold `0.005`; its historical
+  `training/evaluation.py` digest resolves exactly to commit
+  `54a4e0b55dbabbbfd0ecbeb5c58caf80523f02d2`. A current-tree full re-evaluation
+  correctly refuses to substitute the later T4 implementation bytes for that
+  frozen historical source.
+- The final process check at `2026-09-02T07:42:01Z` found no trainer, floor
+  worker, benchmark, server, or pytest process. The authoritative closing
+  `make test` run passes **652/652 tests in 538.08 seconds**, with no skips.
+  Afterward, the machine had **517 GiB** free and repository caches occupied
+  **122,897,608 KiB**, above the mandatory 40 GiB floor. The original T3
+  failure remains byte-identical at SHA-256
+  `d6654131c4acf86de13206f210f1ea1a82e3aad18871e5b64428bdf1dbeed7c6`.
+- Hardware remains explicitly **NOT RUN** because the exact current-session
+  operator gate was not supplied. No robot environment, serial port, camera,
+  motor, arm, model/data upload, or external runner was touched.
