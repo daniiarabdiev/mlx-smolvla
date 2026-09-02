@@ -1964,3 +1964,49 @@
   26.2` in every smoke environment, matching the link warning. This upstream
   binary floor is recorded explicitly: project tagging is fixed, but actual
   macOS-14 execution is not claimed.
+
+## 2026-09-02 — Stage R P1-3 release documentation complete
+
+- `README.md` now opens with a single-paragraph native-MLX pitch and covers the
+  verified Python 3.11–3.13 install boundary, conversion/cache behavior, an
+  exactly ten-line API example, saved-observation and optional dataset CLI
+  paths, cache inventory/cleanup, limitations, troubleshooting, and
+  Apache-2.0/NOTICE attribution. Every local Markdown link resolves.
+- The benchmark table keeps the canonical `BENCHMARK.md` measurements: a
+  50-action chunk represents **1.67 seconds** at 30 fps; fp32's **111.34 ms**
+  median is **15.0x** motion-duration/compute and bf16's **131.12 ms** is
+  **12.7x**. The prose explicitly excludes capture, transport, and actuation
+  and records bf16's measured 0.50 GiB memory saving and slower latency.
+- The correctness section names the pinned LeRobot/PyTorch golden source,
+  immutable deterministic/statistical gates, strict CPU arithmetic boundary,
+  default MLX/Metal execution behavior, and the unresolved strict Metal module
+  caveat. Its stats-active and public-fine-tune numbers are copied from the
+  hashed P0-2 records, including ratios `1.0000000330040129` /
+  `0.9985395647267157` and `1.0000005749451057` / `0.996050278176297`.
+- The standard GPU handoff is pinned to `lerobot[training,smolvla]==0.6.1` and
+  uses the upstream `lerobot-train` flags for the base policy, dataset, CUDA,
+  200,000 steps, 20,000-step checkpoints, and local output. Both
+  `--policy.push_to_hub=false` and `--save_checkpoint_to_hub=false` are
+  explicit; WandB is disabled. Installed-source inspection confirms the
+  resulting path `outputs/smolvla-finetune/checkpoints/last/pretrained_model`,
+  which the README loads directly or by a separately published Hub ID. This
+  PyTorch/LeRobot path is clearly separated from experimental native-MLX
+  training.
+- Command validation: all five documented native CLI forms parse; the ten-line
+  API example executed offline and returned a finite `(6,)` action; offline
+  conversion and saved-observation prediction succeeded; LeRobot's dynamic
+  SmolVLA help accepted every documented training flag without starting a
+  training run. The reference environment's TorchCodec/FFmpeg warning and
+  PyAV fallback are reflected in troubleshooting. Artifact install smokes,
+  golden generation, and cache cleanup commands were already exercised and
+  recorded by P1-2, P0-2, and P0-3 respectively.
+- Timing-command smoke began only after a process-table check at
+  `2026-09-02T02:40:25Z` found no training or floor worker. The documented
+  50-run fp32 benchmark command completed on `Device(gpu, 0)` at 110.93 ms
+  median / 111.86 ms p95 and 3,157,868,570 peak bytes. This command-validation
+  sample does not replace the canonical benchmark or the still-required P1-1
+  production evidence table.
+- Final P1-3 verification passes **584/584 tests in 529.75 seconds**. No
+  hardware, serial port, robot directory, or upload was used. The original T3
+  failure remains byte-identical at SHA-256
+  `d6654131c4acf86de13206f210f1ea1a82e3aad18871e5b64428bdf1dbeed7c6`.

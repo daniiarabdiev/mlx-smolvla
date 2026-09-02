@@ -1,52 +1,188 @@
 # SmolVLA MLX
 
-Native MLX inference for the `lerobot/smolvla_base` policy on Apple Silicon.
-The runtime contains no PyTorch, LeRobot, or Transformers imports: it uses MLX
-for vision, the truncated SmolVLM prefix decoder, the action expert, and the
-flow-matching sampler.
+SmolVLA MLX is a native MLX inference port of LeRobot's SmolVLA policy for
+Apple Silicon. It converts compatible SmolVLA checkpoints into MLX
+safetensors, runs vision, the truncated SmolVLM prefix decoder, the action
+expert, and flow matching through MLX, and keeps PyTorch, LeRobot, and
+Transformers out of the base runtime so inference can use the Mac GPU and
+unified memory directly.
 
 ## Install
 
-On Apple Silicon with Python 3.11, 3.12, or 3.13:
+Use an Apple Silicon Mac and Python 3.11, 3.12, or 3.13:
 
 ```bash
-pip install .
+python -m pip install .
 ```
 
-For repository development and the optional PyTorch reference lane (Python
-3.12 or 3.13; LeRobot 0.6.1 requires Python 3.12+):
+For repository development and the pinned PyTorch reference lane, use Python
+3.12 or 3.13 because LeRobot 0.6.1 requires Python 3.12 or newer:
 
 ```bash
 uv sync --extra reference
 ```
 
-`predict --dataset` uses the optional LeRobot dataset bridge in a child
-process. Install that extra when you need the dataset-backed CLI command:
+The first load downloads the checkpoint and tokenizer, then converts all 500
+model tensors once. The default cache is `~/.cache/smolvla_mlx`; set
+`SMOLVLA_MLX_CACHE` or pass `cache_dir=` to put it elsewhere. A complete cached
+checkpoint, tokenizer, and conversion can be loaded again with
+`HF_HUB_OFFLINE=1`.
 
-```bash
-pip install ".[reference]"
+The native compatibility extension is optional. A source build can force the
+tested pure-MLX fallback with `SMOLVLA_MLX_BUILD_NATIVE=0`. See
+[DIST_MANIFEST.md](DIST_MANIFEST.md) for the locally built CPython 3.11–3.13
+artifacts, checksums, and deployment caveat.
+
+## Python API
+
+```python
+import numpy as np
+from smolvla_mlx import SmolVLAMLX
+policy = SmolVLAMLX.from_pretrained("lerobot/smolvla_base")
+observation = {
+    "observation.images.camera1": np.zeros((3, 480, 640), np.uint8),
+    "observation.images.camera2": np.zeros((3, 480, 640), np.uint8),
+    "observation.state": np.zeros(6, np.float32),
+    "task": "pick up the object",
+}
+action = policy.select_action(observation)
 ```
 
-The first `from_pretrained` call downloads the checkpoint and tokenizer, then
-converts the 500 tensors into MLX safetensors. By default this uses
-`~/.cache/smolvla_mlx`; set `SMOLVLA_MLX_CACHE` or pass `cache_dir` to control
-the location. Once the checkpoint and converted safetensors are present, the
-same call works offline.
+`select_action` returns one postprocessed physical action and keeps the rest of
+the checkpoint's action horizon in a FIFO. Call `policy.reset()` between
+episodes. Use `policy.predict_action_chunk(observation)` when the normalized
+`[1, 50, action_dim]` chunk is the desired interface. Passing a local
+checkpoint directory instead of a Hub ID uses the same strict loader.
+
+## CLI quickstart
+
+From a repository checkout with the generated golden observation present:
+
+```bash
+smolvla-mlx convert --model lerobot/smolvla_base --dtype float32
+smolvla-mlx predict --observation tests/golden/sample_000
+smolvla-mlx bench --dtype float32 --runs 50 --warmups 5
+smolvla-mlx test
+```
+
+`predict --observation` and `bench` use the task and sample mapping in
+`tests/golden/metadata.json`; run `make goldens` if the ignored local goldens
+are absent. Dataset-backed prediction is optional and isolated in a child
+process so the base runtime stays dependency-light:
+
+```bash
+python -m pip install ".[reference]"
+smolvla-mlx predict --dataset lerobot/svla_so101_pickplace --episode 0 --index 0
+```
+
+That bridge may also require a working FFmpeg/TorchCodec or PyAV setup for the
+dataset's video encoding. It does not change the base saved-observation path.
+
+## Performance
+
+One SmolVLA chunk contains 50 actions, or about 1.67 seconds of commanded
+motion at 30 fps. On the measured Apple M5 Pro with 48 GiB unified memory,
+macOS 26.5.2, and MLX 0.32.2, the warmed Metal path produced the chunk in
+111.34 ms at fp32—about **15.0× the chunk's motion duration per unit of compute**.
+
+| Storage dtype | Median chunk | P95 | Peak MLX memory | Motion/compute |
+| --- | ---: | ---: | ---: | ---: |
+| fp32 | 111.34 ms | 111.80 ms | 2.94 GiB | 15.0× |
+| bf16 | 131.12 ms | 131.71 ms | 2.44 GiB | 12.7× |
+
+These are model-only local timings, not an end-to-end robot control-rate
+claim; camera capture, transport, and actuation are excluded. On this measured
+stack bf16 saved about 0.50 GiB of peak MLX memory but was slower than fp32.
+The stage breakdown, warmup policy, and measured source commit are in
+[BENCHMARK.md](BENCHMARK.md).
+
+## Correctness evidence
+
+The golden source is LeRobot 0.6.1 with PyTorch 2.11.0 on CPU fp32. The base
+policy is pinned to revision
+`c83c3163b8ca9b7e67c509fffd9121e66cb96205`, and its SmolVLM2-500M backbone to
+`7b375e1b73b11138ff12fe22c8f2822d8fe03467`. Fixed noise and eight real
+observations compare preprocessing, all 16 prefix layers and K/V boundaries,
+the action-expert blocks, all ten Euler steps, normalized chunks, and
+postprocessed actions. The acceptance limits were written before evaluation
+and have not been loosened.
+
+The deterministic normalized-action limits are `0.005` maximum absolute error
+for fp32 and `0.05` for bf16. The independent statistical gate compares first
+action MAE on 50 pinned real frames and requires MLX/reference `<= 1.05`:
+
+| Checkpoint evidence | fp32 normalized max | bf16 normalized max | fp32 MAE ratio | bf16 MAE ratio |
+| --- | ---: | ---: | ---: | ---: |
+| Base checkpoint | pass (`<=0.005`) | pass (`<=0.05`) | 0.9999999969 | 1.0000097741 |
+| Base + active dataset statistics | 0.0000028759 | 0.0048642755 | 1.0000000330 | 0.9985395647 |
+| Public fine-tune + active statistics | 0.0000343621 | 0.0040360391 | 1.0000005749 | 0.9960502782 |
+
+The public fine-tune is
+`soonweihong0857/swhfypv3_smolvla_multitask_model` at pinned revision
+`5e2491c809ec892427f54db1eb23bf8c4bbbf770`; it exercises non-base camera
+names plus saved state/action mean and standard deviation. Exact values,
+artifact hashes, and regeneration commands are recorded in
+[PROGRESS.md](PROGRESS.md).
+
+Strict module parity and production inference are separate claims. The strict
+arithmetic ladder selects MLX CPU to reproduce the pinned PyTorch operations;
+the public API currently follows `mx.default_device()`, which is Metal in a
+fresh Apple Silicon process. Metal is the measured performance path, but its
+Vision and Connector kernels do not meet the much tighter strict per-module
+fp32 thresholds; those failures remain documented without changing the
+thresholds. A separately labeled end-to-end production-path correctness table
+is the remaining Stage R P1-1 evidence item.
+
+## Run your own fine-tune
+
+Fine-tune with standard LeRobot 0.6.1 on a GPU machine, then copy the saved
+checkpoint directory to the Mac. This is LeRobot/PyTorch training; it is
+separate from this repository's experimental native-MLX training research.
+For an NVIDIA CUDA host:
+
+```bash
+python -m pip install "lerobot[training,smolvla]==0.6.1"
+lerobot-train \
+  --policy.path=lerobot/smolvla_base \
+  --policy.device=cuda \
+  --policy.push_to_hub=false \
+  --dataset.repo_id=<USER>/<DATASET> \
+  --batch_size=64 \
+  --steps=200000 \
+  --output_dir=outputs/smolvla-finetune \
+  --save_freq=20000 \
+  --save_checkpoint_to_hub=false \
+  --wandb.enable=false
+```
+
+The two explicit Hub flags keep the run local. LeRobot maintains the latest
+saved policy at
+`outputs/smolvla-finetune/checkpoints/last/pretrained_model`; load that
+directory directly after transferring it:
+
+```python
+from smolvla_mlx import SmolVLAMLX
+
+policy = SmolVLAMLX.from_pretrained(
+    "/path/to/smolvla-finetune/checkpoints/last/pretrained_model"
+)
+
+# Or, after you deliberately publish the complete checkpoint yourself:
+policy = SmolVLAMLX.from_pretrained("<USER>/<MODEL>")
+```
+
+The checkpoint must include `config.json`, `model.safetensors`, both processor
+JSON files, and any normalization safetensors required by its config.
 
 ## Cache layout and cleanup
 
-Repository commands keep their working data under `.cache/`:
+Repository commands route caches under `.cache/`: Hugging Face snapshots and
+datasets in `.cache/hf`, MLX conversions and parity caches in
+`.cache/smolvla_mlx`, and protected training evidence in `.cache/training`.
+Golden evidence is under the ignored `tests/golden*` trees.
 
-- `.cache/hf` contains pinned Hugging Face model snapshots and datasets.
-- `.cache/smolvla_mlx` contains converted MLX weights and named parity or
-  inference caches. These are retained because conversion can be expensive.
-- `.cache/training` contains checkpoint, floor, and evaluation evidence. The
-  cleanup command never enters or removes this directory.
-- `tests/golden*` contains ignored, reproducible reference outputs used by the
-  parity suites; `make clean-cache` does not touch them.
-
-Inspect every top-level native-cache entry, its byte size, and its retention
-decision before cleaning:
+Inspect the exact candidates before deleting the narrowly allowed debug
+entries:
 
 ```bash
 make cache-inventory
@@ -54,90 +190,32 @@ make clean-cache-dry-run
 make clean-cache
 ```
 
-Cleanup is deliberately narrow: it accepts only the exact repository path
-`.cache/smolvla_mlx`, refuses symlinked or out-of-repository targets, and
-removes only top-level `debug-*` directories plus exact `benchmark-debug`.
-Model sources, converted weights, probes, training evidence, and golden files
-remain intact.
+Cleanup refuses symlinked or out-of-repository targets and removes only
+top-level `debug-*` directories plus exact `benchmark-debug`. It never enters
+model sources, converted weights, golden outputs, or training evidence.
 
-## Python API
+## Scope, limitations, and troubleshooting
 
-```python
-import numpy as np
-from smolvla_mlx import SmolVLAMLX
+- The stable installed surface is inference and offline software evaluation.
+  Robot I/O, serial transport, and hardware-in-the-loop validation are not in
+  this release surface.
+- Checkpoints must match the audited SmolVLA/SmolVLM2 architecture. Camera
+  names and state/action shapes come from each checkpoint's config; at least
+  one configured camera must be present, and errors print the expected input
+  contract. Configured streams that are absent are skipped unless the config
+  explicitly requests `empty_cameras` padding.
+- `predict --dataset` and `make goldens` need the Python 3.12+ reference extra;
+  ordinary imports, conversion, and saved-observation inference do not import
+  PyTorch, LeRobot, or Transformers.
+- The project wheels and native extension target `macosx_14_0_arm64`, but the
+  pinned MLX 0.32.2 wheel's own `libmlx.dylib` declares macOS 26.2. A working
+  end-to-end macOS 14 installation therefore depends on a lower-target MLX
+  build; see [DIST_MANIFEST.md](DIST_MANIFEST.md).
+- If strict CPU arithmetic reports `pure-mlx-fallback`, the optional extension
+  was not loaded. Reinstall from a native wheel for the exact extension-backed
+  path, or retain the tested fallback when portability matters more.
+- If an offline load fails, first complete one online load into the same
+  `SMOLVLA_MLX_CACHE`; both the policy and its tokenizer must be present.
 
-policy = SmolVLAMLX.from_pretrained("lerobot/smolvla_base")
-observation = {
-    "observation.images.camera1": np.zeros((3, 480, 640), dtype=np.uint8),
-    "observation.images.camera2": np.zeros((3, 480, 640), dtype=np.uint8),
-    "observation.state": np.zeros(6, dtype=np.float32),
-    "task": "pick up the object",
-}
-
-# A [1, 50, 6] normalized action chunk.
-chunk = policy.predict_action_chunk(observation)
-
-# One postprocessed action at a time; the 50-action queue refills only when empty.
-action = policy.select_action(observation)
-assert action.shape == (6,)
-policy.reset()
-```
-
-`predict_action_chunk` mirrors the reference policy's normalized chunk API.
-`select_action` applies the checkpoint postprocessor before putting actions in
-the FIFO. For this checkpoint, the saved postprocessor has no matching action
-statistics, so its effective transform is identity.
-
-## CLI
-
-```bash
-smolvla-mlx convert --model lerobot/smolvla_base --dtype bfloat16
-smolvla-mlx test
-smolvla-mlx bench --runs 50 --warmups 5
-smolvla-mlx predict --observation tests/golden/sample_000
-smolvla-mlx predict --dataset lerobot/svla_so101_pickplace --episode 0 --index 0
-```
-
-`bench` and `predict --observation` use a saved real golden observation; run
-`make goldens` first if the local golden files are absent. `predict --dataset`
-extracts a dataset frame through the optional child-process LeRobot bridge, so
-the core-only installation remains dependency-isolated. Exact CPU-reference
-arithmetic uses the packaged native extension when present; source builds may
-set `SMOLVLA_MLX_BUILD_NATIVE=0` for the tested pure-MLX fallback.
-
-## Correctness
-
-The reference is LeRobot 0.6.1/PyTorch 2.11.0 on CPU fp32, checkpoint
-`lerobot/smolvla_base` revision `c83c3163b8ca9b7e67c509fffd9121e66cb96205`,
-and base VLM revision `7b375e1b73b11138ff12fe22c8f2822d8fe03467`.
-
-- All 16 VLM prefix layers, K/V cache boundaries, action-expert block outputs,
-  Euler states, and velocity outputs pass the fixed per-module tolerances.
-- Deterministic end-to-end action chunks pass all eight real goldens at fp32
-  maximum absolute error ≤ `5e-3` and bf16 ≤ `5e-2`.
-- The 50-frame action-MAE gate recorded fp32 MLX/reference ratio
-  `0.9999999969` and bf16 ratio `1.0000097741`, both below the fixed `1.05`
-  limit.
-
-## Performance
-
-On an Apple M5 Pro with 48 GiB unified memory, macOS 26.5.2, and MLX 0.32.2,
-the 50-run Metal benchmark measured:
-
-| Storage dtype | Median chunk latency | P95 | Peak MLX memory |
-| --- | ---: | ---: | ---: |
-| fp32 | 111.34 ms | 111.80 ms | 2.94 GiB |
-| bf16 | 131.12 ms | 131.71 ms | 2.44 GiB |
-
-See [BENCHMARK.md](BENCHMARK.md) for the vision, prefix, and expert-loop stage
-breakdown and the precise measured commit.
-
-## Scope and limitations
-
-- v0.1 targets the audited SmolVLA checkpoint and two camera inputs.
-- CPU paths use focused compatibility primitives to match the PyTorch golden
-  arithmetic exactly; Metal uses native MLX kernels and is the performance path.
-- Robot I/O, serial ports, training, and quantization are deliberately out of
-  scope.
-- The project is licensed under [Apache License 2.0](LICENSE). Third-party
-  source attribution and license notices are in [NOTICE](NOTICE).
+The project is licensed under the [Apache License 2.0](LICENSE). Upstream code
+and model attribution is collected in [NOTICE](NOTICE).

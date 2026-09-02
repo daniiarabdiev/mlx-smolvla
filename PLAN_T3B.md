@@ -262,11 +262,15 @@ artifact hashes and the pinned MLX dylib's separate 26.2 binary-floor caveat.
 
 ### Task 4.5 — P1-3: release documentation and LeRobot GPU training path
 
-**Status:** static gap audit complete; command validation and final prose wait
-for the relevant release packages. The current README has the core API and old
-strict-parity numbers, but still describes only Python 3.12, identity-only
-postprocessing, inference-only scope, and no cache cleanup, production/strict
-mode distinction, GPU fine-tune handoff, serving path, or troubleshooting.
+**Status:** Complete. The release README now has the verified pitch, install
+matrix, exactly ten-line executable API example, CLI quickstart, real-time
+benchmark framing, immutable correctness methodology and active-statistics
+evidence, strict-versus-production boundary, cache contract, limitations,
+troubleshooting, and license/NOTICE links. The pinned LeRobot 0.6.1 GPU command
+was schema-checked with both upload paths disabled, and its local output can be
+loaded here by path or a deliberately published Hub ID. All non-hardware
+commands are covered by direct smokes or their already-recorded package gates;
+the exact tree passes 584/584 tests.
 
 - Polish README installation, conversion, inference, cache, strict-parity versus
   production-mode, known-limitations, and troubleshooting sections.

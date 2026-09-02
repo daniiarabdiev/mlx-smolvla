@@ -12,6 +12,8 @@ TRAINING ALPHA (STATISTICAL)
 
 T3B-3 COMPLETE — FIXED GATES PASSED; DERIVED DETERMINISTIC GATE DOCUMENTED
 
+STAGE R P1-3 COMPLETE — RELEASE DOCUMENTATION AND GPU HANDOFF VERIFIED
+
 The protected SmolVLA MLX v0.1 inference baseline is intact. At full-scope
 kickoff on 2026-08-31, `make test` passed **179/179** in **158.71 seconds** on
 the M5 Pro. The repository had **553 GiB** free, above the mandatory 40 GiB
@@ -133,11 +135,20 @@ saved-observation prediction. The pre-artifact source tree passes **584/584
 tests in 523.20 seconds**. `DIST_MANIFEST.md` records all hashes and the honest
 limitation that pinned MLX 0.32.2's own dylib declares `minos 26.2`.
 
+Stage R P1-3 is complete. The release README's ten-line API example executes
+offline, all native CLI forms parse, real conversion/prediction and the idle
+50-run benchmark command succeed, and the pinned LeRobot 0.6.1 GPU training
+flags are accepted with both upload paths disabled. Performance framing,
+active-statistics correctness, strict CPU versus default Metal behavior,
+audited inputs, cache safety, troubleshooting, and license attribution all
+trace to recorded evidence. The exact P1-3 tree passes **584/584 tests in
+529.75 seconds**.
+
 ## Stage state
 
 | Stage | State | Evidence / next action |
 | --- | --- | --- |
-| R — Release | P0 complete; P1-2 complete | Origin and licensing, stats-active/public checkpoints, safe cache cleanup, Python 3.11–3.13 artifacts, optional native fallback, and four fresh artifact smokes are complete. P1-3 docs plus P1-1/P1-4 production evidence remain; pinned MLX's own dylib has a documented 26.2 minimum-version caveat. |
+| R — Release | P0 complete; P1-2/P1-3 complete | Origin and licensing, stats-active/public checkpoints, safe cache cleanup, Python 3.11–3.13 artifacts, optional native fallback, four fresh artifact smokes, and verified release documentation are complete. P1-1/P1-4 production evidence remains; pinned MLX's own dylib has a documented 26.2 minimum-version caveat. |
 | T0 — Training-readiness | Complete | 155/155 gradients finite and nonzero over 99,880,992 trainable scalars; 196.799 ms forward+backward and 2,509,594,126-byte peak MLX memory. See `TRAINING_FEASIBILITY.md`. |
 | T1 — Gradient parity | Complete | Identical real batch/draws; loss and all 155 gradients pass immutable gates. See `GRADIENT_PARITY.md`. |
 | T2 — Optimizer lockstep | Complete | 25/25 losses and 155/155 final tensors pass immutable gates. See `OPTIMIZER_LOCKSTEP.md`. |
