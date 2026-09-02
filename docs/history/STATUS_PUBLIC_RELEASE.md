@@ -15,16 +15,17 @@ withheld.
 | A — real SO-101 | **BLOCKED** | The operator has not supplied the exact standalone live-session authorization. [`hardware/FIRST_CONTACT.md`](../../hardware/FIRST_CONTACT.md) therefore remains explicitly not performed; no device, vendor tree, or robot was accessed. |
 | B — macOS / MLX floor | **Complete** | Official macOS 14 arm64 wheels for MLX 0.32.0, 0.32.1, and 0.32.2 were hash- and Mach-O-verified, then passed the unchanged correctness and installed-runtime gates. See [`MLX_COMPATIBILITY.md`](../evidence/MLX_COMPATIBILITY.md). |
 | C — public-release preparation | **Complete** | Canonical distribution/import/CLI/cache/GitHub identities, prior-project acknowledgment, community metadata, hobbyist-first README, agent guide, root hygiene, and a sub-two-minute fast lane are committed. |
-| D — software verification | **Complete; publication held** | The canonical artifacts passed archive, Twine, fresh-install, offline prediction, doctor, quantization, and loopback-serving checks. The fast suite passed 385/385 and the complete suite passed 676/676. See [`DIST_MANIFEST.md`](../evidence/DIST_MANIFEST.md) and [`DOCTOR.txt`](../evidence/DOCTOR.txt). |
+| D — software verification | **Complete; publication held** | The canonical artifacts passed archive, Twine, fresh-install, offline prediction, doctor, quantization, and loopback-serving checks. The fast suite passed 387/387 and the complete suite passed 678/678. See [`DIST_MANIFEST.md`](../evidence/DIST_MANIFEST.md) and [`DOCTOR.txt`](../evidence/DOCTOR.txt). |
 
 ## Closing verification
 
-- `make test-fast`: 385 passed, 291 deliberately slow tests deselected, no
-  skips or xfails, 94.88 test seconds / 97.83 seconds wall. An idle-process
+- `make test-fast`: 387 passed, 291 deliberately slow tests deselected, no
+  skips or xfails, 93.71 test seconds / 96.50 seconds wall. An idle-process
   preflight found no trainer, floor worker, pytest, or other Make test process.
-- `make test`: 676 passed, no skips or xfails, 582.37 test seconds / 585.34
+- `make test`: 678 passed, no skips or xfails, 572.61 test seconds / 575.49
   seconds wall. The same idle-process preflight passed first.
-- Focused public/hygiene/distribution/rename/compatibility slice: 33/33.
+- Focused public/hygiene/distribution/rename/cache/compatibility/hardware slice:
+  50/50.
 - Sdist plus CPython 3.11/3.12/3.13 native wheels: canonical names only,
   project-extension `minos 14.0`, all four accepted by Twine and all four
   freshly installed outside the checkouts.
@@ -43,7 +44,7 @@ withheld.
   The protected bf16, inference-comparison, quantization, second-attempt, and
   training-benchmark evidence also matches the clean source checkpoint.
 - A final read-only fetch confirmed the canonical origin. Both official PyPI
-  endpoints returned HTTP 404 at 2026-09-02T13:59:54Z, so `mlx-smolvla`
+  endpoints returned HTTP 404 at 2026-09-02T14:45:08Z, so `mlx-smolvla`
   appeared unclaimed at that instant but is not reserved.
 - Nothing was uploaded. No tolerance changed. No training run, floor
   computation, hardware access, camera access, serial access, or vendor-tree

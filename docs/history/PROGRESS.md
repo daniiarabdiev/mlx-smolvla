@@ -2767,3 +2767,43 @@
   blockers clear. Hardware remains blocked because the exact live-session gate
   was not supplied. Accordingly no tag, upload, public-visibility change,
   release creation, announcement, device access, or vendor-tree access ran.
+
+## 2026-09-02 — reviewed release-candidate rebuild and closing suite
+
+- Independent release review found no critical or important issue. Three minor
+  findings were resolved with regression coverage: the legacy cache warning now
+  distinguishes an explicit cache path from the current environment variable;
+  active specifications and generated-output defaults point to their moved
+  public paths; and the checklist documents immutable format-v1 evidence IDs as
+  the compatibility exception to canonical archive/import/CLI naming. The
+  focused affected slice passed **61/61**, and follow-up review reported no
+  remaining finding.
+- Committed and pushed those fixes as source checkpoint
+  `5efb48aa5d47e30438d6a4aaafc180a2983b1235`, then rebuilt the sdist and all
+  three native Apple Silicon wheels from a clean detached worktree at that
+  exact commit. All four passed Twine and archive inspection; every wheel and
+  the installed sdist extension report `minos 14.0`. Exact bytes and hashes are
+  in `docs/evidence/DIST_MANIFEST.md`.
+- Four new base environments installed the sdist on CPython 3.12.13 and the
+  matching wheels on CPython 3.11.15, 3.12.13, and 3.13.14. Each ran outside
+  the checkout, resolved only the installed canonical package, kept the four
+  excluded bridge dependencies absent, reported `native-reference`, passed
+  `doctor`, and produced a finite six-component action offline. The installed
+  compatibility shim passed legacy-only, current-plus-legacy, and
+  explicit-plus-legacy precedence and warning checks.
+- A fifth new CPython 3.12 environment installed the wheel with `serve`, matched
+  the pinned descriptor hash, completed a `Ready` RPC on an ephemeral loopback
+  port, rendered all required CLI safety/training/quantization surfaces, and
+  emitted finite 8-bit and 4-bit VLM actions offline.
+- With separate idle preflights, `make test-fast` passed **387/387 selected
+  tests** with 291 slow tests deselected in **93.71 test seconds / 96.50 seconds
+  wall**, and `make test` passed **678/678 tests** in **572.61 test seconds /
+  575.49 seconds wall**. Neither run reported a skip or xfail.
+- A final fetch confirmed canonical `origin/main` at the exact artifact source
+  checkpoint before this evidence commit. Both official PyPI endpoints returned
+  HTTP 404 at `2026-09-02T14:45:08Z`, so the name appeared unclaimed at that
+  instant but remains unreserved.
+- No training or floor computation ran. No fixed gate or protected evidence was
+  changed. No hardware, camera, serial port, vendor tree, upload, tag, release,
+  visibility change, or announcement was attempted; the live hardware gate
+  remains the sole public-release blocker.

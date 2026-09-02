@@ -25,7 +25,7 @@
 
 - After the supervised hardware evidence is committed and `v0.1.0` is tagged,
   rebuild from that tag into a new directory. Do not publish the current
-  untagged `e3ad965` candidate merely because its smoke matrix passed:
+  untagged candidate merely because its smoke matrix passed:
 
   ```sh
   FINAL_RELEASE_SOURCE="$PWD/.cache/release-v0.1.0-source"
@@ -127,7 +127,7 @@
 
 - **Status:** done — both the official JSON endpoint and Simple Repository API
   returned HTTP 404 at `2026-09-02T11:48Z` and again during closing
-  verification at `2026-09-02T13:59:54Z`.
+  verification at `2026-09-02T14:45:08Z`.
 - **Result:** `mlx-smolvla` appears unclaimed on public PyPI at the time of the
   read-only check. This is not a reservation; the operator must check again
   immediately before publishing.

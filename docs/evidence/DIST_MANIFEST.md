@@ -2,7 +2,7 @@
 
 This manifest records the `mlx-smolvla` 0.1.0 release-candidate artifacts
 built locally from clean, pushed source commit
-`e3ad9656adda836534667797c04daf92756ada44` on 2026-09-02. Nothing was
+`5efb48aa5d47e30438d6a4aaafc180a2983b1235` on 2026-09-02. Nothing was
 uploaded. The hardware gate remains open, so no release tag was created.
 
 ## Build environment
@@ -13,10 +13,10 @@ uploaded. The hardware gate remains open, so no release tag was created.
 - Deployment target: `MACOSX_DEPLOYMENT_TARGET=14.0`.
 - Interpreters: repository-local CPython 3.11.15, 3.12.13, and 3.13.14.
 - Build/download cache: repository-local `.cache/uv`.
-- Source: clean detached worktree `.cache/release-mlx-smolvla-e3ad965` at
+- Source: clean detached worktree `.cache/release-mlx-smolvla-5efb48a` at
   the commit above.
 - Output: ignored directory
-  `.cache/release-mlx-smolvla-e3ad965-artifacts`.
+  `.cache/release-mlx-smolvla-5efb48a-artifacts`.
 
 The sdist was built with `uv build --sdist`; each native wheel used
 `uv build --wheel --python <repository-local-interpreter>`. All four commands
@@ -29,10 +29,10 @@ and tests; it contains no prebuilt `.so` or `.dylib`.
 
 | Artifact | Bytes | SHA-256 | Wheel tag / contents | Project extension `minos` |
 | --- | ---: | --- | --- | ---: |
-| `mlx_smolvla-0.1.0.tar.gz` | 413,038 | `0e923dc79245bd7a582008661f86638e134faa4bf2229a35461e6206c4d657bc` | Source distribution; native extension built during installation | 14.0 in the installation smoke |
-| `mlx_smolvla-0.1.0-cp311-cp311-macosx_14_0_arm64.whl` | 364,621 | `493717f30629224a0cf4ba5b06e782fbf17e27637595324e5bea772c4bb705ed` | `cp311-cp311-macosx_14_0_arm64`; 71 entries | 14.0 |
-| `mlx_smolvla-0.1.0-cp312-cp312-macosx_14_0_arm64.whl` | 363,621 | `66bf1786bcb0795fef35a87e6297b43dd3c53f48645919064d6c37fa6c9b9bc7` | `cp312-cp312-macosx_14_0_arm64`; 71 entries | 14.0 |
-| `mlx_smolvla-0.1.0-cp313-cp313-macosx_14_0_arm64.whl` | 363,661 | `6e50f09edbc6bfbeb8714532d71eb0cf72a5b32b05a48431f667fbefa73f4271` | `cp313-cp313-macosx_14_0_arm64`; 71 entries | 14.0 |
+| `mlx_smolvla-0.1.0.tar.gz` | 413,439 | `01efceb57a5bc22679f486160a6746894849cb577f1772aa597b22ee3e71180e` | Source distribution; native extension built during installation | 14.0 in the installation smoke |
+| `mlx_smolvla-0.1.0-cp311-cp311-macosx_14_0_arm64.whl` | 364,651 | `7cdecaf15a638ab11f2770341118f563fcef09f79ffbf989e027b9854aa92ae4` | `cp311-cp311-macosx_14_0_arm64`; 71 entries | 14.0 |
+| `mlx_smolvla-0.1.0-cp312-cp312-macosx_14_0_arm64.whl` | 363,654 | `fd574f417f942ed4f4c0fd142f3cd254e7a9ed943fa940831100bc5304b53088` | `cp312-cp312-macosx_14_0_arm64`; 71 entries | 14.0 |
+| `mlx_smolvla-0.1.0-cp313-cp313-macosx_14_0_arm64.whl` | 363,690 | `b9dc2a9e77d63d86706abedc4e8fdae6dca3e78128006629e3539dc47b330583` | `cp313-cp313-macosx_14_0_arm64`; 71 entries | 14.0 |
 
 Archive inspection found only the canonical `mlx_smolvla/` package path.
 Each wheel declares distribution `mlx-smolvla`, version `0.1.0`,
@@ -47,7 +47,7 @@ native-extension surfaces are present. No wheel contains the retired
 ## Fresh-environment smoke matrix
 
 Each artifact was installed with dependencies into a new virtual environment.
-Every probe ran from `/private/tmp/mlx-smolvla-smoke-e3ad965`, outside both the
+Every probe ran from `/private/tmp/mlx-smolvla-smoke-5efb48a`, outside both the
 main checkout and detached build worktree, and asserted that the imported
 module path was inside the virtual environment. Hub and dataset access were
 forced offline for prediction.
@@ -82,9 +82,10 @@ predictions each emitted six finite values offline. No robot, serial port,
 camera, model host, or other external service was contacted.
 
 The installed cp312 wheel also verified the one-release cache compatibility
-shim: `SMOLVLA_MLX_CACHE` alone is used with a `FutureWarning`, while
+shim: `SMOLVLA_MLX_CACHE` alone is used with a `FutureWarning`;
 `MLX_SMOLVLA_CACHE` wins and the warning says the legacy value was ignored
-when both are set.
+when both are set; and an explicit cache path wins while the warning says the
+legacy value was ignored because an explicit directory was supplied.
 
 ## Verified MLX range and macOS floor
 
