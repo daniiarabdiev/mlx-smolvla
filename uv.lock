@@ -1990,6 +1990,10 @@ reference = [
 serve = [
     { name = "lerobot", extra = ["async"], marker = "python_full_version >= '3.12'" },
 ]
+train = [
+    { name = "lerobot", extra = ["dataset", "smolvla"], marker = "python_full_version >= '3.12'" },
+    { name = "torch", marker = "python_full_version >= '3.12'" },
+]
 
 [package.dev-dependencies]
 dev = [
@@ -2001,12 +2005,14 @@ requires-dist = [
     { name = "huggingface-hub", specifier = "==1.29.0" },
     { name = "lerobot", extras = ["async"], marker = "python_full_version >= '3.12' and extra == 'serve'", specifier = "==0.6.1" },
     { name = "lerobot", extras = ["dataset", "smolvla"], marker = "python_full_version >= '3.12' and extra == 'reference'", specifier = "==0.6.1" },
+    { name = "lerobot", extras = ["dataset", "smolvla"], marker = "python_full_version >= '3.12' and extra == 'train'", specifier = "==0.6.1" },
     { name = "mlx", specifier = "==0.32.2" },
     { name = "numpy", specifier = "==2.2.6" },
     { name = "pillow", specifier = "==12.3.0" },
     { name = "safetensors", specifier = "==0.8.0" },
     { name = "tokenizers", specifier = "==0.22.2" },
     { name = "torch", marker = "python_full_version >= '3.12' and extra == 'reference'", specifier = "==2.11.0" },
+    { name = "torch", marker = "python_full_version >= '3.12' and extra == 'train'", specifier = "==2.11.0" },
 ]
 provides-extras = ["reference", "serve", "train"]
 

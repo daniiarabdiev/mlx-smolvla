@@ -207,17 +207,24 @@ def compute_train_statistics(
     import pyarrow.parquet as parquet
 
     dataset_root = Path(dataset_root)
-    data_path = dataset_root / "data" / "chunk-000" / "file-000.parquet"
+    data_paths = tuple(sorted((dataset_root / "data").glob("chunk-*/file-*.parquet")))
     stats_path = dataset_root / "meta" / "stats.json"
-    if not data_path.is_file() or not stats_path.is_file():
-        raise FileNotFoundError(f"pinned dataset is incomplete under {dataset_root}")
+    if not data_paths or not all(path.is_file() for path in data_paths) or not stats_path.is_file():
+        raise FileNotFoundError(f"LeRobot dataset is incomplete under {dataset_root}")
     episodes = tuple(sorted(int(index) for index in train_episodes))
     if not episodes or len(set(episodes)) != len(episodes):
         raise ValueError("training episodes must be a nonempty unique tuple")
 
-    table = parquet.read_table(
-        data_path,
-        columns=["episode_index", "observation.state", "action"],
+    import pyarrow as pa
+
+    table = pa.concat_tables(
+        [
+            parquet.read_table(
+                path,
+                columns=["episode_index", "observation.state", "action"],
+            )
+            for path in data_paths
+        ]
     )
     episode_values = np.asarray(table["episode_index"], dtype=np.int64)
     selected = np.isin(episode_values, np.asarray(episodes, dtype=np.int64))
@@ -336,6 +343,9 @@ class TrainingDataBridge:
         episodes: tuple[int, ...],
         sampler_seed: int = SAMPLER_SEED,
         stats: Mapping[str, Mapping[str, object]] | None = None,
+        dataset_id: str = DATASET_ID,
+        dataset_root: str | Path | None = None,
+        dataset_revision: str | None = DATASET_REVISION,
     ) -> None:
         import torch
         from huggingface_hub import snapshot_download
@@ -348,11 +358,15 @@ class TrainingDataBridge:
         from lerobot.utils.collate import lerobot_collate_fn
 
         cache_dir = Path(cache_dir)
-        dataset_root = cache_dir / "datasets" / "svla_so101_pickplace"
+        dataset_root = (
+            cache_dir / "datasets" / "svla_so101_pickplace"
+            if dataset_root is None
+            else Path(dataset_root)
+        )
         metadata = LeRobotDatasetMetadata(
-            DATASET_ID,
+            dataset_id,
             root=dataset_root,
-            revision=DATASET_REVISION,
+            revision=dataset_revision,
         )
         if not episodes or any(index < 0 or index >= metadata.total_episodes for index in episodes):
             raise ValueError(f"bridge episodes are outside the pinned dataset: {episodes}")
@@ -374,11 +388,11 @@ class TrainingDataBridge:
         )
         delta_timestamps = resolve_delta_timestamps(config, metadata)
         dataset = LeRobotDataset(
-            DATASET_ID,
+            dataset_id,
             root=dataset_root,
             episodes=list(episodes),
             delta_timestamps=delta_timestamps,
-            revision=DATASET_REVISION,
+            revision=dataset_revision,
             video_backend="pyav",
             return_uint8=True,
         )

@@ -18,7 +18,7 @@ def test_cli_exposes_required_commands() -> None:
     )
 
     assert completed.returncode == 0, completed.stderr
-    for command in ("convert", "test", "bench", "predict", "serve"):
+    for command in ("convert", "test", "bench", "predict", "serve", "train"):
         assert command in completed.stdout
 
 

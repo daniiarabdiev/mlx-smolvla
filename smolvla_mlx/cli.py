@@ -92,6 +92,43 @@ def _parser() -> argparse.ArgumentParser:
         help="allow a non-loopback insecure/pickle bind (trusted network only)",
     )
     serve.set_defaults(handler=_serve)
+
+    train = subcommands.add_parser(
+        "train",
+        help="fine-tune SmolVLA natively with MLX using LoRA or the full reference trainable set",
+    )
+    train.add_argument("dataset", help="LeRobot dataset repo id or local dataset path")
+    training_mode = train.add_mutually_exclusive_group(required=True)
+    training_mode.add_argument(
+        "--lora",
+        dest="training_mode",
+        action="store_const",
+        const="lora",
+        help="train native MLX low-rank adapters",
+    )
+    training_mode.add_argument(
+        "--full",
+        dest="training_mode",
+        action="store_const",
+        const="full",
+        help="train every parameter enabled by the reference SmolVLA freeze policy",
+    )
+    train.add_argument("--steps", type=int, default=100)
+    train.add_argument("--batch-size", type=int, default=1)
+    train.add_argument("--lr", dest="learning_rate", type=float, default=1e-4)
+    train.add_argument("--output", type=Path, required=True)
+    train.add_argument("--checkpoint-every", dest="checkpoint_interval", type=int, default=25)
+    train.add_argument("--resume", action="store_true")
+    train.add_argument("--cache-dir", type=Path, default=Path(".cache/hf"))
+    train.add_argument(
+        "--native-cache",
+        type=Path,
+        default=Path(".cache/smolvla_mlx/policy-float32"),
+    )
+    train.add_argument("--rank", type=int, default=8)
+    train.add_argument("--alpha", type=float, default=16.0)
+    train.add_argument("--dropout", type=float, default=0.0)
+    train.set_defaults(handler=_train)
     return parser
 
 
@@ -305,6 +342,52 @@ def _serve(args: argparse.Namespace) -> int:
             allow_remote=args.allow_remote,
         )
     )
+    return 0
+
+
+def _train(args: argparse.Namespace) -> int:
+    if sys.version_info < (3, 12):
+        raise RuntimeError("train requires Python 3.12+ and the optional .[train] dependencies")
+    try:
+        from training.ux import FullTrainingConfig, LoRATrainingConfig, run_training
+    except ImportError as error:
+        raise RuntimeError(
+            "training dependencies are unavailable; install this package with `pip install '.[train]'`"
+        ) from error
+
+    common = {
+        "dataset": args.dataset,
+        "steps": args.steps,
+        "batch_size": args.batch_size,
+        "learning_rate": args.learning_rate,
+        "output_dir": args.output,
+        "cache_dir": args.cache_dir,
+        "native_cache": args.native_cache,
+        "checkpoint_interval": args.checkpoint_interval,
+        "resume": args.resume,
+    }
+    config = (
+        FullTrainingConfig(**common)
+        if args.training_mode == "full"
+        else LoRATrainingConfig(
+            **common,
+            rank=args.rank,
+            alpha=args.alpha,
+            dropout=args.dropout,
+        )
+    )
+
+    def progress(step: int, total: int, update: object) -> None:
+        if step == 1 or step % 10 == 0 or step == total:
+            print(
+                f"step={step}/{total} loss={getattr(update, 'loss'):.6f} "
+                f"lr={getattr(update, 'learning_rate'):.8g}",
+                flush=True,
+            )
+
+    result = run_training(config, progress=progress)
+    payload = result.as_dict() if hasattr(result, "as_dict") else result
+    print(json.dumps(payload, indent=2, sort_keys=True, default=str))
     return 0
 
 

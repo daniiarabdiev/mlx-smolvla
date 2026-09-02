@@ -2137,3 +2137,54 @@
   records the package matrix, cache reduction, limitations, safety boundary,
   and no open human tasks, ending in the required `RELEASE READY` milestone.
   Nothing was uploaded.
+
+## 2026-09-02 — Stage T4 native training UX and exact resume complete
+
+- Added a lazy optional `smolvla-mlx train` command with a required `--lora` or
+  `--full` mode, dataset repo ID or local path, steps, effective batch size,
+  learning rate, output, checkpoint cadence, and resume controls. The `train`
+  extra now pins LeRobot 0.6.1 and Torch 2.11.0 on Python 3.12+; base import
+  isolation remains unchanged.
+- T4 lives in a separate `training/ux.py` layer so the completed T3/T3B runner,
+  launch schema, gates, and failure records stay untouched. It reuses the
+  audited MLX loss/gradient/optimizer/checkpoint/export primitives and extends
+  the bridge only with explicit dataset identity/root/revision inputs. Dataset
+  statistics now support every sorted LeRobot data shard rather than assuming
+  one Parquet file.
+- Full mode applies LeRobot's reference trainable policy—state projection plus
+  complete action expert—and proves 155 fp32 master tensors / 99,880,992
+  scalars. Expert-only LoRA proves 112 adapters / 224 fp32 tensors / 1,708,032
+  scalars. AdamW state contains exactly two moments per trainable in both modes.
+- The first full preflight reached export and exposed JSON tuple/list metadata
+  identity; canonical JSON metadata fixed it and a fresh preflight exported all
+  500 tensors and emitted a finite six-value action. The first full resume
+  attempt then failed closed because AdamW had promoted bf16 live trainables to
+  fp32 while reconstruction began bf16. Full mode now creates explicit fp32
+  master parameters before optimizer initialization. Both failed attempts are
+  preserved under ignored `.cache/training` paths.
+- The fixed 100-versus-50+resume harness passed for real expert-only LoRA and
+  real full mode. Both report parameter max absolute `0.0`, per-step loss max
+  absolute `0.0`, all-numerical-metric max absolute `0.0`, exact optimizer
+  tensors, exact serialized draw chains, exact sampler state, and exact
+  canonical step state. The immutable `1e-6` parameter and `1e-7` loss gates
+  were not changed.
+- LoRA's first-ten/last-ten mean loss is
+  `0.9695772379636765`/`0.615369763597846`; full mode's is
+  `1.8326249837875366`/`0.5984157636761666`. Both direct and resumed runs retain
+  exactly steps 50/75/100, export 500 fp32 tensors, reload through the public
+  MLX policy, and emit identical finite action hashes per mode. Smoke peak
+  observations are 3,818,770,536 bytes for LoRA and 4,603,826,668 bytes for
+  full; they are explicitly non-benchmark evidence because snapshot copying,
+  export, and action validation are included.
+- Evidence hashes are
+  `44325aa73c012d5b9dfb5499a549eeb689b90c64ebd07b137ee024cefa797b57`
+  (LoRA) and
+  `2c46c621a08b59584701b1bc2171690cfc03c7a116e41d4e4fff35f217699748`
+  (full). Focused CLI/training/distribution verification passes **22/22**;
+  compatibility runs pass **152/152** and **137/137** across the complete
+  legacy T3B, dataset, and T4 surfaces. `TRAINING_UX.md` records commands,
+  semantics, gates, hashes, limitations, and results. The closing complete
+  repository suite passes **608/608 tests in 533.65 seconds**.
+- No upload, hardware, robot directory, or serial port was used. The original
+  T3 failure remains byte-identical at SHA-256
+  `d6654131c4acf86de13206f210f1ea1a82e3aad18871e5b64428bdf1dbeed7c6`.

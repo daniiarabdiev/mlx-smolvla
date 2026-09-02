@@ -34,7 +34,10 @@ reference = [
 serve = [
   "lerobot[async]==0.6.1; python_version >= '3.12'",
 ]
-train = []
+train = [
+  "lerobot[dataset,smolvla]==0.6.1; python_version >= '3.12'",
+  "torch==2.11.0; python_version >= '3.12'",
+]
 
 [dependency-groups]
 dev = [

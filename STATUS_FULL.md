@@ -1,6 +1,6 @@
 # Full-Scope Status
 
-ACTIVE — T4 TRAINING UX AND FULL-FINE-TUNE SMOKE
+ACTIVE — T5 TRAINING DOCUMENTATION AND BENCHMARK
 
 T3B-1 COMPLETE — SELF-CONSISTENCY FLOOR RECORDED
 
@@ -19,6 +19,8 @@ STAGE R P1-1 COMPLETE — DEFAULT PRODUCTION METAL EVIDENCE RECORDED
 STAGE R P1-4 COMPLETE — LEROBOT ASYNC SERVER VERIFIED IN LOOPBACK
 
 RELEASE READY
+
+T4 COMPLETE — NATIVE TRAINING UX AND EXACT RESUME VERIFIED
 
 The protected SmolVLA MLX v0.1 inference baseline is intact. At full-scope
 kickoff on 2026-08-31, `make test` passed **179/179** in **158.71 seconds** on
@@ -176,6 +178,18 @@ offline prediction and a fifth serve-extra install passes an ephemeral
 loopback `Ready` RPC. The exact Stage R closing tree passes **601/601 tests in
 537.54 seconds**.
 
+Stage T4 is complete. The public `smolvla-mlx train` surface accepts a dataset
+repo ID or path and requires explicit LoRA or full mode. Full mode matches the
+reference state-projection/action-expert freeze policy with 155 fp32 master
+tensors / 99,880,992 scalars; expert-only LoRA exposes 224 fp32 tensors /
+1,708,032 scalars. Both optimizers have exact two-moment coverage. Real
+100-update direct and step-50-resumed trajectories both decrease their
+first-ten to last-ten mean loss, retain only checkpoints 50/75/100, export all
+500 tensors, reload, and emit finite actions. The evaluator records zero
+parameter, loss, and all-metric drift with exact optimizer, draw-chain,
+sampler, and canonical step-state identity for both modes. See
+`TRAINING_UX.md`. The exact T4 tree passes **608/608 tests in 533.65 seconds**.
+
 ## Stage state
 
 | Stage | State | Evidence / next action |
@@ -188,12 +202,12 @@ loopback `Ready` RPC. The exact Stage R closing tree passes **601/601 tests in
 | T3B-1 — Reference floor | Complete | Nine PyTorch workers, including a fixed five-process MPS empirical envelope, evaluated 56 cases each; `F = F64 = 0.00003549918286283038`; report SHA-256 `cba4a856...f0585`; informational only, with no statistical-bound claim. |
 | T3B-2 — Prospective evaluator | Complete | Fixed gates unchanged; derived `max(0.005, 3F)` gate, chronology, complete input provenance, semantic conversion validation, and no-clobber output are frozen and pass 52 focused tests. |
 | T3B-3 — Expert-only LoRA | Statistical alpha | All 3,000 updates and the strict export completed. Fixed preprocessing, held-out-improvement, and round-trip gates pass. Prospective normalized parity is `0.013038858771324158` versus derived `0.005`; the new failure record preserves this result without changing tolerances. |
-| T4 — Training UX/full fine-tune | In progress | Implement full fine-tune as code plus a 100-update smoke only. |
-| T5 — Training docs/benchmark | Unblocked after T4 | Run only after training/floor processes are absent and idle state is recorded. |
+| T4 — Training UX/full fine-tune | Complete | Unified CLI, explicit reference-full topology, 100-update real smoke, finite complete export, three-checkpoint retention, and LoRA/full exact-resume gates all pass. See `TRAINING_UX.md`. |
+| T5 — Training docs/benchmark | In progress | Verify no trainer/floor process is alive, freeze the benchmark protocol, then collect idle LoRA/full bf16/fp32 evidence. |
 | Q — Quality extras | Unblocked; pending T4/T5 | Normative package definitions are available in `BRIEF_RELEASE.md`. |
 | H — Hardware readiness | Unblocked; scheduled after Q | Documents and loopback-safe tooling only; no hardware access is authorized. |
 
-`TRAINING ALPHA (STATISTICAL)` and `RELEASE READY` have been reached.
+`TRAINING ALPHA (STATISTICAL)`, `RELEASE READY`, and `T4 COMPLETE` have been reached.
 
 ## Current local evidence
 
@@ -214,6 +228,8 @@ loopback `Ready` RPC. The exact Stage R closing tree passes **601/601 tests in
 | `.cache/training/t3b/floor.json` | JSON | SHA-256 `28d83926a70e507671bfd694e032f81b71093d475075aad627b3c24c5b334efc`; floor input SHA-256 `3688cdad4f40724fa82765bb1c2ba89369aed056e29cecb8b1c074d6069939bb`; `F = 0.00002467632293701172`; prospective and older than the comparison marker |
 | `.cache/training/t3b/comparison.json` | JSON | SHA-256 `6aa8e3771bbbd81ecd9599ec9605a4e1efb804fa9ec66c4f82d2d6aea3eb00c6`; fixed gates pass; normalized max `0.013038858771324158` |
 | `.cache/training/t3b/parity-evaluation.json` | JSON | SHA-256 `1e337f0bb87aa66a4270c526dd918bd18807aa6aa5291a59b119780080ea9eca`; derived deterministic gate fails at threshold `0.005` |
+| `.cache/training/t4-resume-lora` | Exact-resume smoke | Evidence SHA-256 `44325aa73c012d5b9dfb5499a549eeb689b90c64ebd07b137ee024cefa797b57`; 100 vs 50+resume has zero parameter/loss/metric drift and exact optimizer/draw/sampler/state identity; both exports finite |
+| `.cache/training/t4-resume-full-v2` | Exact-resume smoke | Evidence SHA-256 `2c46c621a08b59584701b1bc2171690cfc03c7a116e41d4e4fff35f217699748`; 155 fp32 master tensors, zero parameter/loss/metric drift, exact continuation state, and finite 500-tensor exports |
 | `.cache/hf` | 3,498,900 KiB | repository-local pinned source/dataset cache; unchanged by P0-3 cleanup |
 | `.cache/smolvla_mlx` | 52,764,872 KiB | post-P0-3 native cache; converted production weights retained and no cleanup candidates remain |
 | `dist/` | 4 artifacts | One sdist plus CPython 3.11/3.12/3.13 `macosx_14_0_arm64` wheels; exact hashes in `DIST_MANIFEST.md` |
