@@ -11,7 +11,7 @@ lane:
 ```bash
 git clone https://github.com/daniiarabdiev/mlx-smolvla.git
 cd mlx-smolvla
-uv sync --extra reference
+uv sync --all-extras
 make test-fast
 ```
 

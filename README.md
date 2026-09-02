@@ -1,245 +1,126 @@
-# SmolVLA MLX
+# mlx-smolvla
 
-SmolVLA MLX is a native MLX inference port of LeRobot's SmolVLA policy for
-Apple Silicon. It converts compatible SmolVLA checkpoints into MLX
-safetensors, runs vision, the truncated SmolVLM prefix decoder, the action
-expert, and flow matching through MLX, and keeps PyTorch, LeRobot, and
-Transformers out of the base runtime so inference can use the Mac GPU and
-unified memory directly.
+Run SmolVLA checkpoint inference, LeRobot-protocol serving, and preview
+fine-tuning natively with MLX on Apple Silicon—without Torch, Transformers, or
+LeRobot in the base runtime.
+
+On the pinned Apple M5 Pro test case, MLX fp32 produced a 50-action chunk in
+**110.75 ms median** versus **204.58 ms** for PyTorch-MPS (**1.847× faster**),
+while that chunk represents **1.67 s** at 30 fps (about **15.0× real-time
+duration**); scope and raw timings are in the [benchmark evidence](docs/BENCHMARK.md#mlx-versus-pytorch-mps).
+
+> **Hardware demo slot:** physical SO-101 validation is still blocked on the
+> separately authorized safety session, so this release candidate does not
+> claim real-robot operation. See the [first-contact status](hardware/FIRST_CONTACT.md)
+> and [media guidance](docs/media/README.md).
+
+## Requirements
+
+| Requirement | Supported release surface |
+| --- | --- |
+| Mac | Apple Silicon |
+| macOS | 14 or newer |
+| Python | 3.11-3.13 for inference; 3.12-3.13 for reference, serve, and train extras |
+| MLX | 0.32.0, 0.32.1, or 0.32.2 |
+
+All three MLX versions passed conversion, strict deterministic checks,
+production fp32/bf16 statistical gates, installed offline prediction, `doctor`,
+and loopback serving on macOS-14-compatible official wheels. See the
+[compatibility matrix](docs/evidence/MLX_COMPATIBILITY.md) for exact wheel and
+dylib inspection evidence.
 
 ## Install
 
-Use an Apple Silicon Mac and Python 3.11, 3.12, or 3.13:
+When the operator publishes v0.1.0 to PyPI:
 
 ```bash
+python -m pip install mlx-smolvla
+```
+
+Until then, install from a checkout:
+
+```bash
+git clone https://github.com/daniiarabdiev/mlx-smolvla.git
+cd mlx-smolvla
 python -m pip install .
+mlx-smolvla doctor
 ```
 
-For repository development and the pinned PyTorch reference lane, use Python
-3.12 or 3.13 because LeRobot 0.6.1 requires Python 3.12 or newer:
+The first online load downloads and converts the checkpoint once. Converted
+weights default to `~/.cache/mlx_smolvla`; set `MLX_SMOLVLA_CACHE` or pass
+`cache_dir=` to move them. A populated cache supports subsequent
+`HF_HUB_OFFLINE=1` loads.
 
-```bash
-uv sync --extra reference
-```
+## Run a checkpoint
 
-The first load downloads the checkpoint and tokenizer, then converts all 500
-model tensors once. The default cache is `~/.cache/smolvla_mlx`; set
-`SMOLVLA_MLX_CACHE` or pass `cache_dir=` to put it elsewhere. A complete cached
-checkpoint, tokenizer, and conversion can be loaded again with
-`HF_HUB_OFFLINE=1`.
-
-The native compatibility extension is optional. A source build can force the
-tested pure-MLX fallback with `SMOLVLA_MLX_BUILD_NATIVE=0`. See
-[DIST_MANIFEST.md](DIST_MANIFEST.md) for the locally built CPython 3.11–3.13
-artifacts, checksums, and deployment caveat.
-
-## Python API
+The Python path is three lines once `observation` contains two CHW `uint8`
+camera arrays, a six-value `float32` state, and a task string:
 
 ```python
-import numpy as np
-from smolvla_mlx import SmolVLAMLX
+from mlx_smolvla import SmolVLAMLX
 policy = SmolVLAMLX.from_pretrained("lerobot/smolvla_base")
-observation = {
-    "observation.images.camera1": np.zeros((3, 480, 640), np.uint8),
-    "observation.images.camera2": np.zeros((3, 480, 640), np.uint8),
-    "observation.state": np.zeros(6, np.float32),
-    "task": "pick up the object",
-}
 action = policy.select_action(observation)
 ```
 
-`select_action` returns one postprocessed physical action and keeps the rest of
-the checkpoint's action horizon in a FIFO. Call `policy.reset()` between
-episodes. Use `policy.predict_action_chunk(observation)` when the normalized
-`[1, 50, action_dim]` chunk is the desired interface. Passing a local
-checkpoint directory instead of a Hub ID uses the same strict loader. The
-default `execution_mode="production"` owns an MLX Metal context; pass
-`execution_mode="strict"` to own the CPU compatibility context used by the
-golden parity ladder.
-
-## CLI quickstart
-
-From a repository checkout with the generated golden observation present:
+Or predict from a saved observation directory:
 
 ```bash
-smolvla-mlx convert --model lerobot/smolvla_base --dtype float32
-smolvla-mlx predict --observation tests/golden/sample_000
-smolvla-mlx predict --observation tests/golden/sample_000 --execution-mode strict
-smolvla-mlx bench --dtype float32 --runs 50 --warmups 5
-smolvla-mlx test
+mlx-smolvla predict --model lerobot/smolvla_base --observation /path/to/saved-observation
 ```
 
-Dense bf16 remains the default. Two VLM-only, weight-quantized production
-presets passed the unchanged 50-case statistical gate and are available as
-explicit Apple-Metal opt-ins:
+`select_action` returns one physical action and queues the remainder of the
+50-action horizon; call `policy.reset()` between episodes. Local LeRobot-style
+checkpoint directories and complete Hub repository IDs use the same strict
+configuration/tensor loader. Quantized `vlm-8bit` and `vlm-4bit` presets are
+explicit production-only opt-ins documented in the [benchmark](docs/BENCHMARK.md#vlm-only-quantization).
 
 ```bash
-smolvla-mlx predict --observation tests/golden/sample_000 --quantization vlm-8bit
-smolvla-mlx predict --observation tests/golden/sample_000 --quantization vlm-4bit
-smolvla-mlx serve --quantization vlm-4bit
+mlx-smolvla predict --observation /path/to/saved-observation --quantization vlm-8bit
+mlx-smolvla predict --observation /path/to/saved-observation --quantization vlm-4bit
 ```
 
-The equivalent Python argument is
-`SmolVLAMLX.from_pretrained(..., quantization="vlm-8bit")`. These presets are
-validated only with the bf16 base dtype and `execution_mode="production"`.
-They quantize connector and language-model linear weights in memory while
-leaving the token embedding, vision encoder, state projection, and action
-expert dense bf16. See the accuracy/latency/memory table in
-[BENCHMARK.md](BENCHMARK.md); neither preset is enabled implicitly.
+Dense bf16 remains the default; neither quantized preset is selected implicitly.
 
-`predict --observation` and `bench` use the task and sample mapping in
-`tests/golden/metadata.json`; run `make goldens` if the ignored local goldens
-are absent. Dataset-backed prediction is optional and isolated in a child
-process so the base runtime stays dependency-light:
+## Serve for your robot
+
+Install the optional protocol surface and start the trusted loopback server on
+the Mac:
 
 ```bash
-python -m pip install ".[reference]"
-smolvla-mlx predict --dataset lerobot/svla_so101_pickplace --episode 0 --index 0
+python -m pip install "mlx-smolvla[serve]"
+mlx-smolvla serve --host 127.0.0.1 --port 8080 --dtype bfloat16
 ```
 
-That bridge may also require a working FFmpeg/TorchCodec or PyAV setup for the
-dataset's video encoding. It does not change the base saved-observation path.
-
-## Performance
-
-One SmolVLA chunk contains 50 actions, or about 1.67 seconds of commanded
-motion at 30 fps. On the measured Apple M5 Pro with 48 GiB unified memory,
-macOS 26.6.2, and MLX 0.32.2, the installed default production path produced
-the chunk in 110.54 ms at fp32—about **15.1× the chunk's motion duration per
-unit of compute**.
-
-| Storage dtype | Median chunk | P95 | Peak MLX memory | Motion/compute |
-| --- | ---: | ---: | ---: | ---: |
-| fp32 | 110.54 ms | 111.41 ms | 2.94 GiB | 15.1× |
-| bf16 | 130.44 ms | 131.25 ms | 2.44 GiB | 12.8× |
-
-These are model-only local timings, not an end-to-end robot control-rate
-claim; camera capture, transport, and actuation are excluded. On this measured
-stack bf16 saved about 0.50 GiB of peak MLX memory but was slower than fp32.
-The stage breakdown, warmup policy, and measured source commit are in
-[BENCHMARK.md](BENCHMARK.md).
-
-## Correctness evidence
-
-The golden source is LeRobot 0.6.1 with PyTorch 2.11.0 on CPU fp32. The base
-policy is pinned to revision
-`c83c3163b8ca9b7e67c509fffd9121e66cb96205`, and its SmolVLM2-500M backbone to
-`7b375e1b73b11138ff12fe22c8f2822d8fe03467`. Fixed noise and eight real
-observations compare preprocessing, all 16 prefix layers and K/V boundaries,
-the action-expert blocks, all ten Euler steps, normalized chunks, and
-postprocessed actions. The acceptance limits were written before evaluation
-and have not been loosened.
-
-The deterministic normalized-action limits are `0.005` maximum absolute error
-for fp32 and `0.05` for bf16. The independent statistical gate compares first
-action MAE on 50 pinned real frames and requires MLX/reference `<= 1.05`:
-
-| Checkpoint evidence | fp32 normalized max | bf16 normalized max | fp32 MAE ratio | bf16 MAE ratio |
-| --- | ---: | ---: | ---: | ---: |
-| Base checkpoint | pass (`<=0.005`) | pass (`<=0.05`) | 0.9999999969 | 1.0000097741 |
-| Base + active dataset statistics | 0.0000028759 | 0.0048642755 | 1.0000000330 | 0.9985395647 |
-| Public fine-tune + active statistics | 0.0000343621 | 0.0040360391 | 1.0000005749 | 0.9960502782 |
-
-The public fine-tune is
-`soonweihong0857/swhfypv3_smolvla_multitask_model` at pinned revision
-`5e2491c809ec892427f54db1eb23bf8c4bbbf770`; it exercises non-base camera
-names plus saved state/action mean and standard deviation. Exact values,
-artifact hashes, and regeneration commands are recorded in
-[PROGRESS.md](PROGRESS.md).
-
-Strict module parity and production inference are separate claims. `strict`
-owns an MLX CPU context and reproduces the pinned PyTorch operations;
-`production` is the public default, owns an MLX Metal context, and is the path
-measured above.
-
-The default production path was also run against the same eight deterministic
-goldens and 50-frame statistical corpus:
-
-| Production dtype | Deterministic max | Fixed gate | Deterministic | 50-frame MAE ratio | Statistical |
-| --- | ---: | ---: | ---: | ---: | ---: |
-| fp32 | 0.0473065376 | 0.005 | fail | 1.0000128000 | pass (`<=1.05`) |
-| bf16 | 0.0441064835 | 0.05 | pass | 1.0000216963 | pass (`<=1.05`) |
-
-Metal fp32 therefore does not inherit the strict deterministic guarantee;
-select `strict` when that contract is required. Metal bf16 passes its unchanged
-deterministic gate, and both production storage modes pass the unchanged
-statistical gate. The known Vision and Connector module discrepancies remain
-documented without changing their thresholds; full methodology and both mode
-tables are in [BENCHMARK.md](BENCHMARK.md).
-
-## Fine-tune on your Mac
-
-The practical loop is: record during the day, fine-tune locally overnight,
-then load the exported checkpoint in the morning. Recording still belongs to
-your operator-reviewed LeRobot hardware configuration; this repository does
-not discover ports or drive a robot. Keep the recording local with LeRobot
-0.6.1's explicit upload switch:
+A mainline LeRobot 0.6.1 client can connect using its real, operator-reviewed
+robot and camera configuration:
 
 ```bash
-uv sync --extra train
-lerobot-record \
-  --config_path=record_config.yaml \
-  --dataset.repo_id=local/overnight \
-  --dataset.root=.cache/hf/datasets/overnight \
-  --dataset.push_to_hub=false
+python -m lerobot.async_inference.robot_client \
+  --policy_type=smolvla \
+  --pretrained_name_or_path=lerobot/smolvla_base \
+  --robot.type=so101_follower \
+  --robot.port=<FOLLOWER_PORT> \
+  --robot.id=<CALIBRATION_ID> \
+  --robot.cameras='<CAMERA_CONFIG>' \
+  --actions_per_chunk=10 \
+  --task='pick up the object' \
+  --server_address=127.0.0.1:8080 \
+  --policy_device=cpu --client_device=cpu --fps=30
 ```
 
-For the recommended memory-efficient native run, point the trainer at that
-local LeRobot dataset:
+The server implements the audited four-RPC LeRobot protocol, but robot I/O and
+safety remain the client's responsibility. Do not run the command against
+hardware until you have reviewed the [hardware runbook](docs/HARDWARE_RUNBOOK.md)
+and [current first-contact status](hardware/FIRST_CONTACT.md). The
+[bring-your-own-robot guide](examples/bring_your_own_robot/README.md) describes
+the adapter boundary for non-mainline clients. Remote serving is an explicit
+trusted-network-only mode because LeRobot 0.6.1 uses unauthenticated pickle
+payloads.
 
-```bash
-smolvla-mlx train .cache/hf/datasets/overnight \
-  --lora \
-  --dtype bfloat16 \
-  --steps 30000 \
-  --batch-size 8 \
-  --lr 1e-4 \
-  --checkpoint-every 100 \
-  --output .cache/training/overnight
-```
+## Run your own fine-tune
 
-Metrics stream to `metrics.csv`; checkpoints are atomic and only the newest
-three are retained. If the process stops, run the same command with `--resume`:
-
-```bash
-smolvla-mlx train .cache/hf/datasets/overnight \
-  --lora --dtype bfloat16 --steps 30000 --batch-size 8 --lr 1e-4 \
-  --checkpoint-every 100 --output .cache/training/overnight --resume
-```
-
-In the morning, validate the complete local export on a compatible saved
-observation before using the trusted loopback server:
-
-```bash
-smolvla-mlx predict \
-  --model .cache/training/overnight/export \
-  --observation tests/golden/sample_000 \
-  --dtype bfloat16 \
-  --execution-mode production
-```
-
-On the measured M5 Pro, effective-batch-8 LoRA bf16 runs at 0.873 updates/s,
-or 19.09 minutes per 1,000 updates; 30,000 updates project to 9.55 hours of
-optimizer work. Checkpoint/export overhead is additional. Full mode is also
-available with `--full`; its bf16 measurement is 0.836 updates/s and 3.55 GiB
-peak MLX memory versus 2.27 GiB for LoRA. The complete four-cell bf16/fp32
-matrix and methodology are in [BENCHMARK.md](BENCHMARK.md), backed by committed
-[TRAINING_BENCHMARK.json](TRAINING_BENCHMARK.json).
-
-The round-trip proof is not just a private adapter format: the T3B MLX-trained
-export loaded in the pinned Torch/LeRobot reference and produced a held-out MAE
-ratio of 0.9999447392, inside the fixed `[0.95, 1.05]` gate. T4's LoRA and full
-smokes each exported the same standard 500-tensor / 450,046,176-parameter
-LeRobot layout, reloaded it through the public MLX policy, and emitted a finite
-action. Exact-resume evidence and artifact hashes are in
-[TRAINING_UX.md](TRAINING_UX.md).
-
-## Standard GPU fine-tune alternative
-
-Fine-tune with standard LeRobot 0.6.1 on a GPU machine, then copy the saved
-checkpoint directory to the Mac. This is LeRobot/PyTorch training; it is
-separate from this repository's experimental native-MLX training research.
-For an NVIDIA CUDA host:
+You can train with standard LeRobot on any supported accelerator, keep uploads
+disabled, then transfer the complete checkpoint directory to the Mac:
 
 ```bash
 python -m pip install "lerobot[training,smolvla]==0.6.1"
@@ -248,148 +129,103 @@ lerobot-train \
   --policy.device=cuda \
   --policy.push_to_hub=false \
   --dataset.repo_id=<USER>/<DATASET> \
-  --batch_size=64 \
-  --steps=200000 \
+  --batch_size=64 --steps=200000 \
   --output_dir=outputs/smolvla-finetune \
-  --save_freq=20000 \
-  --save_checkpoint_to_hub=false \
+  --save_freq=20000 --save_checkpoint_to_hub=false \
   --wandb.enable=false
 ```
 
-The two explicit Hub flags keep the run local. LeRobot maintains the latest
-saved policy at
-`outputs/smolvla-finetune/checkpoints/last/pretrained_model`; load that
-directory directly after transferring it:
+Load its `checkpoints/last/pretrained_model` directory directly, or use a Hub
+ID only after deliberately publishing the complete checkpoint yourself:
 
 ```python
-from smolvla_mlx import SmolVLAMLX
-
-policy = SmolVLAMLX.from_pretrained(
-    "/path/to/smolvla-finetune/checkpoints/last/pretrained_model"
-)
-
-# Or, after you deliberately publish the complete checkpoint yourself:
-policy = SmolVLAMLX.from_pretrained("<USER>/<MODEL>")
+policy = SmolVLAMLX.from_pretrained("/path/to/checkpoints/last/pretrained_model")
+# policy = SmolVLAMLX.from_pretrained("<USER>/<MODEL>")
 ```
 
-The checkpoint must include `config.json`, `model.safetensors`, both processor
-JSON files, and any normalization safetensors required by its config.
+The separately pinned public multitask fine-tune passed all eight deterministic
+cases and its 50-frame fp32/bf16 MAE ratios were 1.0000005749 and 0.9960502782;
+the [public-checkpoint evidence](docs/evidence/README.md#inference-correctness)
+records the immutable revision and regeneration path.
 
-## Serve for your robot
+## Fine-tune on your Mac (preview)
 
-The optional server speaks the exact async-inference gRPC protocol shipped by
-LeRobot 0.6.1 while running the policy with native MLX. On the Apple Silicon
-Mac, use Python 3.12 or 3.13, install the isolated extra, and start the safe
-loopback default:
+Native MLX training is a preview: step-zero gradients and 25 optimizer updates
+pass the fixed lockstep gates, LoRA/full exports reload through both MLX and
+LeRobot, and the measured expert-only LoRA export has a Torch/MLX held-out MAE
+ratio of **0.9999447392**; however, its strict deterministic maximum is
+**0.0130388588** against the prospectively fixed **0.005** gate, so that gap
+remains under investigation. See the [training evidence](docs/evidence/README.md#training)
+before relying on the workflow.
 
 ```bash
-python -m pip install ".[serve]"
-smolvla-mlx serve \
-  --host 127.0.0.1 \
-  --port 8080 \
-  --dtype bfloat16 \
-  --execution-mode production
+uv sync --extra train
+mlx-smolvla train /path/to/lerobot-dataset \
+  --lora --dtype bfloat16 --steps 30000 --batch-size 8 --lr 1e-4 \
+  --checkpoint-every 100 --output .cache/training/overnight
 ```
 
-On that same Mac, a LeRobot user runs its standard client with their existing
-calibration and camera values substituted for the placeholders:
+Resume the exact output directory with the same arguments plus `--resume`.
+Validate the exported checkpoint before serving it:
 
 ```bash
-python -m lerobot.async_inference.robot_client \
-  --policy_type=smolvla \
-  --pretrained_name_or_path=lerobot/smolvla_base \
-  --robot.type=so101_follower \
-  --robot.port=<YOUR_FOLLOWER_PORT> \
-  --robot.id=<YOUR_CALIBRATION_ID> \
-  --robot.cameras='<YOUR_LEROBOT_CAMERA_CONFIG>' \
-  --actions_per_chunk=10 \
-  --task='pick up the object' \
-  --server_address=127.0.0.1:8080 \
-  --policy_device=cpu \
-  --client_device=cpu \
-  --fps=30
+mlx-smolvla predict \
+  --model .cache/training/overnight/export \
+  --observation /path/to/saved-observation
 ```
 
-The client's `policy_device` field is retained for wire compatibility; the
-server's `--execution-mode` owns the actual MLX device. A different-machine
-client requires a trusted private network plus an explicit server bind such as
-`--host 0.0.0.0 --allow-remote` and the Mac's private address in
-`--server_address`. LeRobot 0.6.1 uses unauthenticated, unencrypted gRPC and
-Python pickle payloads, so never expose this port to an untrusted peer or the
-public internet.
+On the measured host, effective-batch-8 LoRA bf16 ran at **0.873 updates/s**,
+or **19.09 minutes per 1,000 updates**; 30,000 updates project to **9.55 hours**
+of optimizer work before checkpoint/export/evaluation overhead, with **2.27 GiB**
+peak MLX memory. The full four-cell protocol and raw timing source are in the
+[training benchmark](docs/BENCHMARK.md#native-training-performance-metal).
 
-`Ready` starts a fresh episode, the one-item observation queue keeps the latest
-frame, inference is serialized, and each returned CPU Torch `TimedAction`
-inherits the observation timestep and advances its timestamp by `1 / --fps`.
-Ctrl-C stops the server. Schema, validation, cancellation, concurrency, and a
-localhost real-checkpoint test are covered in `tests/test_server.py`; the
-recorded three-action chunk is exactly equal to three direct
-`select_action` calls. Hardware-in-the-loop validation is still pending and
-must be performed in a separate supervised operator session.
+## Execution modes
 
-For that supervised session, the server can write one no-clobber JSONL timing
-record per returned action chunk without storing observations or actions:
+`execution_mode="production"` is the default MLX Metal path and is accepted by
+the pinned 50-frame statistical gate. `execution_mode="strict"` selects the MLX
+CPU compatibility path for bit-close deterministic comparison with PyTorch CPU.
 
-```bash
-uv run --extra serve python scripts/serve_latency_smoke.py \
-  --output .cache/hardware/first-contact-latency.jsonl \
-  --host 127.0.0.1 --port 8080 --dtype bfloat16 --fps 5
-```
+## Limitations
 
-This command starts only the software policy server; it does not connect to a
-robot. Do not run a hardware client from this document alone. The execution
-gate, low-limit one-action client command, physical safety checks, rollback,
-and evidence checklist are in [HARDWARE_RUNBOOK.md](HARDWARE_RUNBOOK.md).
+- Physical SO-101 integration is not yet validated; [first-contact evidence](hardware/FIRST_CONTACT.md) currently records the authorization block, not a robot result.
+- Production Metal fp32 passes the statistical gate but fails the strict `0.005` deterministic maximum; use strict mode for that contract and see the [mode table](docs/BENCHMARK.md#default-production-correctness-metal).
+- Native training remains statistical alpha because its derived deterministic checkpoint gate fails; the unchanged result is in the [T3B failure record](docs/evidence/FAILURE_LORA_FINETUNE_B.md).
+- Checkpoints must match the audited SmolVLA/SmolVLM2 configuration and complete tensor inventory described in the [architecture](docs/ARCHITECTURE.md).
+- The LeRobot serving protocol is suitable only for trusted peers; security boundaries are documented in the [architecture](docs/ARCHITECTURE.md) and [security policy](.github/SECURITY.md).
 
-## Cache layout and cleanup
+## Correctness methodology
 
-Repository commands route caches under `.cache/`: Hugging Face snapshots and
-datasets in `.cache/hf`, MLX conversions and parity caches in
-`.cache/smolvla_mlx`, and protected training evidence in `.cache/training`.
-Golden evidence is under the ignored `tests/golden*` trees.
+The reference lane pins LeRobot 0.6.1, exact model/dataset revisions, fixed
+noise, eight real observations, all 16 used prefix layers and K/V boundaries,
+the action expert, every Euler step, normalized chunks, and physical actions.
+The strict normalized-action maxima are fixed at `0.005` (fp32) and `0.05`
+(bf16); an independent 50-frame gate requires MLX/reference first-action MAE
+`<= 1.05`. Thresholds are never loosened after evaluation. The
+[evidence index](docs/evidence/README.md#inference-correctness) links reports,
+hashes, negative results, and reproduction commands.
 
-Inspect the exact candidates before deleting the narrowly allowed debug
-entries:
+## Contributing, citation, and license
 
-```bash
-make cache-inventory
-make clean-cache-dry-run
-make clean-cache
-```
+Start with [CONTRIBUTING.md](CONTRIBUTING.md); `make test-fast` is the iteration
+lane and `make test` is the complete gate. [AGENTS.md](AGENTS.md) gives coding
+agents the repository map and immutable contracts for agent-assisted work.
+Citation metadata is in [CITATION.cff](CITATION.cff). The project is licensed
+under [Apache-2.0](LICENSE), with upstream attribution in [NOTICE](NOTICE).
 
-Cleanup refuses symlinked or out-of-repository targets and removes only
-top-level `debug-*` directories plus exact `benchmark-debug`. It never enters
-model sources, converted weights, golden outputs, or training evidence.
+## Acknowledgments
 
-## Scope, limitations, and troubleshooting
+This work builds on [SmolVLA](https://huggingface.co/lerobot/smolvla_base),
+[LeRobot](https://github.com/huggingface/lerobot), and
+[MLX](https://github.com/ml-explore/mlx). The SmolVLM backbone work in
+[mlx-vlm](https://github.com/Blaizzy/mlx-vlm) was also a useful architecture
+reference; `mlx-smolvla` does not depend on it at runtime.
 
-- The base installed surface is dependency-light inference and offline
-  software evaluation. The `serve` extra adds a software-only policy server;
-  robot I/O remains in LeRobot's client, and hardware-in-the-loop validation
-  is not claimed.
-- Checkpoints must match the audited SmolVLA/SmolVLM2 architecture. Camera
-  names and state/action shapes come from each checkpoint's config; at least
-  one configured camera must be present, and errors print the expected input
-  contract. Configured streams that are absent are skipped unless the config
-  explicitly requests `empty_cameras` padding.
-- `predict --dataset` and `make goldens` need the Python 3.12+ reference extra;
-  ordinary imports, conversion, and saved-observation inference do not import
-  PyTorch, LeRobot, or Transformers.
-- `serve` needs Python 3.12+ and `.[serve]`. Its pickle wire format is safe only
-  with trusted peers; loopback is enforced unless `--allow-remote` is explicit.
-- The project wheels and native extension target `macosx_14_0_arm64`, but the
-  pinned MLX 0.32.2 wheel's own `libmlx.dylib` declares macOS 26.2. A working
-  end-to-end macOS 14 installation therefore depends on a lower-target MLX
-  build; see [DIST_MANIFEST.md](DIST_MANIFEST.md).
-- If strict CPU arithmetic reports `pure-mlx-fallback`, the optional extension
-  was not loaded. Reinstall from a native wheel for the exact extension-backed
-  path, or retain the tested fallback when portability matters more.
-- If an offline load fails, first complete one online load into the same
-  `SMOLVLA_MLX_CACHE`; both the policy and its tokenizer must be present.
-- The checked-in macOS 15 full-suite workflow is deliberately disabled because
-  GitHub's hosted Apple-silicon runners cannot hold the required regenerated
-  evidence. [CI.md](CI.md) records the verified limits and exact self-hosted
-  activation requirements.
+## Related projects
 
-The project is licensed under the [Apache License 2.0](LICENSE). Upstream code
-and model attribution is collected in [NOTICE](NOTICE).
+[`tokimoa/smolvla-mlx`](https://huggingface.co/tokimoa/smolvla-mlx), uploaded
+to the Hugging Face Hub on **2026-07-29**, is an earlier, independent inference
+port of SmolVLA to MLX. This project differs in scope by adding verified parity gates,
+a base runtime without Torch or Transformers at runtime,
+LeRobot-protocol serving, and training; no comparative performance claim is
+made against that project.

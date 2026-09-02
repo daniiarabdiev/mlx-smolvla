@@ -157,7 +157,7 @@ def test_reference_loader_rejects_non_cpu_or_mps_devices_before_resolution() -> 
 def test_committed_comparison_artifact_revalidates_from_raw_timings() -> None:
     from reference.benchmark import validate_comparison_document
 
-    path = Path("INFERENCE_COMPARISON.json")
+    path = Path("docs/evidence/INFERENCE_COMPARISON.json")
     artifact = json.loads(path.read_text(encoding="utf-8"))
     validated = validate_comparison_document(artifact)
     assert validated == artifact
@@ -167,8 +167,8 @@ def test_committed_comparison_artifact_revalidates_from_raw_timings() -> None:
 
 
 def test_benchmark_document_traces_comparison_values_to_artifact() -> None:
-    artifact = json.loads(Path("INFERENCE_COMPARISON.json").read_text(encoding="utf-8"))
-    benchmark = Path("BENCHMARK.md").read_text(encoding="utf-8")
+    artifact = json.loads(Path("docs/evidence/INFERENCE_COMPARISON.json").read_text(encoding="utf-8"))
+    benchmark = Path("docs/BENCHMARK.md").read_text(encoding="utf-8")
     assert "## MLX versus PyTorch-MPS" in benchmark
     assert "115ad58c0c618b65a6275018614f3ee6cf17dd02a9d4ad9c94aaf7e5a9842e48" in benchmark
     for engine in artifact["engines"]:

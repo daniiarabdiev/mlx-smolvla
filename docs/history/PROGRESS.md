@@ -2663,3 +2663,51 @@
   the unfiltered `make test-fast` will be rerun after that implementation.
 - No training run or floor computation was active during any timing; no product
   performance measurement, hardware/device access, or upload ran.
+
+## 2026-09-02 — five-minute README and public tree migration
+
+- Rewrote the README in the mandated hobbyist-first order. Its headline traces
+  the pinned `110.75 ms` MLX / `204.58 ms` PyTorch-MPS measurement and `1.847x`
+  ratio to committed evidence; all hardware language says not performed.
+- Added the required factual acknowledgment of the earlier independent
+  `tokimoa/smolvla-mlx` Hub port and its 2026-07-29 upload date. No performance
+  comparison is made against it. Added the prepared model card, media slot,
+  blocked first-contact record, and bring-your-own-client boundary guide.
+- Added red root/historical-correction/link/privacy tests and observed all four
+  intended hygiene failures. Moved specifications/plans/status into
+  `docs/history`, measured results into `docs/evidence`, and active architecture,
+  benchmark, reuse, and hardware material into `docs`; protected evidence bytes
+  remain exact. Added all three documentation indexes and the dated correction.
+- Replaced root `setup.py`/`CMakeLists.txt`/`MANIFEST.in` with a PEP 517 backend
+  in `reference/_build_backend.py` and package-local CMake project while retaining
+  the old files in history. The first editable build exposed a header-root
+  assumption; fixing only the CMake include directory preserved the native C++
+  bytes. Native and extension-free distribution tests pass.
+- Untracked and ignored `.codex/config.toml`; moved `.DS_Store` recoverably to
+  the user's Trash and the original source archive into the ignored cache. The
+  public Markdown link and absolute-home-path audits pass.
+- A clean dependency sync exposed that serving tests had relied on previously
+  installed extras. Both Make test lanes now install all declared extras while
+  retaining their exact full/fast test selections; the focused public,
+  packaging, evidence, CI, and hardware-doc group passes **64/64**.
+- The reorganized complete suite reached **675 passed** in **595.14 seconds**;
+  its sole expected failure was the red root allowlist because these two live
+  log files had not yet moved. All model, provenance, serving, parity, export,
+  training, and frozen-evidence tests passed with no skip or xfail.
+- No training run, floor computation, product timing measurement, hardware or
+  vendor-tree access, upload, tolerance change, or protected-evidence rewrite
+  occurred.
+
+## 2026-09-02 — public root and final fast lane green
+
+- Moved the completed progress and human-task ledgers to `docs/history/` and
+  added them to the history index. The exact public root allowlist, `.codex`
+  untracking/ignore check, correction check, public link checker, false-claim
+  checker, and absolute-home-path scan now pass.
+- On an otherwise idle machine, unfiltered `make test-fast` selected and passed
+  **385 tests in 96.48 seconds** (**99.00 seconds wall time**) with 291 slow
+  integration tests deselected and no skip or xfail. No trainer or floor worker
+  was running during this test-suite timing.
+- Next: commit/push the clean Stage C source checkpoint, build the final-name
+  sdist and CPython 3.11-3.13 wheels from that commit, repeat installed smokes,
+  and replace the distribution manifest.

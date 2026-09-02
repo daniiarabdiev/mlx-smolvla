@@ -18,7 +18,7 @@ PyTorch reference.
 ```bash
 export HF_HOME="$PWD/.cache/hf"
 export UV_CACHE_DIR="$PWD/.cache/uv"
-export SMOLVLA_MLX_CACHE="$PWD/.cache/smolvla_mlx"
+export MLX_SMOLVLA_CACHE="$PWD/.cache/mlx_smolvla"
 make training-audit
 ```
 
@@ -113,7 +113,7 @@ The existing repository has two pinned reference-only loading paths:
    `LeRobotDataset` for `lerobot/svla_so101_pickplace` at revision
    `f641879e22172be7e8161d5e6c1503c2d2feb657`, selects whole episodes, maps the
    `side` and `up` cameras, state, task, and action, and returns CPU tensors.
-2. `smolvla_mlx.cli._dataset_observation` keeps runtime imports isolated by
+2. `mlx_smolvla.cli._dataset_observation` keeps runtime imports isolated by
    launching a child process that loads one LeRobot frame and crosses back as
    NumPy `.npz` arrays plus JSON task text.
 

@@ -153,7 +153,7 @@ def test_profile_script_uses_clean_idle_coordinator_and_isolated_workers() -> No
 def test_committed_profile_revalidates_from_all_raw_component_timings() -> None:
     from mlx_smolvla.profile import validate_profile_document
 
-    path = Path("BF16_PROFILE.json")
+    path = Path("docs/evidence/BF16_PROFILE.json")
     artifact = json.loads(path.read_text(encoding="utf-8"))
     assert validate_profile_document(artifact) == artifact
     assert hashlib.sha256(path.read_bytes()).hexdigest() == (
@@ -162,8 +162,8 @@ def test_committed_profile_revalidates_from_all_raw_component_timings() -> None:
 
 
 def test_benchmark_document_traces_profile_and_preserves_default_behavior() -> None:
-    artifact = json.loads(Path("BF16_PROFILE.json").read_text(encoding="utf-8"))
-    benchmark = Path("BENCHMARK.md").read_text(encoding="utf-8")
+    artifact = json.loads(Path("docs/evidence/BF16_PROFILE.json").read_text(encoding="utf-8"))
+    benchmark = Path("docs/BENCHMARK.md").read_text(encoding="utf-8")
     assert "## bf16 latency diagnosis" in benchmark
     assert "74da9f937cb8bfeba4066d5518187490ff96a1447e4a2ad2253e2493245be1cf" in benchmark
     for profile in artifact["profiles"]:

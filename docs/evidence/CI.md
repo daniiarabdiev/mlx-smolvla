@@ -1,23 +1,22 @@
 # Continuous integration feasibility
 
 Stage Q P2-4 leaves
-[`.github/workflows/macos-15.yml`](.github/workflows/macos-15.yml) checked in,
+[`.github/workflows/macos-15.yml`](../../.github/workflows/macos-15.yml) checked in,
 syntactically valid, manually dispatchable, and unconditionally disabled at
 the job level. It has no `push` or `pull_request` trigger. A manual dispatch
 therefore creates a skipped job rather than spending runner time.
 
 ## Local test lanes
 
-`make test-fast` runs every test not marked `slow`. The marker is reserved for
+`make test-fast` runs every test not marked `slow` with all declared extras installed. The marker is reserved for
 tests that load pinned model/dataset artifacts, execute complete model/evidence
 pipelines, or run the isolated provenance/optimizer processes those artifacts
 require. It does not skip or alter those tests: `make test` still runs the
 complete suite with the same semantics and gates.
 
-On 2026-09-02 the fast lane selected 378 tests and passed them in 92.76 seconds
-(95.32 seconds wall clock) on an otherwise idle Apple Silicon validation host.
-One still-red README contract was filtered from that intermediate measurement;
-the release audit repeats the unfiltered target after the README is complete.
+On 2026-09-02 the final unfiltered fast lane selected 385 tests and passed them
+in 96.48 seconds (99.00 seconds wall clock) on an otherwise idle Apple Silicon
+validation host, with no skips or xfails.
 
 ## Why GitHub-hosted macOS is disabled
 
@@ -66,7 +65,7 @@ Before removing the workflow's `if: ${{ false }}` guard:
    deterministic reconstruction targets for those long runs. No unverified
    substitute or reduced test selection is acceptable.
 4. Change `runs-on` to
-   `[self-hosted, macOS, ARM64, smolvla-mlx-ci]`. Keep checkout `clean: false`
+   `[self-hosted, macOS, ARM64, mlx-smolvla-ci]`. Keep checkout `clean: false`
    so the ignored operator evidence is not deleted.
 5. Keep all caches repository-local. The workflow itself regenerates base,
    stats-active, public-fine-tune, gradient, and optimizer goldens before

@@ -4,9 +4,9 @@
 
 This project includes adapted portions of `mlx-vlm` 0.6.4 in:
 
-- `smolvla_mlx/vision.py`, adapted from `mlx_vlm/models/idefics3/vision.py`
-- `smolvla_mlx/connector.py`, adapted from `mlx_vlm/models/idefics3/idefics3.py`
-- `smolvla_mlx/language.py`, adapted from `mlx_vlm/models/idefics3/language.py`
+- `mlx_smolvla/vision.py`, adapted from `mlx_vlm/models/idefics3/vision.py`
+- `mlx_smolvla/connector.py`, adapted from `mlx_vlm/models/idefics3/idefics3.py`
+- `mlx_smolvla/language.py`, adapted from `mlx_vlm/models/idefics3/language.py`
 
 Copyright © 2025 Prince Canuma
 
@@ -38,7 +38,7 @@ SOFTWARE.
 
 ## LeRobot 0.6.1
 
-`smolvla_mlx/language.py` also reproduces the prefix/cache execution behavior
+`mlx_smolvla/language.py` also reproduces the prefix/cache execution behavior
 verified from `lerobot/policies/smolvla/smolvlm_with_expert.py` in LeRobot 0.6.1.
 
 Copyright 2025 The Hugging Face Inc. team.
@@ -48,7 +48,7 @@ of the license is available at <https://www.apache.org/licenses/LICENSE-2.0>.
 
 ## SLEEF at 5a1d179
 
-`smolvla_mlx/native/rmsnorm.cpp` contains a focused adaptation of SLEEF's
+`mlx_smolvla/native/rmsnorm.cpp` contains a focused adaptation of SLEEF's
 four-wide `xexpf` function from commit
 `5a1d179df9cf652951b59010a2d2075372d67f68`. PyTorch 2.11.0 vendors that
 revision and dispatches it for the relevant ARM CPU vector operation.

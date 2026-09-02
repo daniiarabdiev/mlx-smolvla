@@ -1,7 +1,7 @@
 # MLX reuse decisions
 
 This is the implementation boundary for the native runtime. The package under
-`smolvla_mlx/` must never import PyTorch, LeRobot, or Transformers. The
+`mlx_smolvla/` must never import PyTorch, LeRobot, or Transformers. The
 reference-only `reference/`, `scripts/`, and test lanes may do so.
 
 ## Decision summary
@@ -31,7 +31,7 @@ Stage Q's optional quantization path follows the public
 [`mlx.nn.quantize`](https://github.com/ml-explore/mlx/blob/main/python/mlx/nn/layers/quantized.py)
 class-predicate contract and the selective loader pattern in
 [`mlx-vlm`](https://github.com/Blaizzy/mlx-vlm/blob/main/mlx_vlm/utils.py).
-Only the pattern is reused: `smolvla_mlx.quantization` calls MLX directly and
+Only the pattern is reused: `mlx_smolvla.quantization` calls MLX directly and
 keeps `mlx_vlm` outside the runtime dependency graph.
 
 ## Required adaptations
@@ -65,6 +65,6 @@ source/version headers in the files and license notices in `NOTICE`:
 
 | Local file | Upstream source | Adaptation |
 | --- | --- | --- |
-| `smolvla_mlx/vision.py` | `mlx_vlm/models/idefics3/vision.py` at mlx-vlm 0.6.4 | Fixed the audited 512px SigLIP dimensions, accepts NCHW policy input, omits unused variable-resolution mask machinery, and replaces precise GELU with `gelu_pytorch_tanh`. |
-| `smolvla_mlx/connector.py` | `mlx_vlm/models/idefics3/idefics3.py` at mlx-vlm 0.6.4 | Retains the pixel-shuffle layout while fixing the checkpoint's scale factor to 4 and exposing only the required modality projection. |
-| `smolvla_mlx/language.py` | `mlx_vlm/models/idefics3/language.py` at mlx-vlm 0.6.4, with prefix/cache behavior verified from LeRobot 0.6.1 `policies/smolvla/smolvlm_with_expert.py` | Fixes the audited 16-layer checkpoint subset, split-half RoPE base 10,000, prefix-LM mask, grouped-query attention, and explicit post-RoPE K/V export. |
+| `mlx_smolvla/vision.py` | `mlx_vlm/models/idefics3/vision.py` at mlx-vlm 0.6.4 | Fixed the audited 512px SigLIP dimensions, accepts NCHW policy input, omits unused variable-resolution mask machinery, and replaces precise GELU with `gelu_pytorch_tanh`. |
+| `mlx_smolvla/connector.py` | `mlx_vlm/models/idefics3/idefics3.py` at mlx-vlm 0.6.4 | Retains the pixel-shuffle layout while fixing the checkpoint's scale factor to 4 and exposing only the required modality projection. |
+| `mlx_smolvla/language.py` | `mlx_vlm/models/idefics3/language.py` at mlx-vlm 0.6.4, with prefix/cache behavior verified from LeRobot 0.6.1 `policies/smolvla/smolvlm_with_expert.py` | Fixes the audited 16-layer checkpoint subset, split-half RoPE base 10,000, prefix-LM mask, grouped-query attention, and explicit post-RoPE K/V export. |

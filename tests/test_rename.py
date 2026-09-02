@@ -3,12 +3,13 @@
 from __future__ import annotations
 
 from pathlib import Path
-import runpy
 import tomllib
 import warnings
 
 
 def test_distribution_import_cli_and_native_extension_use_canonical_name() -> None:
+    from reference._build_backend import setup_kwargs
+
     project = tomllib.loads(Path("pyproject.toml").read_text(encoding="utf-8"))
 
     assert project["project"]["name"] == "mlx-smolvla"
@@ -16,10 +17,10 @@ def test_distribution_import_cli_and_native_extension_use_canonical_name() -> No
         "mlx-smolvla": "mlx_smolvla.cli:main"
     }
 
-    setup_globals = runpy.run_path("setup.py", run_name="mlx_smolvla_setup_metadata")
-    assert "mlx_smolvla" in setup_globals["PACKAGES"]
-    assert "smolvla_mlx" not in setup_globals["PACKAGES"]
-    assert setup_globals["EXT_MODULES"][0].name == "mlx_smolvla._rmsnorm_native"
+    configuration = setup_kwargs()
+    assert "mlx_smolvla" in configuration["packages"]
+    assert "smolvla_mlx" not in configuration["packages"]
+    assert configuration["ext_modules"][0].name == "mlx_smolvla._rmsnorm_native"
 
 
 def test_cli_identifies_itself_with_canonical_name() -> None:
@@ -98,9 +99,11 @@ def test_makefile_and_workflow_export_only_the_canonical_cache_variable() -> Non
 
 
 def test_native_build_toggle_uses_canonical_environment_prefix(monkeypatch) -> None:
+    from reference._build_backend import setup_kwargs
+
     monkeypatch.setenv("MLX_SMOLVLA_BUILD_NATIVE", "0")
     monkeypatch.delenv("SMOLVLA_MLX_BUILD_NATIVE", raising=False)
 
-    setup_globals = runpy.run_path("setup.py", run_name="mlx_smolvla_setup_no_native")
+    configuration = setup_kwargs()
 
-    assert setup_globals["EXT_MODULES"] == []
+    assert configuration["ext_modules"] == []

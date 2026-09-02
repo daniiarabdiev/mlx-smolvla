@@ -246,7 +246,7 @@ def test_experiment_script_has_isolated_accuracy_and_latency_workers() -> None:
 def test_committed_quantization_artifact_revalidates_from_raw_evidence() -> None:
     from mlx_smolvla.quantization import validate_quantization_document
 
-    path = Path("QUANTIZATION_EXPERIMENT.json")
+    path = Path("docs/evidence/QUANTIZATION_EXPERIMENT.json")
     artifact = json.loads(path.read_text(encoding="utf-8"))
     assert validate_quantization_document(artifact) == artifact
     assert hashlib.sha256(path.read_bytes()).hexdigest() == (
@@ -260,8 +260,8 @@ def test_committed_quantization_artifact_revalidates_from_raw_evidence() -> None
 
 
 def test_quantization_results_and_opt_ins_are_published_without_default_change() -> None:
-    artifact = json.loads(Path("QUANTIZATION_EXPERIMENT.json").read_text(encoding="utf-8"))
-    benchmark = Path("BENCHMARK.md").read_text(encoding="utf-8")
+    artifact = json.loads(Path("docs/evidence/QUANTIZATION_EXPERIMENT.json").read_text(encoding="utf-8"))
+    benchmark = Path("docs/BENCHMARK.md").read_text(encoding="utf-8")
     readme = Path("README.md").read_text(encoding="utf-8")
 
     assert "## VLM-only quantization" in benchmark

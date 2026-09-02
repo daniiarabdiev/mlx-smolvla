@@ -93,7 +93,7 @@ def test_public_agent_guide_preserves_engineering_contracts() -> None:
     assert "never loosen" in guide.lower()
     assert 'execution_mode="production"' in guide
     assert 'execution_mode="strict"' in guide
-    assert "/Users/" not in guide
+    assert "/" + "Users" + "/" not in guide
     assert "HUMAN_TASKS.md" not in guide
     assert claude == "See [AGENTS.md](AGENTS.md)."
 
@@ -114,5 +114,5 @@ def test_makefile_exposes_fast_lane_without_changing_full_lane() -> None:
     makefile = (ROOT / "Makefile").read_text(encoding="utf-8")
 
     assert "test-fast:" in makefile
-    assert "pytest -m 'not slow' $(TESTS)" in makefile
-    assert "test:\n\tuv run --extra reference pytest $(TESTS)" in makefile
+    assert "uv run --all-extras pytest -m 'not slow' $(TESTS)" in makefile
+    assert "test:\n\tuv run --all-extras pytest $(TESTS)" in makefile

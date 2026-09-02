@@ -58,7 +58,7 @@ low hardware torque and speed limits.
 
 ## Terminal A — native MLX server on this Mac
 
-From the checked-out `smolvla_mlx` repository, verify that both log names are
+From the checked-out `mlx_smolvla` repository, verify that both log names are
 new, then start the dense-bf16 default on loopback. Do not use a quantized
 preset for first contact.
 

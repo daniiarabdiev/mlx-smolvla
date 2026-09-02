@@ -27,7 +27,7 @@ def test_latency_smoke_script_is_a_serve_only_operator_entrypoint() -> None:
 
 
 def test_hardware_runbook_has_exact_gate_commands_safety_and_evidence() -> None:
-    runbook = Path("HARDWARE_RUNBOOK.md").read_text(encoding="utf-8")
+    runbook = Path("docs/HARDWARE_RUNBOOK.md").read_text(encoding="utf-8")
 
     assert "ARM SESSION CONFIRMED" in runbook
     assert "Absent that exact line" in runbook

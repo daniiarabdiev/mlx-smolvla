@@ -15,7 +15,7 @@ checkpoint export, and PyTorch round-trip gates.
 ```bash
 export HF_HOME="$PWD/.cache/hf"
 export UV_CACHE_DIR="$PWD/.cache/uv"
-export SMOLVLA_MLX_CACHE="$PWD/.cache/smolvla_mlx"
+export MLX_SMOLVLA_CACHE="$PWD/.cache/mlx_smolvla"
 make optimizer-goldens
 make optimizer-lockstep
 ```

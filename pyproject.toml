@@ -5,7 +5,8 @@ requires = [
   "mlx==0.32.2",
   "nanobind==2.15.0",
 ]
-build-backend = "setuptools.build_meta"
+build-backend = "reference._build_backend"
+backend-path = ["."]
 
 [project]
 name = "mlx-smolvla"
@@ -14,6 +15,7 @@ description = "Native MLX inference, serving, and training tools for SmolVLA on 
 readme = "README.md"
 requires-python = ">=3.11,<3.14"
 license = "Apache-2.0"
+license-files = ["LICENSE", "NOTICE"]
 keywords = [
   "apple-silicon",
   "lerobot",

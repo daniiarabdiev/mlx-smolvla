@@ -14,7 +14,7 @@ does not yet prove optimizer-state evolution; Stage T2 owns that lockstep gate.
 ```bash
 export HF_HOME="$PWD/.cache/hf"
 export UV_CACHE_DIR="$PWD/.cache/uv"
-export SMOLVLA_MLX_CACHE="$PWD/.cache/smolvla_mlx"
+export MLX_SMOLVLA_CACHE="$PWD/.cache/mlx_smolvla"
 make training-goldens
 make training-parity
 ```

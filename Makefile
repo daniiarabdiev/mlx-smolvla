@@ -13,22 +13,22 @@ goldens:
 	uv run --extra reference python scripts/make_public_finetune_goldens.py --cache-dir $(HF_HOME) --output tests/golden-public-finetune
 
 test:
-	uv run --extra reference pytest $(TESTS)
+	uv run --all-extras pytest $(TESTS)
 
 test-fast:
-	uv run --extra reference pytest -m 'not slow' $(TESTS)
+	uv run --all-extras pytest -m 'not slow' $(TESTS)
 
 bench:
-	uv run python scripts/bench.py
+	uv run python scripts/bench.py --output $(CURDIR)/docs/BENCHMARK.md
 
 inference-comparison:
-	uv run --extra reference python scripts/benchmark_inference_comparison.py --reference-cache $(HF_HOME) --native-cache $(MLX_SMOLVLA_CACHE) --output $(CURDIR)/INFERENCE_COMPARISON.json
+	uv run --extra reference python scripts/benchmark_inference_comparison.py --reference-cache $(HF_HOME) --native-cache $(MLX_SMOLVLA_CACHE) --output $(CURDIR)/docs/evidence/INFERENCE_COMPARISON.json
 
 profile-bf16:
-	uv run python scripts/profile_inference_dtypes.py --native-cache $(MLX_SMOLVLA_CACHE) --output $(CURDIR)/BF16_PROFILE.json
+	uv run python scripts/profile_inference_dtypes.py --native-cache $(MLX_SMOLVLA_CACHE) --output $(CURDIR)/docs/evidence/BF16_PROFILE.json
 
 quantization-experiment:
-	uv run --extra reference python scripts/experiment_quantization.py --reference-cache $(HF_HOME) --native-cache $(MLX_SMOLVLA_CACHE) --dataset-root $(HF_HOME)/datasets/svla_so101_pickplace --dense-statistical $(CURDIR)/.cache/statistical-production.json --output $(CURDIR)/QUANTIZATION_EXPERIMENT.json
+	uv run --extra reference python scripts/experiment_quantization.py --reference-cache $(HF_HOME) --native-cache $(MLX_SMOLVLA_CACHE) --dataset-root $(HF_HOME)/datasets/svla_so101_pickplace --dense-statistical $(CURDIR)/.cache/statistical-production.json --output $(CURDIR)/docs/evidence/QUANTIZATION_EXPERIMENT.json
 
 production-evidence:
 	uv run --extra reference python scripts/production_check.py --output $(CURDIR)/.cache/production-deterministic.json

@@ -77,7 +77,7 @@ I/O. A 30,000-update overnight LoRA bf16 run projects to 9.55 hours of optimizer
 work before those overheads.
 
 Every value above is copied or mechanically derived from the committed
-[TRAINING_BENCHMARK.json](TRAINING_BENCHMARK.json). Its full ignored source
+[TRAINING_BENCHMARK.json](evidence/TRAINING_BENCHMARK.json). Its full ignored source
 artifact is `.cache/training/t5-benchmark.json`, SHA-256
 `7112806471e55e55d98ae101bc2af8172c2cc18f01b3e0c2c0646446adba9423`;
 it binds clean protocol commit `0d897449b06d114d536756f2ed6850b52fd5bda4`,
@@ -119,7 +119,7 @@ The pre-measurement process check at
 `2026-09-02T05:16:10.169655+00:00` found no trainer, floor worker, test suite,
 or competing benchmark. All raw durations, the idle declaration, environment,
 input hashes, and source hashes are committed in
-[INFERENCE_COMPARISON.json](INFERENCE_COMPARISON.json), SHA-256
+[INFERENCE_COMPARISON.json](evidence/INFERENCE_COMPARISON.json), SHA-256
 `115ad58c0c618b65a6275018614f3ee6cf17dd02a9d4ad9c94aaf7e5a9842e48`.
 Its timing implementation was frozen first in clean commit
 `e210f7b76ae8657390a8101b76ee5815df1b15ab`.
@@ -167,7 +167,7 @@ kernel behavior changes before considering a code path change.
 The clean idle declaration is
 `2026-09-02T05:33:56.285086+00:00`. All 600 raw durations, summaries, delta
 attribution, inputs, environment, and source hashes are committed in
-[BF16_PROFILE.json](BF16_PROFILE.json), SHA-256
+[BF16_PROFILE.json](evidence/BF16_PROFILE.json), SHA-256
 `74da9f937cb8bfeba4066d5518187490ff96a1447e4a2ad2253e2493245be1cf`.
 The successful profile binds clean source commit
 `adf40e62a7b652262fc08d7ed6449b4c60a0773d`.
@@ -205,7 +205,7 @@ The pre-measurement check at `2026-09-02T05:57:25.628369+00:00` found no
 trainer, floor worker, test suite, or competing benchmark. All 150 raw latency
 measurements, all 150 per-case error records, exact topology manifests,
 environment, inputs, clean source commit, and decision are committed in
-[QUANTIZATION_EXPERIMENT.json](QUANTIZATION_EXPERIMENT.json), SHA-256
+[QUANTIZATION_EXPERIMENT.json](evidence/QUANTIZATION_EXPERIMENT.json), SHA-256
 `40060b0eaa63efee471ce2966f8fd578ade6ba2e8d9923435e14ef2466be393b`.
 The successful experiment binds clean source commit
 `d75ff8bb751c5ad1a276b690d8c84cbaf0bd6396`.

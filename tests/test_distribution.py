@@ -6,7 +6,6 @@ from importlib.metadata import distribution
 from importlib.util import find_spec
 import os
 from pathlib import Path
-import runpy
 import shutil
 import subprocess
 import sys
@@ -121,22 +120,27 @@ def test_serve_extra_is_optional_and_guarded_by_lerobots_python_312_floor() -> N
 def test_native_extension_build_is_optional_and_targets_macos_14(
     monkeypatch,
 ) -> None:
+    from reference._build_backend import setup_kwargs
+
     monkeypatch.setenv("MLX_SMOLVLA_BUILD_NATIVE", "0")
     monkeypatch.delenv("MACOSX_DEPLOYMENT_TARGET", raising=False)
-    setup_globals = runpy.run_path("setup.py", run_name="smolvla_setup_metadata")
+    configuration = setup_kwargs()
 
-    assert setup_globals["MACOSX_DEPLOYMENT_TARGET"] == "14.0"
-    assert setup_globals["EXT_MODULES"] == []
-    assert setup_globals["CMDCLASS"] == {}
+    assert os.environ["MACOSX_DEPLOYMENT_TARGET"] == "14.0"
+    assert configuration["ext_modules"] == []
+    assert configuration["cmdclass"] == {}
 
 
 def test_native_extension_is_built_by_default(monkeypatch) -> None:
-    monkeypatch.delenv("MLX_SMOLVLA_BUILD_NATIVE", raising=False)
-    setup_globals = runpy.run_path("setup.py", run_name="smolvla_setup_metadata")
+    from reference._build_backend import setup_kwargs
 
-    assert len(setup_globals["EXT_MODULES"]) == 1
-    assert setup_globals["EXT_MODULES"][0].name == "mlx_smolvla._rmsnorm_native"
-    assert "build_ext" in setup_globals["CMDCLASS"]
+    monkeypatch.delenv("MLX_SMOLVLA_BUILD_NATIVE", raising=False)
+    configuration = setup_kwargs()
+
+    assert len(configuration["ext_modules"]) == 1
+    assert configuration["ext_modules"][0].name == "mlx_smolvla._rmsnorm_native"
+    assert Path(configuration["ext_modules"][0].sourcedir).name == "native"
+    assert "build_ext" in configuration["cmdclass"]
 
 
 def test_training_package_is_shipped_as_an_optional_surface() -> None:
@@ -147,10 +151,12 @@ def test_training_package_is_shipped_as_an_optional_surface() -> None:
 
 
 def test_trained_parity_subpackage_is_in_the_wheel_package_list() -> None:
-    setup_globals = runpy.run_path("setup.py", run_name="smolvla_setup_metadata")
+    from reference._build_backend import setup_kwargs
 
-    assert "mlx_smolvla.training" in setup_globals["PACKAGES"]
-    assert "reference" in setup_globals["PACKAGES"]
+    configuration = setup_kwargs()
+
+    assert "mlx_smolvla.training" in configuration["packages"]
+    assert "reference" in configuration["packages"]
     assert find_spec("mlx_smolvla.training.trained_parity") is not None
 
 

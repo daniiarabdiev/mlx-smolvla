@@ -85,7 +85,7 @@ def test_training_benchmark_matrix_validator_requires_all_four_cells() -> None:
 
 
 def test_committed_training_benchmark_record_recomputes_every_derived_number() -> None:
-    record = json.loads(Path("TRAINING_BENCHMARK.json").read_text(encoding="utf-8"))
+    record = json.loads(Path("docs/evidence/TRAINING_BENCHMARK.json").read_text(encoding="utf-8"))
     assert record["artifact_type"] == "smolvla-mlx-training-benchmark-public-record"
     assert record["source_artifact"]["git_commit"] == (
         "0d897449b06d114d536756f2ed6850b52fd5bda4"
@@ -126,8 +126,8 @@ def test_committed_training_benchmark_record_recomputes_every_derived_number() -
 
 
 def test_training_benchmark_and_readme_numbers_trace_to_committed_record() -> None:
-    record = json.loads(Path("TRAINING_BENCHMARK.json").read_text(encoding="utf-8"))
-    benchmark = Path("BENCHMARK.md").read_text(encoding="utf-8")
+    record = json.loads(Path("docs/evidence/TRAINING_BENCHMARK.json").read_text(encoding="utf-8"))
+    benchmark = Path("docs/BENCHMARK.md").read_text(encoding="utf-8")
     readme = Path("README.md").read_text(encoding="utf-8")
     assert "## Native training performance (Metal)" in benchmark
     assert "## Fine-tune on your Mac" in readme

@@ -162,7 +162,7 @@ uv run --extra reference python scripts/produce_trained_comparison.py \
   --comparison .cache/training/t3b/comparison.json \
   --outcome .cache/training/t3b/outcome.json \
   --cache-dir .cache/hf \
-  --native-cache .cache/smolvla_mlx/policy-float32 \
+  --native-cache .cache/mlx_smolvla/policy-float32 \
   --run-dir .cache/training/t3b \
   --evaluation-dir .cache/training/t3-evaluation \
   --base-report .cache/training/t3-base-evaluation.json

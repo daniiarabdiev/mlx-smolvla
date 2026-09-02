@@ -39,7 +39,7 @@ def test_disabled_workflow_preserves_the_intended_hermetic_full_suite() -> None:
         step.get("run", "") for step in job["steps"] if isinstance(step, dict)
     )
     assert "uv==0.11.25" in commands
-    assert "uv sync --extra reference" in commands
+    assert "uv sync --all-extras" in commands
     assert "make goldens" in commands
     assert "make training-goldens" in commands
     assert "make optimizer-goldens" in commands
@@ -49,7 +49,7 @@ def test_disabled_workflow_preserves_the_intended_hermetic_full_suite() -> None:
 
 
 def test_ci_document_records_hosted_limits_and_exact_activation_requirements() -> None:
-    document = Path("CI.md").read_text(encoding="utf-8")
+    document = Path("docs/evidence/CI.md").read_text(encoding="utf-8")
     assert "7 GB" in document and "14 GB" in document
     assert "48 GiB" in document and "80 GiB" in document
     assert "self-hosted" in document

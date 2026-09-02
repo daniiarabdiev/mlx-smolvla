@@ -2,7 +2,7 @@
 
 ## Outcome
 
-Stage T4 is complete. `smolvla-mlx train` accepts a LeRobot dataset repo ID or
+Stage T4 is complete. `mlx-smolvla train` accepts a LeRobot dataset repo ID or
 local path, a fixed step count, effective batch size, learning rate, output
 directory, checkpoint cadence, `--resume`, and exactly one of `--lora` or
 `--full`. Both modes use native MLX model, loss, gradient accumulation,
@@ -21,15 +21,15 @@ exactly two moment tensors per trainable: 310 for full and 448 for LoRA.
 ```bash
 uv sync --extra train
 
-smolvla-mlx train owner/dataset \
+mlx-smolvla train owner/dataset \
   --lora --steps 100 --batch-size 1 --lr 1e-4 \
   --checkpoint-every 25 --output .cache/training/my-lora-run
 
-smolvla-mlx train /path/to/lerobot-dataset \
+mlx-smolvla train /path/to/lerobot-dataset \
   --full --steps 100 --batch-size 1 --lr 1e-4 \
   --checkpoint-every 25 --output .cache/training/my-full-run
 
-smolvla-mlx train /path/to/lerobot-dataset \
+mlx-smolvla train /path/to/lerobot-dataset \
   --full --steps 100 --batch-size 1 --lr 1e-4 \
   --checkpoint-every 25 --output .cache/training/my-full-run --resume
 ```
