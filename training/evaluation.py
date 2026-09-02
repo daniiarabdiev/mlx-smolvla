@@ -29,6 +29,8 @@ from training.dataset import (
 )
 from training.export import resolve_base_checkpoint, validate_merged_checkpoint_export
 from training.finetune import (
+    ADAPTIVE_BUDGET_MODE,
+    FIXED_BUDGET_MODE,
     METRICS_FIELDS,
     CheckpointState,
     FineTuneConfig,
@@ -64,6 +66,13 @@ _SAMPLES_PER_EPISODE = 7
 _EXPECTED_TENSORS_PER_CASE = 5
 _REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 _REPOSITORY_CACHE = _REPOSITORY_ROOT / ".cache"
+_EXPORT_SUPPORT_FILE_NAMES = {
+    "config.json",
+    "policy_postprocessor.json",
+    "policy_postprocessor_step_0_unnormalizer_processor.safetensors",
+    "policy_preprocessor.json",
+    "policy_preprocessor_step_5_normalizer_processor.safetensors",
+}
 
 
 def _require_repository_cache_path(path: Path, *, label: str) -> Path:
@@ -930,10 +939,18 @@ def _validated_training_run_config_sha256(
     split = training_run.get("split")
     lora = training_run.get("lora")
     base_artifact = training_run.get("base_artifact")
-    if not all(
-        isinstance(value, Mapping)
-        for value in (benchmark, split, lora, base_artifact)
-    ):
+    if not all(isinstance(value, Mapping) for value in (split, lora, base_artifact)):
+        raise ValueError("training run configuration cannot be reconstructed")
+    budget_mode = training_run.get("budget_mode", ADAPTIVE_BUDGET_MODE)
+    if budget_mode == FIXED_BUDGET_MODE:
+        if benchmark is not None:
+            raise ValueError("training run configuration cannot be reconstructed")
+        benchmark_warmup_updates = FineTuneConfig.benchmark_warmup_updates
+        benchmark_measured_updates = FineTuneConfig.benchmark_measured_updates
+    elif budget_mode == ADAPTIVE_BUDGET_MODE and isinstance(benchmark, Mapping):
+        benchmark_warmup_updates = int(benchmark["warmup_updates"])
+        benchmark_measured_updates = int(benchmark["measured_updates"])
+    else:
         raise ValueError("training run configuration cannot be reconstructed")
     if training_run.get("dataset") != {
         "id": DATASET_ID,
@@ -952,11 +969,13 @@ def _validated_training_run_config_sha256(
             nominal_steps=int(training_run["nominal_steps"]),
             effective_batch_size=int(training_run["effective_batch_size"]),
             training_seconds=float(training_run["training_seconds_budget"]),
-            benchmark_warmup_updates=int(benchmark["warmup_updates"]),
-            benchmark_measured_updates=int(benchmark["measured_updates"]),
+            benchmark_warmup_updates=benchmark_warmup_updates,
+            benchmark_measured_updates=benchmark_measured_updates,
             rank=int(lora["rank"]),
             alpha=float(lora["alpha"]),
             dropout=float(lora["dropout"]),
+            lora_scope=str(lora.get("scope", FineTuneConfig.lora_scope)),
+            budget_mode=str(budget_mode),
             checkpoint_interval=int(training_run["checkpoint_interval"]),
         )
         optimizer_config = _optimizer_config_from_training_run(training_run)
@@ -1398,6 +1417,8 @@ def _validate_completed_training_artifacts(
         "scalar_count": int(lora["trainable_scalar_count"]),
         "sha256": expected_adapter_sha256,
     }
+    if "scope" in lora:
+        expected_adapter_metadata["scope"] = str(lora["scope"])
     if adapter_metadata != expected_adapter_metadata:
         raise ValueError("final LoRA adapter metadata differs from the completed run")
 
@@ -1698,7 +1719,7 @@ def _expected_export_metadata(training_run: Mapping[str, object]) -> dict[str, o
     lora = training_run.get("lora")
     if not isinstance(split, Mapping) or not isinstance(lora, Mapping):
         raise ValueError("training run is missing split or LoRA export metadata")
-    return {
+    metadata = {
         "seed": int(training_run["seed"]),
         "sampler_seed": int(training_run["sampler_seed"]),
         "selected_steps": int(training_run["selected_steps"]),
@@ -1715,6 +1736,19 @@ def _expected_export_metadata(training_run: Mapping[str, object]) -> dict[str, o
             _validated_training_run_config_sha256(training_run)
         ),
     }
+    if "scope" in lora:
+        metadata["lora_scope"] = str(lora["scope"])
+        export = training_run.get("export")
+        file_sha256 = export.get("file_sha256") if isinstance(export, Mapping) else None
+        if not isinstance(file_sha256, Mapping) or set(file_sha256) != (
+            _EXPORT_SUPPORT_FILE_NAMES | {"model.safetensors"}
+        ):
+            raise ValueError("training run export file inventory is invalid")
+        metadata["support_file_sha256"] = {
+            name: _require_sha256(f"export support file {name}", file_sha256[name])
+            for name in sorted(_EXPORT_SUPPORT_FILE_NAMES)
+        }
+    return metadata
 
 
 def run_finetune_outcome_evaluation(

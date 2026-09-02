@@ -1695,3 +1695,30 @@
 - No T3B MLX-versus-PyTorch comparison has been run. No implementation file was
   changed during this audit because the active trainer revalidates its source
   bytes before export.
+
+## 2026-09-02 — T3B training completion and export audit
+
+- The original PID 69355 completed all **3,000** updates without a resume or
+  checkpoint/metrics recovery and exited after the protected export. Final
+  run status is `trained_and_exported`; retained checkpoints are exactly
+  `step-002800`, `step-002900`, and `step-003000`.
+- Training recorded **3,545.863376834008 seconds**, **2,899,690,676 bytes**
+  peak MLX memory, final loss **0.10034868866205215**, and final smoothed loss
+  **0.17088623540128797**. The metrics file contains one header plus all 3,000
+  updates and hashes to
+  `33f00adc5316cbc295e6f3fa1e153963b64fadec59a7db5401074794245f6278`.
+- The independent artifact audit reconstructed the fixed-step expert-only run
+  digest `09895b216aff79ea3e26294aa4ef0484e5d316ee88eef7733782f95a9da62350`,
+  verified 24,000 samples and 24,000 flow draws, and bound the final adapter
+  SHA-256
+  `cce4eed18a7311594950f6d4da33a44dd337f66fbc29162d686c5338ec044826`
+  to the final checkpoint model.
+- The merged fp32 export passed its complete inventory, manifest, file-hash,
+  dtype, tensor, and scalar audits: **500 tensors**, **450,046,176
+  parameters**, model SHA-256
+  `858704fa572501d9e5a048076f8da692693b90c463feda29201a72f3f0b18883`.
+- The audit initially exposed that the outcome evaluator only reconstructed
+  the legacy adaptive/full-scope T3 schema. Regression tests now cover the
+  T3B fixed-step budget, expert-only adapter scope, and scope-bound support
+  file hashes. The focused evaluator tests pass. No MLX-versus-PyTorch
+  comparison of T3B has run, and no floor has yet been computed.

@@ -657,6 +657,61 @@ def test_run_configuration_digest_is_recomputed_from_the_run_document() -> None:
         module._validated_training_run_config_sha256(changed)
 
 
+def test_t3b_run_configuration_digest_reconstructs_fixed_expert_only_scope() -> None:
+    module = __import__(
+        "training.evaluation",
+        fromlist=["_validated_training_run_config_sha256"],
+    )
+    run = json.loads(
+        Path(".cache/training/t3b/run.json").read_text(encoding="utf-8")
+    )
+
+    assert module._validated_training_run_config_sha256(run) == (
+        "09895b216aff79ea3e26294aa4ef0484e5d316ee88eef7733782f95a9da62350"
+    )
+
+    changed = {**run, "lora": {**run["lora"], "scope": "legacy_full"}}
+    with pytest.raises(ValueError, match="recomputed training run configuration"):
+        module._validated_training_run_config_sha256(changed)
+
+
+def test_completed_t3b_artifacts_bind_expert_only_adapter_metadata() -> None:
+    module = __import__(
+        "training.evaluation",
+        fromlist=["_validate_completed_training_artifacts"],
+    )
+    run = json.loads(
+        Path(".cache/training/t3b/run.json").read_text(encoding="utf-8")
+    )
+
+    evidence, checkpoint = module._validate_completed_training_artifacts(
+        Path(".cache/training/t3b"),
+        run,
+    )
+
+    assert evidence["adapter"] == run["adapter_sha256"]
+    assert checkpoint.completed_step == 3000
+
+
+def test_t3b_expected_export_metadata_includes_lora_scope() -> None:
+    module = __import__(
+        "training.evaluation",
+        fromlist=["_expected_export_metadata"],
+    )
+    run = json.loads(
+        Path(".cache/training/t3b/run.json").read_text(encoding="utf-8")
+    )
+
+    metadata = module._expected_export_metadata(run)
+
+    assert metadata["lora_scope"] == "expert_only"
+    assert metadata["support_file_sha256"] == {
+        name: digest
+        for name, digest in run["export"]["file_sha256"].items()
+        if name != "model.safetensors"
+    }
+
+
 def test_completed_metrics_trace_is_validated_and_hashed_from_the_same_bytes() -> None:
     module = __import__(
         "training.evaluation",
