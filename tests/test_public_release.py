@@ -110,6 +110,12 @@ def test_readme_acknowledges_the_independent_prior_mlx_port_factually() -> None:
     assert "training" in readme.lower()
 
 
+def test_readme_states_the_hardware_extra_python_floor() -> None:
+    readme = (ROOT / "README.md").read_text(encoding="utf-8")
+
+    assert "reference, serve, train, and hardware extras" in readme
+
+
 def test_makefile_exposes_fast_lane_without_changing_full_lane() -> None:
     makefile = (ROOT / "Makefile").read_text(encoding="utf-8")
 

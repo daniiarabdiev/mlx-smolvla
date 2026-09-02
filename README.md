@@ -22,7 +22,7 @@ duration**); scope and raw timings are in the [benchmark evidence](docs/BENCHMAR
 | --- | --- |
 | Mac | Apple Silicon |
 | macOS | 14 or newer |
-| Python | 3.11-3.13 for inference; 3.12-3.13 for reference, serve, and train extras |
+| Python | 3.11-3.13 for inference; 3.12-3.13 for reference, serve, train, and hardware extras |
 | MLX | 0.32.0, 0.32.1, or 0.32.2 |
 
 All three MLX versions passed conversion, strict deterministic checks,
