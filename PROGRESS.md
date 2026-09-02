@@ -2498,3 +2498,28 @@
 - Hardware remains explicitly **NOT RUN** because the exact current-session
   operator gate was not supplied. No robot environment, serial port, camera,
   motor, arm, model/data upload, or external runner was touched.
+
+## 2026-09-02 — Public-release kickoff baseline and hardware gate
+
+- Imported the operator-supplied `BRIEF_PUBLIC_RELEASE.md` as the normative
+  amendment for hardware validation, compatibility-floor work, and public
+  release preparation. Its attachment bytes and tracked bytes differ only by
+  the tracked file's final POSIX newline.
+- Read the governing agent/specification files, `HARDWARE_RUNBOOK.md`,
+  `STATUS_FULL.md`, `HUMAN_TASKS.md`, and the latest progress entries before
+  acting. The worktree began clean at commit `352141e` on `main`, equal to
+  `origin/main`.
+- The process check found no trainer, floor worker, benchmark, policy server,
+  or pytest process. The machine reported **554,864,254,976 bytes free**.
+- The required untouched `make test` baseline collected and passed
+  **652/652 tests in 590.44 seconds**, with no failures.
+- The exact current-session line `ARM SESSION CONFIRMED` was not supplied by
+  the operator. It occurs only as quoted specification text, which the
+  existing runbook explicitly rejects as authorization. No vendor directory,
+  serial device, camera, motor, leader/follower arm, or hardware client was
+  accessed. Stage A is blocked at its live authorization gate; independent
+  Stage B and C work may proceed.
+- Wrote `PLAN_PUBLIC_RELEASE.md` with test-first execution, stage checkpoints,
+  public-tree hygiene, and the rule that neither the release tag nor the
+  `PUBLIC RELEASE READY` line may be produced while a Section 6 blocker
+  remains.
