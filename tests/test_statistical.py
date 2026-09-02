@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from smolvla_mlx.statistical import StatisticalResult
+from mlx_smolvla.statistical import StatisticalResult
 
 
 @pytest.fixture(scope="session")

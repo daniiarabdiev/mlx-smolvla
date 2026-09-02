@@ -275,7 +275,7 @@ def test_resume_evaluator_enforces_fixed_parameter_loss_and_state_gates(
 
 
 def test_cli_train_surface_selects_exactly_one_mode() -> None:
-    from smolvla_mlx.cli import _parser
+    from mlx_smolvla.cli import _parser
 
     parser = _parser()
     full = parser.parse_args(

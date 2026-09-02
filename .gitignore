@@ -15,4 +15,4 @@ tests/golden-public-finetune/
 reference/artifacts/
 *.npy
 *.safetensors
-smolvla_mlx/*.so
+mlx_smolvla/*.so

@@ -11,7 +11,7 @@ import pytest
 
 
 def _document() -> dict[str, object]:
-    from smolvla_mlx.profile import (
+    from mlx_smolvla.profile import (
         DtypeProfile,
         ProfileProtocol,
         derive_dtype_analysis,
@@ -65,9 +65,9 @@ def _document() -> dict[str, object]:
             "sha256": {
                 "scripts/benchmark_inference_comparison.py": "d" * 64,
                 "scripts/profile_inference_dtypes.py": "e" * 64,
-                "smolvla_mlx/benchmark.py": "f" * 64,
-                "smolvla_mlx/policy.py": "1" * 64,
-                "smolvla_mlx/profile.py": "2" * 64,
+                "mlx_smolvla/benchmark.py": "f" * 64,
+                "mlx_smolvla/policy.py": "1" * 64,
+                "mlx_smolvla/profile.py": "2" * 64,
             },
         },
         "profiles": profiles,
@@ -76,7 +76,7 @@ def _document() -> dict[str, object]:
 
 
 def test_profile_protocol_fixes_dtypes_boundaries_and_counts() -> None:
-    from smolvla_mlx.profile import ProfileProtocol
+    from mlx_smolvla.profile import ProfileProtocol
 
     protocol = ProfileProtocol()
     assert protocol.dtypes == ("float32", "bfloat16")
@@ -95,7 +95,7 @@ def test_profile_protocol_fixes_dtypes_boundaries_and_counts() -> None:
 
 
 def test_dtype_profile_recomputes_every_stage_summary() -> None:
-    from smolvla_mlx.profile import DtypeProfile, ProfileProtocol
+    from mlx_smolvla.profile import DtypeProfile, ProfileProtocol
 
     protocol = ProfileProtocol()
     samples = {
@@ -117,7 +117,7 @@ def test_dtype_profile_recomputes_every_stage_summary() -> None:
 
 
 def test_profile_validator_recomputes_matrix_and_delta_attribution() -> None:
-    from smolvla_mlx.profile import validate_profile_document
+    from mlx_smolvla.profile import validate_profile_document
 
     document = _document()
     assert validate_profile_document(document) == document
@@ -136,7 +136,7 @@ def test_profile_validator_recomputes_matrix_and_delta_attribution() -> None:
 
 
 def test_profile_validator_accepts_canonical_sorted_json_key_order() -> None:
-    from smolvla_mlx.profile import validate_profile_document
+    from mlx_smolvla.profile import validate_profile_document
 
     canonical_round_trip = json.loads(json.dumps(_document(), sort_keys=True))
     assert validate_profile_document(canonical_round_trip) == canonical_round_trip
@@ -151,7 +151,7 @@ def test_profile_script_uses_clean_idle_coordinator_and_isolated_workers() -> No
 
 
 def test_committed_profile_revalidates_from_all_raw_component_timings() -> None:
-    from smolvla_mlx.profile import validate_profile_document
+    from mlx_smolvla.profile import validate_profile_document
 
     path = Path("BF16_PROFILE.json")
     artifact = json.loads(path.read_text(encoding="utf-8"))

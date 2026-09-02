@@ -7,7 +7,7 @@
 # either hosted runner would be a known resource failure.
 #
 # Activation requires ALL of the following:
-#   1. change runs-on to [self-hosted, macOS, ARM64, smolvla-mlx-ci];
+#   1. change runs-on to [self-hosted, macOS, ARM64, mlx-smolvla-ci];
 #   2. provide >=48 GiB unified memory and >=80 GiB free local SSD at start;
 #   3. seed the operator-verified T3/T3B/T4 evidence under repository-local
 #      .cache/training (or first add complete deterministic rebuild targets);
@@ -31,7 +31,7 @@ jobs:
     env:
       HF_HOME: ${{ github.workspace }}/.cache/hf
       UV_CACHE_DIR: ${{ github.workspace }}/.cache/uv
-      SMOLVLA_MLX_CACHE: ${{ github.workspace }}/.cache/smolvla_mlx
+      MLX_SMOLVLA_CACHE: ${{ github.workspace }}/.cache/mlx_smolvla
     steps:
       - name: Check out source without deleting operator-verified evidence
         uses: actions/checkout@v4

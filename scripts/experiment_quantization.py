@@ -38,7 +38,7 @@ from scripts.benchmark_inference_comparison import (
     _system_value,
     _tracked_worktree_is_clean,
 )
-from smolvla_mlx.quantization import (
+from mlx_smolvla.quantization import (
     QuantizationAccuracy,
     QuantizationLatency,
     QuantizationProtocol,
@@ -56,16 +56,16 @@ _DENSE_STATISTICAL_SHA256 = "c506ddcfdde50297e97b9905a299d55f117680a93b257e0af33
 _SOURCE_FILES = (
     "scripts/benchmark_inference_comparison.py",
     "scripts/experiment_quantization.py",
-    "smolvla_mlx/benchmark.py",
-    "smolvla_mlx/policy.py",
-    "smolvla_mlx/quantization.py",
+    "mlx_smolvla/benchmark.py",
+    "mlx_smolvla/policy.py",
+    "mlx_smolvla/quantization.py",
 )
 
 
 def _parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--reference-cache", type=Path, default=Path(".cache/hf"))
-    parser.add_argument("--native-cache", type=Path, default=Path(".cache/smolvla_mlx"))
+    parser.add_argument("--native-cache", type=Path, default=Path(".cache/mlx_smolvla"))
     parser.add_argument(
         "--dataset-root",
         type=Path,
@@ -95,7 +95,7 @@ def _parse_args() -> argparse.Namespace:
 def _load_policy(variant: str, native_cache: Path):
     import mlx.core as mx
 
-    from smolvla_mlx.policy import SmolVLAMLX
+    from mlx_smolvla.policy import SmolVLAMLX
 
     policy = SmolVLAMLX.from_pretrained(
         CHECKPOINT_ID,
@@ -120,7 +120,7 @@ def _latency_worker(args: argparse.Namespace) -> dict[str, object]:
     import mlx.core as mx
     import numpy as np
 
-    from smolvla_mlx.benchmark import _run_staged
+    from mlx_smolvla.benchmark import _run_staged
 
     protocol = QuantizationProtocol()
     policy, topology = _load_policy(args.worker_variant, args.native_cache)

@@ -11,8 +11,8 @@ import numpy as np
 import pytest
 
 from reference.goldens import GoldenStore
-from smolvla_mlx.policy import SmolVLAMLX
-from smolvla_mlx.statistical import StatisticalResult
+from mlx_smolvla.policy import SmolVLAMLX
+from mlx_smolvla.statistical import StatisticalResult
 
 
 _ROOT = Path("tests/golden-stats-active")
@@ -60,7 +60,7 @@ def stats_active_policy(request: pytest.FixtureRequest) -> tuple[SmolVLAMLX, str
     with mx.stream(mx.cpu):
         policy = SmolVLAMLX.from_pretrained(
             _CHECKPOINT,
-            cache_dir=Path(".cache/smolvla_mlx") / f"stats-active-{request.param}",
+            cache_dir=Path(".cache/mlx_smolvla") / f"stats-active-{request.param}",
             dtype=request.param,
             tokenizer_dir=next(
                 Path(".cache/hf").glob(

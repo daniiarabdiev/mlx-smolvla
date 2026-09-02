@@ -32,7 +32,7 @@ def test_disabled_workflow_preserves_the_intended_hermetic_full_suite() -> None:
     )
     job = workflow["jobs"]["full-suite"]
     environment = job["env"]
-    for name in ("HF_HOME", "UV_CACHE_DIR", "SMOLVLA_MLX_CACHE"):
+    for name in ("HF_HOME", "UV_CACHE_DIR", "MLX_SMOLVLA_CACHE"):
         assert environment[name].startswith("${{ github.workspace }}/.cache/")
 
     commands = "\n".join(

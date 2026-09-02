@@ -1,9 +1,27 @@
 # Public-release execution plan
 
-This plan implements `BRIEF_PUBLIC_RELEASE.md`. The brief is the approved
-design for this run. Fixed numerical tolerances, the original T3/T3B failure
-records, runtime import isolation, no-upload policy, and the prohibition on
-training runs remain unchanged.
+This plan implements `BRIEF_PUBLIC_RELEASE.md` as amended by
+`BRIEF_RENAME.md`. The briefs are the approved design for this run. Fixed
+numerical tolerances, the original T3/T3B failure records, runtime import
+isolation, no-upload policy, and the prohibition on training runs remain
+unchanged.
+
+## Canonical-name amendment — before Stage D
+
+1. Prove the desired GitHub endpoint is fetchable before changing `origin`;
+   record an exact operator task and continue if it is not.
+2. Check `mlx-smolvla` read-only on PyPI and record the dated result.
+3. Add red identity/cache tests, then use `git mv` to rename the runtime
+   package to `mlx_smolvla`; migrate distribution, CLI, cache, build, import,
+   test, Makefile, workflow, active-doc, agent-guide, and model-card names.
+4. Retain a one-release warning shim for `SMOLVLA_MLX_CACHE`; the canonical
+   variable is `MLX_SMOLVLA_CACHE`, whose default is
+   `~/.cache/mlx_smolvla`.
+5. Remove the erroneous first-port claim outside `docs/history/`, add the
+   dated history-index correction, and acknowledge the earlier independent
+   `tokimoa/smolvla-mlx` Hub port without performance comparisons.
+6. Rebuild every distribution under the canonical name and repeat every
+   fresh-install, offline-predict, and loopback-serve smoke before Stage D.
 
 ## Current gate
 
@@ -92,7 +110,7 @@ Files: `tests/test_compatibility.py`, `tests/test_cli.py`,
 
 1. Add red tests for a structured compatibility verdict and an actionable
    unsupported-macOS error with exact MLX/macOS requirements.
-2. Add red CLI tests for `smolvla-mlx doctor`, including package/Python/MLX,
+2. Add red CLI tests for `mlx-smolvla doctor`, including package/Python/MLX,
    chip/macOS, Metal default, cache path/size, extras, and compatibility.
 3. Keep imports dependency-light and ensure doctor degrades into a useful
    report when an optional extra is absent.
@@ -138,12 +156,12 @@ File: `docs/dev/RELEASE_CHECKLIST.md`.
 
 ### C2. Public metadata and contributor surface, test first
 
-Files: `pyproject.toml`, `smolvla_mlx/__init__.py`, `CHANGELOG.md`,
+Files: `pyproject.toml`, `mlx_smolvla/__init__.py`, `CHANGELOG.md`,
 `CONTRIBUTING.md`, `CITATION.cff`, `.github/ISSUE_TEMPLATE/*`,
 `.github/SECURITY.md` if required, `AGENTS.md`, `CLAUDE.md`, and tests.
 
 1. Add red distribution tests for version 0.1.0, complete classifiers,
-   keywords, license/readme, and final `smolvla-mlx` project URLs.
+   keywords, license/readme, and final `mlx-smolvla` project URLs.
 2. Add release/community files and a public agent guide that preserves the
    immutable gate policy, dependency isolation, production/strict defaults,
    and test commands.
@@ -163,8 +181,8 @@ tests for the Make target.
 
 ### C4. Doctor implementation
 
-Files: `smolvla_mlx/compatibility.py`, `smolvla_mlx/doctor.py`,
-`smolvla_mlx/cli.py`, focused tests, and the bug template.
+Files: `mlx_smolvla/compatibility.py`, `mlx_smolvla/doctor.py`,
+`mlx_smolvla/cli.py`, focused tests, and the bug template.
 
 1. Implement deterministic structured collection separately from rendering so
    tests do not spoof real machine state.
@@ -202,7 +220,7 @@ Files: all tracked documentation, `.gitignore`, `docs/README.md`,
 
 ### C7. Rename readiness and artifacts
 
-1. Probe `git@github.com:daniiarabdiev/smolvla-mlx.git` read-only. Change the
+1. Probe `git@github.com:daniiarabdiev/mlx-smolvla.git` read-only. Change the
    remote only after fetch/ls-remote proves the rename; otherwise leave an
    exact operator task while all public text uses the hyphenated name.
 2. Lock dependencies, build sdist and CPython 3.11–3.13 wheels from a clean
@@ -216,7 +234,7 @@ Files: all tracked documentation, `.gitignore`, `docs/README.md`,
 Files: `docs/evidence/DOCTOR.txt`,
 `docs/history/STATUS_PUBLIC_RELEASE.md`, and final history/task indexes.
 
-1. Capture `smolvla-mlx doctor`; run both fast and complete suites, link and
+1. Capture `mlx-smolvla doctor`; run both fast and complete suites, link and
    public-root checks, personal/secret scans, artifact installs, offline
    predictions, and serve loopback.
 2. Recompute protected failure/evidence hashes and confirm no tolerance,

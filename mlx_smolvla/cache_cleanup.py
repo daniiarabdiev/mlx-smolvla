@@ -50,7 +50,7 @@ def _absolute(path: str | Path) -> Path:
 
 
 def _validate_cache_path(repository_root: Path, cache_dir: Path) -> None:
-    expected = repository_root / ".cache" / "smolvla_mlx"
+    expected = repository_root / ".cache" / "mlx_smolvla"
     if cache_dir != expected:
         raise ValueError(f"clean-cache requires the exact repository cache {expected}, got {cache_dir}")
     if repository_root.is_symlink() or not repository_root.is_dir():
@@ -189,7 +189,7 @@ def clean_cache(
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--repository-root", type=Path, default=Path.cwd())
-    parser.add_argument("--cache-dir", type=Path, default=Path(".cache/smolvla_mlx"))
+    parser.add_argument("--cache-dir", type=Path, default=Path(".cache/mlx_smolvla"))
     action = parser.add_mutually_exclusive_group()
     action.add_argument("--dry-run", action="store_true")
     action.add_argument("--inventory", action="store_true")
@@ -207,7 +207,7 @@ def main(argv: list[str] | None = None) -> int:
                 dry_run=args.dry_run,
             )
     except (OSError, RuntimeError, ValueError) as error:
-        print(f"smolvla-mlx clean-cache: {error}", file=sys.stderr)
+        print(f"mlx-smolvla clean-cache: {error}", file=sys.stderr)
         return 2
     print(json.dumps(asdict(report), indent=2, sort_keys=True))
     return 0

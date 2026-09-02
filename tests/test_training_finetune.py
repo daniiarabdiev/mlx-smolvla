@@ -2753,7 +2753,7 @@ def test_conversion_semantic_validator_can_only_mutate_private_byte_copies(
         fromlist=["_validate_t3b_conversion_from_stable_hardlinks"],
     )
     convert_module = __import__(
-        "smolvla_mlx.convert",
+        "mlx_smolvla.convert",
         fromlist=["validate_converted_checkpoint"],
     )
     source_root = tmp_path / "source"
@@ -2849,7 +2849,7 @@ def test_t3b_frozen_input_collector_validates_the_real_pinned_population() -> No
     )
     config = module.FineTuneConfig(
         cache_dir=Path(".cache/hf"),
-        native_cache=Path(".cache/smolvla_mlx/policy-float32"),
+        native_cache=Path(".cache/mlx_smolvla/policy-float32"),
         output_dir=Path(".cache/training/t3b"),
         lora_scope="expert_only",
         budget_mode=module.FIXED_BUDGET_MODE,
@@ -6408,7 +6408,7 @@ def test_finetune_provenance_covers_repo_and_installed_runtime_paths(
     )
     hashes = module.finetune_implementation_hashes()
     assert {
-        "smolvla_mlx/__init__.py",
+        "mlx_smolvla/__init__.py",
         "training/evaluation.py",
         "training/reference_export.py",
         "installed/lerobot/datasets/dataset_reader.py",

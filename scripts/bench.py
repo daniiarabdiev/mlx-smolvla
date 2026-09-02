@@ -19,16 +19,16 @@ if str(_REPOSITORY_ROOT) not in sys.path:
 import mlx.core as mx
 import numpy as np
 
-from smolvla_mlx.benchmark import BenchmarkResult, run_benchmark
-from smolvla_mlx.policy import SmolVLAMLX
-from smolvla_mlx.production_evidence import ProductionDeterministicEvidence
-from smolvla_mlx.statistical import StatisticalResult
+from mlx_smolvla.benchmark import BenchmarkResult, run_benchmark
+from mlx_smolvla.policy import SmolVLAMLX
+from mlx_smolvla.production_evidence import ProductionDeterministicEvidence
+from mlx_smolvla.statistical import StatisticalResult
 
 
 def _parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--model", default="lerobot/smolvla_base")
-    parser.add_argument("--cache-dir", type=Path, default=Path(".cache/smolvla_mlx"))
+    parser.add_argument("--cache-dir", type=Path, default=Path(".cache/mlx_smolvla"))
     parser.add_argument("--tokenizer-dir", type=Path)
     parser.add_argument("--sample-root", type=Path, default=Path("tests/golden/sample_000"))
     parser.add_argument("--metadata", type=Path, default=Path("tests/golden/metadata.json"))

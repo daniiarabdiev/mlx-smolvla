@@ -134,7 +134,7 @@ def _send_observation(stub, observation: TimedObservation) -> None:
 
 
 def _start_fake_server(fake_policy: _FakePolicy, **overrides):
-    from smolvla_mlx.server import ServeConfig, create_server
+    from mlx_smolvla.server import ServeConfig, create_server
 
     values = dict(
         host="127.0.0.1",
@@ -193,7 +193,7 @@ def test_pinned_reference_schema_is_exact() -> None:
 
 
 def test_server_configuration_defaults_to_loopback_and_requires_remote_opt_in() -> None:
-    from smolvla_mlx.server import ServeConfig
+    from mlx_smolvla.server import ServeConfig
 
     config = ServeConfig()
     assert config.host == "127.0.0.1"
@@ -228,7 +228,7 @@ def test_server_configuration_defaults_to_loopback_and_requires_remote_opt_in() 
 
 
 def test_server_passes_quantization_opt_in_to_policy_loader() -> None:
-    from smolvla_mlx.server import ServeConfig, create_server
+    from mlx_smolvla.server import ServeConfig, create_server
 
     captured: dict[str, object] = {}
     policy = _FakePolicy()
@@ -360,7 +360,7 @@ def test_get_actions_is_cancellable_and_inference_is_serialized() -> None:
 
 
 def test_cancelled_waiter_restores_observation_consumed_during_cancellation() -> None:
-    from smolvla_mlx.server import NativeMLXPolicyServer, ServeConfig
+    from mlx_smolvla.server import NativeMLXPolicyServer, ServeConfig
 
     class CancelAfterDequeueContext:
         def __init__(self) -> None:
@@ -447,7 +447,7 @@ def test_latency_log_records_one_successful_loopback_chunk_without_payloads(
 
 
 def test_latency_log_refuses_to_mix_with_an_existing_session(tmp_path: Path) -> None:
-    from smolvla_mlx.server import ServeConfig, create_server
+    from mlx_smolvla.server import ServeConfig, create_server
 
     path = tmp_path / "existing.jsonl"
     path.write_text("existing session\n", encoding="utf-8")
@@ -466,12 +466,12 @@ def test_recorded_loopback_chunk_equals_direct_select_action(
 ) -> None:
     """Use reference client transport and real recorded data; never touch hardware."""
 
-    from smolvla_mlx.server import ServeConfig, create_server
+    from mlx_smolvla.server import ServeConfig, create_server
 
     config = ServeConfig(
         host="127.0.0.1",
         port=0,
-        cache_dir=Path(".cache/smolvla_mlx/server-loopback"),
+        cache_dir=Path(".cache/mlx_smolvla/server-loopback"),
         tokenizer_dir=base_vlm_dir,
         dtype="float32",
         execution_mode="strict",

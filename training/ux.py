@@ -29,7 +29,7 @@ from safetensors import safe_open
 
 from reference.discovery import DATASET_ID
 from reference.discovery import DATASET_REVISION
-from smolvla_mlx.policy import SmolVLAMLX
+from mlx_smolvla.policy import SmolVLAMLX
 from training.dataset import (
     TrainingDataBridge,
     compute_train_statistics,
@@ -101,7 +101,7 @@ class TrainingConfig:
     dtype: str = "bfloat16"
     output_dir: Path = Path(".cache/training/t4")
     cache_dir: Path = Path(".cache/hf")
-    native_cache: Path = Path(".cache/smolvla_mlx/policy-float32")
+    native_cache: Path = Path(".cache/mlx_smolvla/policy-float32")
     seed: int = 20_260_901
     sampler_seed: int = 20_260_901
     checkpoint_interval: int = 25

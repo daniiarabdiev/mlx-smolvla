@@ -8,7 +8,7 @@ import pytest
 import torch
 from safetensors.numpy import load_file
 
-from smolvla_mlx.rmsnorm import native_extension_available
+from mlx_smolvla.rmsnorm import native_extension_available
 
 
 requires_native_extension = pytest.mark.skipif(
@@ -21,10 +21,10 @@ requires_native_extension = pytest.mark.skipif(
 def test_cpu_reference_rmsnorm_matches_pytorch_cpu_exactly_on_real_prefix() -> None:
     """Fails if the runtime uses MLX's different CPU reduction order."""
 
-    from smolvla_mlx.rmsnorm import ReferenceRMSNorm
+    from mlx_smolvla.rmsnorm import ReferenceRMSNorm
 
     prefix = np.load("tests/golden/sample_000/prefix/embeddings.npy").astype(np.float32, copy=False)
-    checkpoint = Path(".cache/smolvla_mlx/language-prefix-float32/model.float32.safetensors")
+    checkpoint = Path(".cache/mlx_smolvla/language-prefix-float32/model.float32.safetensors")
     weight = load_file(checkpoint)["language.layers.0.input_layernorm.weight"]
     expected = torch.rms_norm(
         torch.from_numpy(prefix.copy()),
@@ -46,10 +46,10 @@ def test_cpu_reference_rmsnorm_matches_pytorch_cpu_exactly_on_real_prefix() -> N
 def test_cpu_reference_rmsnorm_upcasts_bfloat16_storage_weight() -> None:
     """Fails if compact checkpoint storage reaches the float32 CPU primitive unchanged."""
 
-    from smolvla_mlx.rmsnorm import ReferenceRMSNorm
+    from mlx_smolvla.rmsnorm import ReferenceRMSNorm
 
     prefix = np.load("tests/golden/sample_000/prefix/embeddings.npy").astype(np.float32, copy=False)
-    checkpoint = Path(".cache/smolvla_mlx/language-prefix-float32/model.float32.safetensors")
+    checkpoint = Path(".cache/mlx_smolvla/language-prefix-float32/model.float32.safetensors")
     source_weight = load_file(checkpoint)["language.layers.0.input_layernorm.weight"]
     expected_weight = torch.from_numpy(source_weight.copy()).to(torch.bfloat16).float()
     expected = torch.rms_norm(
@@ -72,12 +72,12 @@ def test_cpu_reference_rmsnorm_upcasts_bfloat16_storage_weight() -> None:
 def test_cpu_reference_rmsnorm_matches_pytorch_cpu_on_expert_width() -> None:
     """The 720-wide action expert needs the same source CPU reduction contract."""
 
-    from smolvla_mlx.rmsnorm import ReferenceRMSNorm
+    from mlx_smolvla.rmsnorm import ReferenceRMSNorm
 
     suffix = np.load("tests/golden/sample_000/flow/step_00/suffix_embeddings.npy").astype(
         np.float32, copy=False
     )
-    checkpoint = Path(".cache/smolvla_mlx/language-prefix-float32/model.float32.safetensors")
+    checkpoint = Path(".cache/mlx_smolvla/language-prefix-float32/model.float32.safetensors")
     weight = load_file(checkpoint)["expert.layers.0.input_layernorm.weight"]
     expected = torch.rms_norm(
         torch.from_numpy(suffix.copy()),
@@ -96,7 +96,7 @@ def test_cpu_reference_rmsnorm_matches_pytorch_cpu_on_expert_width() -> None:
 
 
 def test_pure_mlx_fallback_covers_every_cpu_compatibility_primitive(monkeypatch) -> None:
-    from smolvla_mlx import rmsnorm
+    from mlx_smolvla import rmsnorm
 
     monkeypatch.setattr(rmsnorm, "_rmsnorm_native", None)
     assert rmsnorm.native_extension_available() is False
@@ -128,3 +128,36 @@ def test_pure_mlx_fallback_covers_every_cpu_compatibility_primitive(monkeypatch)
     )
     np.testing.assert_array_equal(np.array(rotated[:, :1]), np.array(states[:, :1]))
     assert np.isfinite(np.array(rotated)).all()
+
+
+def test_native_extension_falls_back_when_runtime_mlx_abi_differs(monkeypatch) -> None:
+    """A wheel built against 0.32.2 must not pass older arrays to its extension."""
+
+    from mlx_smolvla import rmsnorm
+
+    class IncompatibleExtension:
+        @staticmethod
+        def rms_norm(*_args, **_kwargs):
+            raise AssertionError("the incompatible native extension was called")
+
+    monkeypatch.setattr(rmsnorm, "_rmsnorm_native", IncompatibleExtension())
+    monkeypatch.setattr(
+        rmsnorm,
+        "_runtime_mlx_version",
+        lambda: "0.32.1",
+        raising=False,
+    )
+    values = np.linspace(-1.0, 1.0, 720, dtype=np.float32).reshape(1, 1, 720)
+    weight = np.linspace(0.5, 1.5, 720, dtype=np.float32)
+
+    with mx.stream(mx.cpu):
+        normalizer = rmsnorm.ReferenceRMSNorm(720, eps=1e-5)
+        normalizer.weight = mx.array(weight)
+        actual = normalizer(mx.array(values))
+        mx.eval(actual)
+
+    expected = values / np.sqrt(np.mean(values * values, axis=-1, keepdims=True) + 1e-5)
+    expected *= weight
+    np.testing.assert_allclose(np.array(actual), expected, rtol=1e-6, atol=1e-6)
+    assert rmsnorm.native_extension_available() is False
+    assert rmsnorm.cpu_compatibility_backend() == "pure-mlx-fallback"

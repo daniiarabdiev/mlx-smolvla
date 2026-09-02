@@ -13,8 +13,8 @@ import pytest
 
 from reference.goldens import GoldenStore
 from scripts.make_public_finetune_goldens import MODEL_ID, MODEL_REVISION
-from smolvla_mlx.policy import SmolVLAMLX
-from smolvla_mlx.statistical import StatisticalResult
+from mlx_smolvla.policy import SmolVLAMLX
+from mlx_smolvla.statistical import StatisticalResult
 
 
 _ROOT = Path("tests/golden-public-finetune")
@@ -87,7 +87,7 @@ def public_finetune_policy(
     with mx.stream(mx.cpu):
         policy = SmolVLAMLX.from_pretrained(
             public_finetune_checkpoint,
-            cache_dir=Path(".cache/smolvla_mlx") / f"public-finetune-{request.param}",
+            cache_dir=Path(".cache/mlx_smolvla") / f"public-finetune-{request.param}",
             dtype=request.param,
             tokenizer_dir=base_vlm_dir,
             execution_mode="strict",
@@ -159,7 +159,7 @@ def test_any_hub_repo_id_is_resolved_without_a_hardcoded_allowlist(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
 ) -> None:
-    module = __import__("smolvla_mlx.policy", fromlist=["_resolve_checkpoint"])
+    module = __import__("mlx_smolvla.policy", fromlist=["_resolve_checkpoint"])
     captured = {}
 
     def fake_snapshot_download(identifier, **kwargs):
@@ -178,7 +178,7 @@ def test_from_pretrained_accepts_matching_hub_identifier(
     public_finetune_checkpoint: Path,
     base_vlm_dir: Path,
 ) -> None:
-    module = __import__("smolvla_mlx.policy", fromlist=["snapshot_download"])
+    module = __import__("mlx_smolvla.policy", fromlist=["snapshot_download"])
 
     def local_snapshot(identifier, **_kwargs):
         assert identifier == "owner/custom-smolvla"
@@ -188,7 +188,7 @@ def test_from_pretrained_accepts_matching_hub_identifier(
     with mx.stream(mx.cpu):
         policy = SmolVLAMLX.from_pretrained(
             "owner/custom-smolvla",
-            cache_dir=Path(".cache/smolvla_mlx/public-finetune-float32"),
+            cache_dir=Path(".cache/mlx_smolvla/public-finetune-float32"),
             dtype="float32",
             tokenizer_dir=base_vlm_dir,
             execution_mode="strict",

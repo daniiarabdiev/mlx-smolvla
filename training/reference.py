@@ -29,7 +29,7 @@ from reference.discovery import (
     DATASET_REVISION,
 )
 from reference.policy import ReferencePolicy
-from smolvla_mlx.convert import target_name_for_source
+from mlx_smolvla.convert import target_name_for_source
 from training.data import TrainingArtifact, TrainingArtifactWriter
 
 

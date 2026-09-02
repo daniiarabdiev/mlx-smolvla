@@ -1,0 +1,211 @@
+{
+  "format_version": 1,
+  "captured_at_utc": "2026-09-02T11:53:16Z",
+  "policy": {
+    "minimum_macos": "14.0",
+    "architecture": "arm64",
+    "mlx_specifier": ">=0.32.0,<0.32.3",
+    "verified_mlx_versions": [
+      "0.32.0",
+      "0.32.1",
+      "0.32.2"
+    ]
+  },
+  "host": {
+    "chip": "Apple M5 Pro",
+    "memory_bytes": 51539607552,
+    "macos": "26.6.2",
+    "macos_build": "25G83",
+    "python": "3.12.13"
+  },
+  "selected_host_environment": {
+    "mlx_version": "0.32.2",
+    "mlx_wheel": {
+      "filename": "mlx-0.32.2-cp312-cp312-macosx_26_0_arm64.whl",
+      "sha256": "68560fd648c5bb900aa6f6765cd74c5a8abaf092d97d73584a57b7545966c227",
+      "source": "https://pypi.org/project/mlx/0.32.2/"
+    },
+    "mlx_metal_wheel": {
+      "filename": "mlx_metal-0.32.2-py3-none-macosx_26_0_arm64.whl",
+      "sha256": "e6abeac9ac5265830c9c1541b6f96e9be37a85c2446763a46ad466c63a3837ab",
+      "source": "https://pypi.org/project/mlx-metal/0.32.2/"
+    },
+    "installed_binary_identity": {
+      "mlx/core.cpython-312-darwin.so": {
+        "minos": "26.2",
+        "sha256": "5ff77c777a73864d2af86defd61b141467746636f0047b76b66a7ae645fa12fb"
+      },
+      "mlx/lib/libjaccl.dylib": {
+        "minos": "26.2",
+        "sha256": "9cfd72679ff35c593a1d46fd30d995cc4a131eed15733617efb1118001e74084"
+      },
+      "mlx/lib/libmlx.dylib": {
+        "minos": "26.2",
+        "sha256": "d24c7a9b9d55a76bfd3bbcd1d042251a185cbadcb6340c3244a6ffa3dcb7c7e8"
+      }
+    }
+  },
+  "canonical_package_wheel_under_test": {
+    "filename": "mlx_smolvla-0.0.1-cp312-cp312-macosx_14_0_arm64.whl",
+    "sha256": "d69f71a06c96ead38f54b6b127e14487cfc7b8e4ea3d62bc9435b66e3b8399e3",
+    "native_extension_minos": "14.0",
+    "canonical_package_entries": 26,
+    "legacy_package_entries": 0,
+    "purpose": "pre-release compatibility candidate; final 0.1.0 artifacts are rebuilt later"
+  },
+  "tested_releases": [
+    {
+      "mlx_version": "0.32.0",
+      "wheels": {
+        "mlx": {
+          "filename": "mlx-0.32.0-cp312-cp312-macosx_14_0_arm64.whl",
+          "bytes": 558889,
+          "sha256": "ea5a594355c89c0095eaba413fd39d4caa8642fa13432dfb0c9354d141046467"
+        },
+        "mlx_metal": {
+          "filename": "mlx_metal-0.32.0-py3-none-macosx_14_0_arm64.whl",
+          "bytes": 40824649,
+          "sha256": "5b64b20ac24b0c401f489de01e8209edc4d372125201f19314e6f39e385322aa"
+        }
+      },
+      "binary_minos": {
+        "core_extension": "14.0",
+        "libjaccl": "14.0",
+        "libmlx": "14.0"
+      },
+      "strict_conversion_and_goldens": {
+        "passed": 22,
+        "failed": 0,
+        "golden_cases": 16,
+        "dtypes": [
+          "float32",
+          "bfloat16"
+        ]
+      },
+      "production_statistical_gate": {
+        "artifact_sha256": "dd23481fc73d0178223fd8460f5bb768d5e84d945a6a05dca3322cf4b2072e04",
+        "sample_count": 50,
+        "torch_fp32_mae": 55.783039437383415,
+        "mlx_fp32_mae": 55.78303949207068,
+        "mlx_fp32_ratio": 1.0000000009803565,
+        "mlx_bf16_mae": 55.783584668189285,
+        "mlx_bf16_ratio": 1.0000097741322698,
+        "maximum_ratio": 1.05,
+        "passed": true
+      },
+      "installed_smoke": {
+        "backend": "pure-mlx-fallback",
+        "legacy_import_present": false,
+        "offline_prediction": "finite-six-component-action",
+        "doctor_status": "verified",
+        "metal_default": true,
+        "loopback_ready_rpc": "pass"
+      }
+    },
+    {
+      "mlx_version": "0.32.1",
+      "wheels": {
+        "mlx": {
+          "filename": "mlx-0.32.1-cp312-cp312-macosx_14_0_arm64.whl",
+          "bytes": 615807,
+          "sha256": "f0b6a28089caeacdc27b89e18ff786ee956b8253cf8819778575fd90d2af8caa"
+        },
+        "mlx_metal": {
+          "filename": "mlx_metal-0.32.1-py3-none-macosx_14_0_arm64.whl",
+          "bytes": 42418884,
+          "sha256": "3fbf7d3de783680e771818189bc734877c9b129ae91312338b5ede420cde44c9"
+        }
+      },
+      "binary_minos": {
+        "core_extension": "14.0",
+        "libjaccl": "14.0",
+        "libmlx": "14.0"
+      },
+      "strict_conversion_and_goldens": {
+        "passed": 22,
+        "failed": 0,
+        "golden_cases": 16,
+        "dtypes": [
+          "float32",
+          "bfloat16"
+        ]
+      },
+      "production_statistical_gate": {
+        "artifact_sha256": "dd23481fc73d0178223fd8460f5bb768d5e84d945a6a05dca3322cf4b2072e04",
+        "sample_count": 50,
+        "torch_fp32_mae": 55.783039437383415,
+        "mlx_fp32_mae": 55.78303949207068,
+        "mlx_fp32_ratio": 1.0000000009803565,
+        "mlx_bf16_mae": 55.783584668189285,
+        "mlx_bf16_ratio": 1.0000097741322698,
+        "maximum_ratio": 1.05,
+        "passed": true
+      },
+      "installed_smoke": {
+        "backend": "pure-mlx-fallback",
+        "legacy_import_present": false,
+        "offline_prediction": "finite-six-component-action",
+        "doctor_status": "verified",
+        "metal_default": true,
+        "loopback_ready_rpc": "pass"
+      }
+    },
+    {
+      "mlx_version": "0.32.2",
+      "wheels": {
+        "mlx": {
+          "filename": "mlx-0.32.2-cp312-cp312-macosx_14_0_arm64.whl",
+          "bytes": 619370,
+          "sha256": "77217798a2b036bae9f213b851d4cde4581893787c9964458b7d471f86036bd6"
+        },
+        "mlx_metal": {
+          "filename": "mlx_metal-0.32.2-py3-none-macosx_14_0_arm64.whl",
+          "bytes": 42516623,
+          "sha256": "3825fff379dbc107dd3413e564a06caeaa24819910ec49c0439e454c06a1b9b8"
+        }
+      },
+      "binary_minos": {
+        "core_extension": "14.0",
+        "libjaccl": "14.0",
+        "libmlx": "14.0"
+      },
+      "strict_conversion_and_goldens": {
+        "passed": 22,
+        "failed": 0,
+        "golden_cases": 16,
+        "dtypes": [
+          "float32",
+          "bfloat16"
+        ]
+      },
+      "production_statistical_gate": {
+        "artifact_sha256": "dd23481fc73d0178223fd8460f5bb768d5e84d945a6a05dca3322cf4b2072e04",
+        "sample_count": 50,
+        "torch_fp32_mae": 55.783039437383415,
+        "mlx_fp32_mae": 55.78303949207068,
+        "mlx_fp32_ratio": 1.0000000009803565,
+        "mlx_bf16_mae": 55.783584668189285,
+        "mlx_bf16_ratio": 1.0000097741322698,
+        "maximum_ratio": 1.05,
+        "passed": true
+      },
+      "installed_smoke": {
+        "backend": "native-reference",
+        "legacy_import_present": false,
+        "offline_prediction": "finite-six-component-action",
+        "doctor_status": "verified",
+        "metal_default": true,
+        "loopback_ready_rpc": "pass"
+      }
+    }
+  ],
+  "sources": [
+    "https://pypi.org/pypi/mlx/0.32.0/json",
+    "https://pypi.org/pypi/mlx-metal/0.32.0/json",
+    "https://pypi.org/pypi/mlx/0.32.1/json",
+    "https://pypi.org/pypi/mlx-metal/0.32.1/json",
+    "https://pypi.org/pypi/mlx/0.32.2/json",
+    "https://pypi.org/pypi/mlx-metal/0.32.2/json"
+  ],
+  "conclusion": "Official macOS 14 arm64 MLX and mlx-metal wheels exist and carry a 14.0 minimum for every verified 0.32 release. mlx-smolvla therefore supports Apple Silicon Macs on macOS 14 or newer with MLX >=0.32.0,<0.32.3."
+}

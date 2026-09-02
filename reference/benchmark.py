@@ -203,10 +203,17 @@ def validate_comparison_document(value: object) -> dict[str, object]:
         "reference/benchmark.py",
         "reference/policy.py",
         "scripts/benchmark_inference_comparison.py",
-        "smolvla_mlx/benchmark.py",
-        "smolvla_mlx/policy.py",
+        "mlx_smolvla/benchmark.py",
+        "mlx_smolvla/policy.py",
     }
-    if set(source_hashes) != required_sources:
+    normalized_sources = {
+        name.replace("smolvla_mlx/", "mlx_smolvla/", 1)
+        for name in source_hashes
+    }
+    if (
+        len(normalized_sources) != len(source_hashes)
+        or normalized_sources != required_sources
+    ):
         raise ValueError("comparison source hash inventory is incomplete")
     for name, digest in source_hashes.items():
         _sha(digest, f"source digest for {name}")

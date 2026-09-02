@@ -37,8 +37,8 @@ _SOURCE_FILES = (
     "reference/benchmark.py",
     "reference/policy.py",
     "scripts/benchmark_inference_comparison.py",
-    "smolvla_mlx/benchmark.py",
-    "smolvla_mlx/policy.py",
+    "mlx_smolvla/benchmark.py",
+    "mlx_smolvla/policy.py",
 )
 _COMPETING_MARKERS = (
     "pytest",
@@ -66,7 +66,7 @@ _MPS_ENVIRONMENT_KEYS = (
 def _parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--reference-cache", type=Path, default=Path(".cache/hf"))
-    parser.add_argument("--native-cache", type=Path, default=Path(".cache/smolvla_mlx"))
+    parser.add_argument("--native-cache", type=Path, default=Path(".cache/mlx_smolvla"))
     parser.add_argument("--sample-root", type=Path, default=Path("tests/golden/sample_000"))
     parser.add_argument("--metadata", type=Path, default=Path("tests/golden/metadata.json"))
     parser.add_argument("--output", type=Path, default=Path("INFERENCE_COMPARISON.json"))
@@ -191,8 +191,8 @@ def _mlx_worker(args: argparse.Namespace) -> dict[str, object]:
     import mlx.core as mx
     import numpy as np
 
-    from smolvla_mlx.benchmark import _run_staged
-    from smolvla_mlx.policy import SmolVLAMLX
+    from mlx_smolvla.benchmark import _run_staged
+    from mlx_smolvla.policy import SmolVLAMLX
 
     protocol = ComparisonProtocol()
     policy = SmolVLAMLX.from_pretrained(

@@ -21,7 +21,7 @@ import mlx.core as mx
 import numpy as np
 
 from reference.discovery import DATASET_ID, DATASET_REVISION
-from smolvla_mlx.convert import validate_converted_checkpoint
+from mlx_smolvla.convert import validate_converted_checkpoint
 from training.data import TrainingArtifact, TrainingArtifactWriter
 from training.dataset import (
     SPLIT_SEED,
@@ -515,7 +515,7 @@ def load_base_stats_policy(
 ):
     """Load the immutable fp32 base with the frozen train-only statistics."""
 
-    from smolvla_mlx.policy import SmolVLAMLX
+    from mlx_smolvla.policy import SmolVLAMLX
 
     cache_dir = Path(cache_dir)
     split = make_episode_split(num_episodes=50, seed=SPLIT_SEED)
@@ -1972,7 +1972,7 @@ def validate_trained_comparison_start_files(
 ) -> TrainedComparisonStart:
     """Bind the prospective floor and marker before any comparison inference."""
 
-    from smolvla_mlx.training import trained_parity as parity
+    from mlx_smolvla.training import trained_parity as parity
 
     floor_path = Path(floor_path)
     start_marker_path = Path(start_marker_path)
@@ -2071,7 +2071,7 @@ def assemble_trained_comparison_report(
 ) -> dict[str, object]:
     """Assemble and schema-check the immutable trained comparison document."""
 
-    from smolvla_mlx.training import trained_parity as parity
+    from mlx_smolvla.training import trained_parity as parity
 
     parity_evidence = {
         name: deepcopy(value)
@@ -2168,7 +2168,7 @@ def run_trained_comparison_evaluation(
 ) -> tuple[dict[str, object], str, dict[str, object], str]:
     """Validate the floor first, then evaluate and install its bound comparison."""
 
-    from smolvla_mlx.training import trained_parity as parity
+    from mlx_smolvla.training import trained_parity as parity
     from training.self_consistency import (
         collect_floor_input_evidence,
         collect_floor_input_hashes,

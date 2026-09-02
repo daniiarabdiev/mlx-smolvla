@@ -5,7 +5,7 @@
 """The dependency-isolated SigLIP-style vision tower used by SmolVLA.
 
 This is a deliberately focused adaptation of mlx-vlm's Idefics3 vision model.
-It accepts the NCHW image batches emitted by :mod:`smolvla_mlx.preprocessing`
+It accepts the NCHW image batches emitted by :mod:`mlx_smolvla.preprocessing`
 and retains the converted checkpoint's canonical ``vision.*`` parameter tree.
 """
 

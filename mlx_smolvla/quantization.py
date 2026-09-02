@@ -536,11 +536,18 @@ def validate_quantization_document(value: object) -> dict[str, object]:
     expected_sources = {
         "scripts/benchmark_inference_comparison.py",
         "scripts/experiment_quantization.py",
-        "smolvla_mlx/benchmark.py",
-        "smolvla_mlx/policy.py",
-        "smolvla_mlx/quantization.py",
+        "mlx_smolvla/benchmark.py",
+        "mlx_smolvla/policy.py",
+        "mlx_smolvla/quantization.py",
     }
-    if set(source_hashes) != expected_sources:
+    normalized_sources = {
+        name.replace("smolvla_mlx/", "mlx_smolvla/", 1)
+        for name in source_hashes
+    }
+    if (
+        len(normalized_sources) != len(source_hashes)
+        or normalized_sources != expected_sources
+    ):
         raise ValueError("quantization source hash inventory is incomplete")
     for name, digest in source_hashes.items():
         _digest(digest, f"quantization source digest for {name}")

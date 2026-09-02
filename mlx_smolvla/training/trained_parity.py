@@ -368,7 +368,7 @@ def _validate_snapshot_conversion(
 ):
     """Run semantic conversion checks on immutable copies of captured bytes."""
 
-    from smolvla_mlx.convert import validate_converted_checkpoint
+    from mlx_smolvla.convert import validate_converted_checkpoint
 
     with tempfile.TemporaryDirectory(prefix="smolvla-parity-conversion-") as raw:
         private_root = Path(raw)

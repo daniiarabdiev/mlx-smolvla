@@ -1,5 +1,34 @@
 # Human Tasks
 
+## Open — finish the GitHub repository rename
+
+- **Status:** open — at `2026-09-02T11:53:16Z`, read-only SSH lookup of
+  `git@github.com:daniiarabdiev/mlx-smolvla.git` returned `Repository not
+  found`, while the existing `origin` still fetched `main` at `a77e820` from
+  `git@github.com:daniiarabdiev/smolvla-mlx.git`.
+- **Action:** in GitHub, confirm the repository's exact name is
+  `mlx-smolvla` and that the current SSH identity has read/write access. Then
+  verify from this Mac:
+
+  ```sh
+  git ls-remote git@github.com:daniiarabdiev/mlx-smolvla.git HEAD refs/heads/main
+  ```
+
+- **Why:** the rename brief forbids changing `origin` before the new endpoint
+  is fetchable. The local package, import, CLI, cache, and public text can be
+  migrated independently; pushes continue safely to the existing `origin`
+  until this endpoint resolves.
+
+## Done — check the `mlx-smolvla` PyPI name
+
+- **Status:** done — both the official JSON endpoint and Simple Repository API
+  returned HTTP 404 at `2026-09-02T11:48Z`.
+- **Result:** `mlx-smolvla` appears unclaimed on public PyPI at the time of the
+  read-only check. This is not a reservation; the operator must check again
+  immediately before publishing.
+- **Sources:** <https://pypi.org/pypi/mlx-smolvla/json> and
+  <https://pypi.org/simple/mlx-smolvla/>.
+
 ## Open — confirm the supervised hardware session
 
 - **Status:** open — the exact live-session gate has not been supplied.

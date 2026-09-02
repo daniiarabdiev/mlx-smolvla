@@ -9,7 +9,7 @@ import mlx.core as mx
 import numpy as np
 import pytest
 
-from smolvla_mlx.expert import ActionExpert, timestep_embedding
+from mlx_smolvla.expert import ActionExpert, timestep_embedding
 from tests.test_prefix import _prefix_inputs
 
 
@@ -22,12 +22,12 @@ class _ExpertParts:
 
 
 def _load_expert_parts(checkpoint_dir: Path, dtype: str) -> _ExpertParts:
-    from smolvla_mlx.convert import convert_checkpoint
-    from smolvla_mlx.language import TruncatedLanguageModel
+    from mlx_smolvla.convert import convert_checkpoint
+    from mlx_smolvla.language import TruncatedLanguageModel
 
     converted = convert_checkpoint(
         checkpoint_dir,
-        Path(".cache/smolvla_mlx") / f"expert-{dtype}",
+        Path(".cache/mlx_smolvla") / f"expert-{dtype}",
         dtype=dtype,
     )
     weights = mx.load(str(converted.output_path))

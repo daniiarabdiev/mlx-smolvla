@@ -1,5 +1,5 @@
 include CMakeLists.txt
 include LICENSE
 include NOTICE
-recursive-include smolvla_mlx/native *.cpp *.h
+recursive-include mlx_smolvla/native *.cpp *.h
 recursive-include training *.py

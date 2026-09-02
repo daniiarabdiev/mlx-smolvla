@@ -10,7 +10,7 @@ import mlx.core as mx
 import numpy as np
 import pytest
 
-from smolvla_mlx.policy import SmolVLAMLX
+from mlx_smolvla.policy import SmolVLAMLX
 
 
 @dataclass(frozen=True)
@@ -28,7 +28,7 @@ def native_policy(
     with mx.stream(mx.cpu):
         policy = SmolVLAMLX.from_pretrained(
             str(checkpoint_dir),
-            cache_dir=Path(".cache/smolvla_mlx") / f"policy-{request.param}",
+            cache_dir=Path(".cache/mlx_smolvla") / f"policy-{request.param}",
             dtype=request.param,
             tokenizer_dir=base_vlm_dir,
             execution_mode="strict",

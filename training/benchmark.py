@@ -65,7 +65,7 @@ def benchmark_training_cells(
     *,
     dataset: str | Path = DATASET_ID,
     cache_dir: str | Path = Path(".cache/hf"),
-    native_cache: str | Path = Path(".cache/smolvla_mlx/policy-float32"),
+    native_cache: str | Path = Path(".cache/mlx_smolvla/policy-float32"),
     config: TrainingBenchmarkConfig | None = None,
     progress: Callable[[str, str, str, Mapping[str, object] | None], None] | None = None,
 ) -> list[dict[str, object]]:

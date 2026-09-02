@@ -3,7 +3,7 @@
 
 This script belongs to the reference lane and may import PyTorch/LeRobot. The
 runtime package remains dependency-isolated; it consumes only the resulting
-JSON record through :class:`smolvla_mlx.statistical.StatisticalResult`.
+JSON record through :class:`mlx_smolvla.statistical.StatisticalResult`.
 """
 
 from __future__ import annotations
@@ -30,7 +30,7 @@ from reference.policy import (
     load_checkpoint_dataset_observation,
     load_dataset_observation,
 )
-from smolvla_mlx.policy import SmolVLAMLX
+from mlx_smolvla.policy import SmolVLAMLX
 
 
 _CHECKPOINT_FILES = (
@@ -50,7 +50,7 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument("--samples", type=int, default=50, help="Number of deterministic episode-start frames (1-50).")
     parser.add_argument("--output", type=Path, default=Path(".cache/statistical.json"))
     parser.add_argument("--reference-cache", type=Path, default=Path(".cache/hf"))
-    parser.add_argument("--native-cache", type=Path, default=Path(".cache/smolvla_mlx"))
+    parser.add_argument("--native-cache", type=Path, default=Path(".cache/mlx_smolvla"))
     parser.add_argument(
         "--execution-mode",
         choices=("production", "strict"),

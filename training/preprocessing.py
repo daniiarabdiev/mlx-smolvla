@@ -8,7 +8,7 @@ from pathlib import Path
 import mlx.core as mx
 import numpy as np
 
-from smolvla_mlx.preprocessing import SmolVLAPreprocessor
+from mlx_smolvla.preprocessing import SmolVLAPreprocessor
 
 
 _PREPROCESSOR_STATE = "policy_preprocessor_step_5_normalizer_processor.safetensors"
@@ -122,7 +122,7 @@ def load_stats_aware_policy(
 ):
     """Strictly load a native policy and activate its standard saved stats."""
 
-    from smolvla_mlx.policy import SmolVLAMLX
+    from mlx_smolvla.policy import SmolVLAMLX
 
     checkpoint_dir = Path(model_id).expanduser()
     if not checkpoint_dir.is_dir():

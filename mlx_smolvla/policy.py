@@ -13,20 +13,20 @@ from mlx.utils import tree_flatten
 from huggingface_hub import snapshot_download
 import numpy as np
 
-from smolvla_mlx.cache import resolve_cache_dir
-from smolvla_mlx.config import SmolVLAConfig
-from smolvla_mlx.connector import Connector
-from smolvla_mlx.convert import convert_checkpoint
-from smolvla_mlx.expert import ActionExpert
-from smolvla_mlx.flow import euler_sample
-from smolvla_mlx.language import TruncatedLanguageModel, pad_state_to_width
-from smolvla_mlx.preprocessing import SmolVLAPreprocessor
-from smolvla_mlx.quantization import (
+from mlx_smolvla.cache import resolve_cache_dir
+from mlx_smolvla.config import SmolVLAConfig
+from mlx_smolvla.connector import Connector
+from mlx_smolvla.convert import convert_checkpoint
+from mlx_smolvla.expert import ActionExpert
+from mlx_smolvla.flow import euler_sample
+from mlx_smolvla.language import TruncatedLanguageModel, pad_state_to_width
+from mlx_smolvla.preprocessing import SmolVLAPreprocessor
+from mlx_smolvla.quantization import (
     QuantizationManifest,
     expected_topology_manifest,
     quantize_vlm_linears,
 )
-from smolvla_mlx.vision import VisionEncoder
+from mlx_smolvla.vision import VisionEncoder
 
 
 _DEFAULT_CHECKPOINT_ID = "lerobot/smolvla_base"

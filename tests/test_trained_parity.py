@@ -35,7 +35,7 @@ BUNDLE_SHA256 = "f" * 64
 
 def _module():
     return __import__(
-        "smolvla_mlx.training.trained_parity",
+        "mlx_smolvla.training.trained_parity",
         fromlist=["evaluate_trained_parity_documents"],
     )
 
@@ -893,7 +893,7 @@ def _file_fixture(
     export_dir.mkdir(parents=True)
     import mlx.core as mx
     from reference.discovery import CHECKPOINT_ID, CHECKPOINT_REVISION
-    from smolvla_mlx.convert import convert_checkpoint
+    from mlx_smolvla.convert import convert_checkpoint
 
     mx.save_safetensors(
         str(export_dir / "model.safetensors"),
@@ -1295,7 +1295,7 @@ def test_semantic_conversion_uses_private_descriptor_snapshot_copies(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     fixture = _file_fixture(tmp_path, monkeypatch)
-    import smolvla_mlx.convert as conversion_module
+    import mlx_smolvla.convert as conversion_module
 
     comparison = fixture["comparison"]
     original_paths = {

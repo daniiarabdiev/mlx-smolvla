@@ -11,7 +11,7 @@ from training.data import TrainingArtifact
 
 
 _GOLDEN_DIR = Path(".cache/training/gradient_goldens")
-_NATIVE_CACHE = Path(".cache/smolvla_mlx/policy-float32")
+_NATIVE_CACHE = Path(".cache/mlx_smolvla/policy-float32")
 
 
 def test_gradient_parity_thresholds_are_immutable() -> None:

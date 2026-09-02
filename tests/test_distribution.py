@@ -21,7 +21,7 @@ def test_installed_runtime_does_not_require_the_vendored_mlx_vlm_stack() -> None
 
     requirements = [
         Requirement(requirement)
-        for requirement in distribution("smolvla-mlx").requires or ()
+        for requirement in distribution("mlx-smolvla").requires or ()
     ]
     names = {requirement.name.lower() for requirement in requirements if requirement.marker is None}
 
@@ -36,7 +36,7 @@ def test_installed_runtime_requires_the_audited_dependency_versions() -> None:
 
     requirements = [
         Requirement(requirement)
-        for requirement in distribution("smolvla-mlx").requires or ()
+        for requirement in distribution("mlx-smolvla").requires or ()
     ]
     runtime = {
         requirement.name.lower(): str(requirement.specifier)
@@ -44,9 +44,15 @@ def test_installed_runtime_requires_the_audited_dependency_versions() -> None:
         if requirement.marker is None
     }
 
+    mlx_requirement = SpecifierSet(runtime.pop("mlx"))
+    assert "0.32.0" in mlx_requirement
+    assert "0.32.1" in mlx_requirement
+    assert "0.32.2" in mlx_requirement
+    assert "0.31.2" not in mlx_requirement
+    assert "0.32.3" not in mlx_requirement
+    assert "0.33.0" not in mlx_requirement
     assert runtime == {
         "huggingface-hub": "==1.29.0",
-        "mlx": "==0.32.2",
         "numpy": "==2.2.6",
         "pillow": "==12.3.0",
         "safetensors": "==0.8.0",
@@ -55,7 +61,7 @@ def test_installed_runtime_requires_the_audited_dependency_versions() -> None:
 
 
 def test_base_distribution_supports_cpython_311_through_313() -> None:
-    requires_python = distribution("smolvla-mlx").metadata["Requires-Python"]
+    requires_python = distribution("mlx-smolvla").metadata["Requires-Python"]
     supported = SpecifierSet(requires_python)
 
     assert "3.11" in supported
@@ -68,7 +74,7 @@ def test_base_distribution_supports_cpython_311_through_313() -> None:
 def test_reference_extra_is_guarded_by_lerobots_python_312_floor() -> None:
     requirements = [
         Requirement(requirement)
-        for requirement in distribution("smolvla-mlx").requires or ()
+        for requirement in distribution("mlx-smolvla").requires or ()
     ]
     guarded = [
         requirement
@@ -94,7 +100,7 @@ def test_reference_extra_is_guarded_by_lerobots_python_312_floor() -> None:
 def test_serve_extra_is_optional_and_guarded_by_lerobots_python_312_floor() -> None:
     requirements = [
         Requirement(requirement)
-        for requirement in distribution("smolvla-mlx").requires or ()
+        for requirement in distribution("mlx-smolvla").requires or ()
     ]
     serve_requirements = [
         requirement
@@ -109,13 +115,13 @@ def test_serve_extra_is_optional_and_guarded_by_lerobots_python_312_floor() -> N
     assert requirement.specifier == SpecifierSet("==0.6.1")
     assert requirement.extras == {"async"}
     assert requirement.marker.evaluate({"extra": "serve", "python_version": "3.11"}) is False
-    assert "serve" in (distribution("smolvla-mlx").metadata.get_all("Provides-Extra") or [])
+    assert "serve" in (distribution("mlx-smolvla").metadata.get_all("Provides-Extra") or [])
 
 
 def test_native_extension_build_is_optional_and_targets_macos_14(
     monkeypatch,
 ) -> None:
-    monkeypatch.setenv("SMOLVLA_MLX_BUILD_NATIVE", "0")
+    monkeypatch.setenv("MLX_SMOLVLA_BUILD_NATIVE", "0")
     monkeypatch.delenv("MACOSX_DEPLOYMENT_TARGET", raising=False)
     setup_globals = runpy.run_path("setup.py", run_name="smolvla_setup_metadata")
 
@@ -125,16 +131,16 @@ def test_native_extension_build_is_optional_and_targets_macos_14(
 
 
 def test_native_extension_is_built_by_default(monkeypatch) -> None:
-    monkeypatch.delenv("SMOLVLA_MLX_BUILD_NATIVE", raising=False)
+    monkeypatch.delenv("MLX_SMOLVLA_BUILD_NATIVE", raising=False)
     setup_globals = runpy.run_path("setup.py", run_name="smolvla_setup_metadata")
 
     assert len(setup_globals["EXT_MODULES"]) == 1
-    assert setup_globals["EXT_MODULES"][0].name == "smolvla_mlx._rmsnorm_native"
+    assert setup_globals["EXT_MODULES"][0].name == "mlx_smolvla._rmsnorm_native"
     assert "build_ext" in setup_globals["CMDCLASS"]
 
 
 def test_training_package_is_shipped_as_an_optional_surface() -> None:
-    metadata = distribution("smolvla-mlx").metadata
+    metadata = distribution("mlx-smolvla").metadata
 
     assert find_spec("training") is not None
     assert "train" in (metadata.get_all("Provides-Extra") or [])
@@ -143,9 +149,9 @@ def test_training_package_is_shipped_as_an_optional_surface() -> None:
 def test_trained_parity_subpackage_is_in_the_wheel_package_list() -> None:
     setup_globals = runpy.run_path("setup.py", run_name="smolvla_setup_metadata")
 
-    assert "smolvla_mlx.training" in setup_globals["PACKAGES"]
+    assert "mlx_smolvla.training" in setup_globals["PACKAGES"]
     assert "reference" in setup_globals["PACKAGES"]
-    assert find_spec("smolvla_mlx.training.trained_parity") is not None
+    assert find_spec("mlx_smolvla.training.trained_parity") is not None
 
 
 def test_built_wheel_contains_and_imports_the_trained_parity_surface(
@@ -172,8 +178,9 @@ def test_built_wheel_contains_and_imports_the_trained_parity_surface(
     assert len(wheels) == 1
     with zipfile.ZipFile(wheels[0]) as archive:
         names = set(archive.namelist())
-    assert "smolvla_mlx/server.py" in names
-    assert "smolvla_mlx/training/trained_parity.py" in names
+    assert not any(name.startswith("smolvla_mlx/") for name in names)
+    assert "mlx_smolvla/server.py" in names
+    assert "mlx_smolvla/training/trained_parity.py" in names
     assert "training/t3_contract.py" in names
     assert "training/ux.py" in names
     assert "training/benchmark.py" in names
@@ -204,7 +211,7 @@ def test_built_wheel_contains_and_imports_the_trained_parity_surface(
             "-c",
             (
                 "import pathlib; "
-                "import smolvla_mlx.training.trained_parity as p; "
+                "import mlx_smolvla.training.trained_parity as p; "
                 "print(pathlib.Path(p.__file__).resolve())"
             ),
         ],
@@ -228,7 +235,7 @@ def test_extension_free_wheel_imports_with_pure_mlx_fallback(tmp_path: Path) -> 
     )
     environment = dict(os.environ)
     environment["UV_CACHE_DIR"] = str((Path.cwd() / ".cache" / "uv").resolve())
-    environment["SMOLVLA_MLX_BUILD_NATIVE"] = "0"
+    environment["MLX_SMOLVLA_BUILD_NATIVE"] = "0"
     built = subprocess.run(
         ["uv", "build", "--wheel", "--out-dir", str(wheel_dir), str(source)],
         env=environment,
@@ -273,7 +280,7 @@ def test_extension_free_wheel_imports_with_pure_mlx_fallback(tmp_path: Path) -> 
             (
                 "import pathlib, sys; "
                 f"sys.path[:0] = [{str(target)!r}, {str(site_packages)!r}]; "
-                "import smolvla_mlx.rmsnorm as r; "
+                "import mlx_smolvla.rmsnorm as r; "
                 "assert r.cpu_compatibility_backend() == 'pure-mlx-fallback'; "
                 "print(pathlib.Path(r.__file__).resolve())"
             ),

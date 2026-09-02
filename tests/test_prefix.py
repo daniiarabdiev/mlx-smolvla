@@ -8,7 +8,7 @@ import mlx.nn as nn
 import numpy as np
 import pytest
 
-from smolvla_mlx.types import ProcessedObservation
+from mlx_smolvla.types import ProcessedObservation
 
 
 @dataclass(frozen=True)
@@ -19,12 +19,12 @@ class _PrefixParts:
 
 
 def _load_prefix_parts(checkpoint_dir: Path, dtype: str) -> _PrefixParts:
-    from smolvla_mlx.convert import convert_checkpoint
-    from smolvla_mlx.language import TruncatedLanguageModel
+    from mlx_smolvla.convert import convert_checkpoint
+    from mlx_smolvla.language import TruncatedLanguageModel
 
     converted = convert_checkpoint(
         checkpoint_dir,
-        Path(".cache/smolvla_mlx") / f"language-prefix-{dtype}",
+        Path(".cache/mlx_smolvla") / f"language-prefix-{dtype}",
         dtype=dtype,
     )
     weights = mx.load(str(converted.output_path))
@@ -70,7 +70,7 @@ def _processed(golden) -> ProcessedObservation:
 
 
 def _prefix_inputs(golden, parts: _PrefixParts):
-    from smolvla_mlx.language import pad_state_to_width
+    from mlx_smolvla.language import pad_state_to_width
 
     processed = _processed(golden)
     state_embedding = parts.state_proj(pad_state_to_width(processed.state, width=32))[:, None, :]

@@ -7,8 +7,8 @@ from pathlib import Path
 
 import pytest
 
-from smolvla_mlx.production_evidence import ProductionDeterministicEvidence
-from smolvla_mlx.statistical import StatisticalResult
+from mlx_smolvla.production_evidence import ProductionDeterministicEvidence
+from mlx_smolvla.statistical import StatisticalResult
 
 
 def _valid_deterministic_payload() -> dict[str, object]:

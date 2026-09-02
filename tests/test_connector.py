@@ -12,7 +12,7 @@ _GOLDEN_TOLERANCES = {
 
 
 def _load_connector(converted_path: Path):
-    from smolvla_mlx.connector import Connector
+    from mlx_smolvla.connector import Connector
 
     connector = Connector()
     weights = mx.load(str(converted_path))
@@ -34,10 +34,10 @@ def test_connector_matches_golden(
     checkpoint_dir: Path,
     dtype: str,
 ) -> None:
-    from smolvla_mlx.convert import convert_checkpoint
+    from mlx_smolvla.convert import convert_checkpoint
 
     with mx.stream(mx.cpu):
-        converted = convert_checkpoint(checkpoint_dir, Path(".cache/smolvla_mlx") / f"connector-{dtype}", dtype=dtype)
+        converted = convert_checkpoint(checkpoint_dir, Path(".cache/mlx_smolvla") / f"connector-{dtype}", dtype=dtype)
         connector = _load_connector(converted.output_path)
         actual = connector(golden.mx("vision/features", getattr(mx, dtype)))
 

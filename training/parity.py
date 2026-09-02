@@ -19,7 +19,7 @@ import mlx.nn as nn
 from mlx.utils import tree_flatten
 import numpy as np
 
-from smolvla_mlx.types import ProcessedObservation
+from mlx_smolvla.types import ProcessedObservation
 from training.data import TrainingArtifact
 from training.differentiable import differentiable_cpu_primitives
 from training.gradients import (

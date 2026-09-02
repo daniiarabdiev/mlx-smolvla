@@ -16,8 +16,8 @@ import math
 import mlx.core as mx
 import mlx.nn as nn
 
-from smolvla_mlx.rmsnorm import ReferenceRMSNorm, reference_rope, reference_silu, reference_softmax
-from smolvla_mlx.types import PrefixCache, PrefixInputs, ProcessedObservation
+from mlx_smolvla.rmsnorm import ReferenceRMSNorm, reference_rope, reference_silu, reference_softmax
+from mlx_smolvla.types import PrefixCache, PrefixInputs, ProcessedObservation
 
 
 _HIDDEN_SIZE = 960

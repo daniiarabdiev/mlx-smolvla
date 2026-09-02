@@ -4,14 +4,14 @@ import pytest
 
 
 def test_explicit_cache_path_wins(tmp_path: Path) -> None:
-    from smolvla_mlx.cache import resolve_cache_dir
+    from mlx_smolvla.cache import resolve_cache_dir
 
     assert resolve_cache_dir(tmp_path) == tmp_path.resolve()
 
 
 def _cache_tree(tmp_path: Path) -> tuple[Path, Path]:
     repository = tmp_path / "repository"
-    cache = repository / ".cache" / "smolvla_mlx"
+    cache = repository / ".cache" / "mlx_smolvla"
     cache.mkdir(parents=True)
     for name in ("debug-attention", "debug-rms", "benchmark-debug"):
         directory = cache / name
@@ -26,7 +26,7 @@ def _cache_tree(tmp_path: Path) -> tuple[Path, Path]:
 
 
 def test_cache_cleanup_dry_run_selects_only_frozen_allowlist(tmp_path: Path) -> None:
-    from smolvla_mlx.cache_cleanup import clean_cache
+    from mlx_smolvla.cache_cleanup import clean_cache
 
     repository, cache = _cache_tree(tmp_path)
     report = clean_cache(repository_root=repository, cache_dir=cache, dry_run=True)
@@ -46,7 +46,7 @@ def test_cache_cleanup_dry_run_selects_only_frozen_allowlist(tmp_path: Path) -> 
 
 
 def test_cache_inventory_reports_size_retention_and_regenerability(tmp_path: Path) -> None:
-    from smolvla_mlx.cache_cleanup import inventory_cache
+    from mlx_smolvla.cache_cleanup import inventory_cache
 
     repository, cache = _cache_tree(tmp_path)
     report = inventory_cache(repository_root=repository, cache_dir=cache)
@@ -71,7 +71,7 @@ def test_cache_inventory_reports_size_retention_and_regenerability(tmp_path: Pat
 
 
 def test_cache_cleanup_removes_only_safe_debug_directories(tmp_path: Path) -> None:
-    from smolvla_mlx.cache_cleanup import clean_cache
+    from mlx_smolvla.cache_cleanup import clean_cache
 
     repository, cache = _cache_tree(tmp_path)
     report = clean_cache(repository_root=repository, cache_dir=cache)
@@ -95,7 +95,7 @@ def test_cache_cleanup_rejects_root_training_outside_and_traversal(
     tmp_path: Path,
     target: str,
 ) -> None:
-    from smolvla_mlx.cache_cleanup import clean_cache
+    from mlx_smolvla.cache_cleanup import clean_cache
 
     repository, cache = _cache_tree(tmp_path)
     targets = {
@@ -113,7 +113,7 @@ def test_cache_cleanup_rejects_root_training_outside_and_traversal(
 
 
 def test_cache_cleanup_rejects_symlink_cache_and_allowed_candidate(tmp_path: Path) -> None:
-    from smolvla_mlx.cache_cleanup import clean_cache
+    from mlx_smolvla.cache_cleanup import clean_cache
 
     repository, cache = _cache_tree(tmp_path)
     real_cache = tmp_path / "real-cache"
@@ -133,7 +133,7 @@ def test_cache_cleanup_rejects_symlink_cache_and_allowed_candidate(tmp_path: Pat
 
 
 def test_cache_cleanup_rejects_allowlisted_name_when_not_a_directory(tmp_path: Path) -> None:
-    from smolvla_mlx.cache_cleanup import clean_cache
+    from mlx_smolvla.cache_cleanup import clean_cache
 
     repository, cache = _cache_tree(tmp_path)
     (cache / "debug-file").write_bytes(b"not a directory")

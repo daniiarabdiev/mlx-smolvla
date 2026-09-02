@@ -20,9 +20,9 @@ def test_conversion_maps_every_checkpoint_tensor_once(
     checkpoint_dir: Path,
     dtype: str,
 ) -> None:
-    from smolvla_mlx.convert import convert_checkpoint
+    from mlx_smolvla.convert import convert_checkpoint
 
-    output_dir = Path(".cache/smolvla_mlx") / f"conversion-{dtype}"
+    output_dir = Path(".cache/mlx_smolvla") / f"conversion-{dtype}"
     report = convert_checkpoint(checkpoint_dir, output_dir, dtype=dtype)
 
     assert report.unmapped_source == ()
@@ -55,7 +55,7 @@ def test_conversion_maps_every_checkpoint_tensor_once(
 
 
 def test_name_map_is_a_strict_bijection(checkpoint_dir: Path) -> None:
-    from smolvla_mlx.convert import build_name_map, source_tensor_names, target_name_for_source
+    from mlx_smolvla.convert import build_name_map, source_tensor_names, target_name_for_source
 
     source_names = source_tensor_names(checkpoint_dir / "model.safetensors")
     target_names = tuple(target_name_for_source(name) for name in source_names)
@@ -73,7 +73,7 @@ def test_name_map_is_a_strict_bijection(checkpoint_dir: Path) -> None:
 def test_conversion_validation_rejects_a_stale_source_checkpoint(
     tmp_path: Path,
 ) -> None:
-    from smolvla_mlx.convert import (
+    from mlx_smolvla.convert import (
         convert_checkpoint,
         validate_converted_checkpoint,
     )
@@ -118,7 +118,7 @@ def test_conversion_validation_rejects_a_stale_source_checkpoint(
 def test_conversion_validation_derives_bfloat16_values_from_source(
     tmp_path: Path,
 ) -> None:
-    from smolvla_mlx.convert import (
+    from mlx_smolvla.convert import (
         convert_checkpoint,
         validate_converted_checkpoint,
     )
@@ -173,7 +173,7 @@ def test_conversion_validation_derives_bfloat16_values_from_source(
 def test_conversion_validation_accepts_the_pinned_mixed_source_dtypes(
     tmp_path: Path,
 ) -> None:
-    from smolvla_mlx.convert import (
+    from mlx_smolvla.convert import (
         convert_checkpoint,
         validate_converted_checkpoint,
     )

@@ -32,7 +32,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--native-cache",
         type=Path,
-        default=Path(".cache/smolvla_mlx/policy-float32"),
+        default=Path(".cache/mlx_smolvla/policy-float32"),
     )
     parser.add_argument(
         "--output",

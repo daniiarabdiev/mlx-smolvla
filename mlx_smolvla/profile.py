@@ -14,7 +14,7 @@ from typing import TYPE_CHECKING
 import numpy as np
 
 if TYPE_CHECKING:
-    from smolvla_mlx.policy import SmolVLAMLX
+    from mlx_smolvla.policy import SmolVLAMLX
 
 
 _DTYPES = ("float32", "bfloat16")
@@ -215,8 +215,8 @@ def run_profile_iteration(
 
     import mlx.core as mx
 
-    from smolvla_mlx.flow import euler_sample
-    from smolvla_mlx.language import pad_state_to_width
+    from mlx_smolvla.flow import euler_sample
+    from mlx_smolvla.language import pad_state_to_width
 
     timings: dict[str, float] = {}
     total_started = time.perf_counter()
@@ -351,11 +351,18 @@ def validate_profile_document(value: object) -> dict[str, object]:
     expected_sources = {
         "scripts/benchmark_inference_comparison.py",
         "scripts/profile_inference_dtypes.py",
-        "smolvla_mlx/benchmark.py",
-        "smolvla_mlx/policy.py",
-        "smolvla_mlx/profile.py",
+        "mlx_smolvla/benchmark.py",
+        "mlx_smolvla/policy.py",
+        "mlx_smolvla/profile.py",
     }
-    if set(source_hashes) != expected_sources:
+    normalized_sources = {
+        name.replace("smolvla_mlx/", "mlx_smolvla/", 1)
+        for name in source_hashes
+    }
+    if (
+        len(normalized_sources) != len(source_hashes)
+        or normalized_sources != expected_sources
+    ):
         raise ValueError("profile source hash inventory is incomplete")
     for name, digest in source_hashes.items():
         _digest(digest, f"profile source digest for {name}")

@@ -25,7 +25,7 @@ execute_process(
 list(PREPEND CMAKE_PREFIX_PATH "${MLX_ROOT}")
 find_package(MLX CONFIG REQUIRED)
 
-add_library(smolvla_rmsnorm STATIC smolvla_mlx/native/rmsnorm.cpp)
+add_library(smolvla_rmsnorm STATIC mlx_smolvla/native/rmsnorm.cpp)
 target_include_directories(smolvla_rmsnorm PUBLIC "${CMAKE_CURRENT_LIST_DIR}")
 target_link_libraries(smolvla_rmsnorm PUBLIC mlx)
 if(CMAKE_CXX_COMPILER_ID MATCHES "AppleClang|Clang")
@@ -40,5 +40,5 @@ nanobind_add_module(
   NOMINSIZE
   NB_DOMAIN
   mlx
-  smolvla_mlx/native/bindings.cpp)
+  mlx_smolvla/native/bindings.cpp)
 target_link_libraries(_rmsnorm_native PRIVATE smolvla_rmsnorm mlx)

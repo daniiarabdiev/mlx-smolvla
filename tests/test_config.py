@@ -5,7 +5,7 @@ import pytest
 
 
 def test_config_matches_audited_checkpoint(checkpoint_dir: Path) -> None:
-    from smolvla_mlx.config import SmolVLAConfig
+    from mlx_smolvla.config import SmolVLAConfig
 
     config = SmolVLAConfig.from_pretrained_files(checkpoint_dir)
 
@@ -41,7 +41,7 @@ def test_architecture_mismatch_reports_checkpoint_input_contract(
     tmp_path: Path,
     checkpoint_dir: Path,
 ) -> None:
-    from smolvla_mlx.config import SmolVLAConfig
+    from mlx_smolvla.config import SmolVLAConfig
 
     raw = json.loads((checkpoint_dir / "config.json").read_text(encoding="utf-8"))
     raw["max_action_dim"] = 64

@@ -2,12 +2,12 @@
 
 from __future__ import annotations
 
-from smolvla_mlx.benchmark import BenchmarkResult, TimingSummary
-from smolvla_mlx.production_evidence import (
+from mlx_smolvla.benchmark import BenchmarkResult, TimingSummary
+from mlx_smolvla.production_evidence import (
     DeterministicDtypeEvidence,
     ProductionDeterministicEvidence,
 )
-from smolvla_mlx.statistical import StatisticalResult
+from mlx_smolvla.statistical import StatisticalResult
 
 
 def test_benchmark_result_has_required_metrics_and_excludes_warmups() -> None:

@@ -13,13 +13,14 @@ from typing import Mapping
 import mlx.core as mx
 import numpy as np
 
-from smolvla_mlx.benchmark import run_benchmark
-from smolvla_mlx.cache import resolve_cache_dir
-from smolvla_mlx.policy import SmolVLAMLX
+from mlx_smolvla.benchmark import run_benchmark
+from mlx_smolvla.cache import resolve_cache_dir
+from mlx_smolvla.doctor import collect_doctor_report
+from mlx_smolvla.policy import SmolVLAMLX
 
 
 def _parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(prog="smolvla-mlx", description="Native MLX inference for SmolVLA.")
+    parser = argparse.ArgumentParser(prog="mlx-smolvla", description="Native MLX inference for SmolVLA.")
     subcommands = parser.add_subparsers(dest="command", required=True)
 
     convert = subcommands.add_parser("convert", help="download/open and strictly convert a checkpoint")
@@ -132,12 +133,19 @@ def _parser() -> argparse.ArgumentParser:
     train.add_argument(
         "--native-cache",
         type=Path,
-        default=Path(".cache/smolvla_mlx/policy-float32"),
+        default=Path(".cache/mlx_smolvla/policy-float32"),
     )
     train.add_argument("--rank", type=int, default=8)
     train.add_argument("--alpha", type=float, default=16.0)
     train.add_argument("--dropout", type=float, default=0.0)
     train.set_defaults(handler=_train)
+
+    doctor = subcommands.add_parser(
+        "doctor",
+        help="print environment, extras, cache, Metal, and compatibility diagnostics",
+    )
+    doctor.add_argument("--cache-dir", type=Path)
+    doctor.set_defaults(handler=_doctor)
     return parser
 
 
@@ -188,6 +196,11 @@ def _test(args: argparse.Namespace) -> int:
         returncode=completed.returncode,
     )
     return completed.returncode
+
+
+def _doctor(args: argparse.Namespace) -> int:
+    _emit(**collect_doctor_report(cache_dir=args.cache_dir).as_dict())
+    return 0
 
 
 def _saved_observation(sample_root: Path, metadata_path: Path) -> Mapping[str, object]:
@@ -333,7 +346,7 @@ def _serve(args: argparse.Namespace) -> int:
     if sys.version_info < (3, 12):
         raise RuntimeError("serve requires Python 3.12+ and the optional .[serve] dependencies")
     try:
-        from smolvla_mlx.server import ServeConfig, serve_forever
+        from mlx_smolvla.server import ServeConfig, serve_forever
     except ImportError as error:
         raise RuntimeError(
             "serve dependencies are unavailable; install this package with `pip install '.[serve]'`"
@@ -412,7 +425,7 @@ def main(argv: list[str] | None = None) -> int:
     try:
         return int(args.handler(args))
     except (FileNotFoundError, RuntimeError, ValueError) as error:
-        print(f"smolvla-mlx: {error}", file=sys.stderr)
+        print(f"mlx-smolvla: {error}", file=sys.stderr)
         return 2
 
 

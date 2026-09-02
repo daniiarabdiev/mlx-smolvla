@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import json
+from pathlib import Path
 import subprocess
 import sys
 
@@ -11,19 +13,42 @@ import pytest
 
 def test_cli_exposes_required_commands() -> None:
     completed = subprocess.run(
-        [sys.executable, "-m", "smolvla_mlx.cli", "--help"],
+        [sys.executable, "-m", "mlx_smolvla.cli", "--help"],
         check=False,
         capture_output=True,
         text=True,
     )
 
     assert completed.returncode == 0, completed.stderr
-    for command in ("convert", "test", "bench", "predict", "serve", "train"):
+    for command in ("convert", "test", "bench", "predict", "serve", "train", "doctor"):
         assert command in completed.stdout
 
 
+def test_doctor_command_prints_a_complete_json_report(tmp_path: Path) -> None:
+    completed = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "mlx_smolvla.cli",
+            "doctor",
+            "--cache-dir",
+            str(tmp_path),
+        ],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+
+    assert completed.returncode == 0, completed.stderr
+    report = json.loads(completed.stdout)
+    assert report["cache_path"] == str(tmp_path.resolve())
+    assert report["package_version"]
+    assert report["mlx_version"]
+    assert report["compatibility"]["message"]
+
+
 def test_predict_requires_exactly_one_observation_source() -> None:
-    from smolvla_mlx.cli import _parser
+    from mlx_smolvla.cli import _parser
 
     parser = _parser()
     with pytest.raises(SystemExit):
@@ -57,7 +82,7 @@ def test_predict_requires_exactly_one_observation_source() -> None:
 
 
 def test_serve_parser_defaults_to_safe_local_production() -> None:
-    from smolvla_mlx.cli import _parser
+    from mlx_smolvla.cli import _parser
 
     args = _parser().parse_args(["serve"])
     assert args.host == "127.0.0.1"
@@ -82,7 +107,7 @@ def test_serve_parser_defaults_to_safe_local_production() -> None:
 
 
 def test_saved_observation_loads_arrays_and_matching_task(tmp_path) -> None:
-    from smolvla_mlx.cli import _saved_observation
+    from mlx_smolvla.cli import _saved_observation
 
     sample = tmp_path / "sample_007"
     raw = sample / "raw"

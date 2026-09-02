@@ -13,9 +13,9 @@ from dataclasses import dataclass
 import mlx.core as mx
 import mlx.nn as nn
 
-from smolvla_mlx.language import _apply_reference_rope
-from smolvla_mlx.rmsnorm import ReferenceRMSNorm, reference_silu, reference_softmax
-from smolvla_mlx.types import PrefixCache
+from mlx_smolvla.language import _apply_reference_rope
+from mlx_smolvla.rmsnorm import ReferenceRMSNorm, reference_silu, reference_softmax
+from mlx_smolvla.types import PrefixCache
 
 
 _ACTION_DIM = 32

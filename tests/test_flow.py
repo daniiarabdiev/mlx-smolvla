@@ -6,7 +6,7 @@ import mlx.core as mx
 import numpy as np
 import pytest
 
-from smolvla_mlx.flow import euler_sample, euler_step, timestep_schedule
+from mlx_smolvla.flow import euler_sample, euler_step, timestep_schedule
 from tests.test_expert import _assert_error, expert_parts, prefix_cache
 
 

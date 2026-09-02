@@ -7,7 +7,7 @@ import argparse
 import logging
 from pathlib import Path
 
-from smolvla_mlx.server import ServeConfig, serve_forever
+from mlx_smolvla.server import ServeConfig, serve_forever
 
 
 def _parser() -> argparse.ArgumentParser:

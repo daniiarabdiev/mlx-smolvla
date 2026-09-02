@@ -41,9 +41,9 @@ def test_pure_cpu_primitives_have_finite_nonzero_vjps() -> None:
 
 
 def _runtime_callables() -> dict[str, object]:
-    rms = __import__("smolvla_mlx.rmsnorm", fromlist=["ReferenceRMSNorm"])
-    language = __import__("smolvla_mlx.language", fromlist=["reference_rope"])
-    expert = __import__("smolvla_mlx.expert", fromlist=["reference_softmax"])
+    rms = __import__("mlx_smolvla.rmsnorm", fromlist=["ReferenceRMSNorm"])
+    language = __import__("mlx_smolvla.language", fromlist=["reference_rope"])
+    expert = __import__("mlx_smolvla.expert", fromlist=["reference_softmax"])
     return {
         "norm_call": rms.ReferenceRMSNorm.__call__,
         "rms_rope": rms.reference_rope,

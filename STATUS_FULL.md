@@ -373,3 +373,19 @@ Training evidence is intentionally ignored by Git and has not been uploaded.
 - The release brief and T3B amendment are committed. Full-scope software
   execution is complete; only the separately gated supervised hardware
   validation remains for an operator-present session.
+## 2026-09-02 public-release continuation
+
+- **Canonical identity migration:** software complete — distribution and CLI
+  `mlx-smolvla`, import package `mlx_smolvla`, cache variable
+  `MLX_SMOLVLA_CACHE`, default cache `~/.cache/mlx_smolvla`, and a tested
+  one-release warning shim for `SMOLVLA_MLX_CACHE`. Public documentation and
+  final release artifacts remain in Stage C/D.
+- **Stage B macOS/MLX floor:** complete — official macOS 14 arm64 wheels for
+  MLX 0.32.0–0.32.2 were directly inspected and every version passed strict
+  conversion/goldens, fixed 50-frame statistical gates, installed offline
+  prediction, doctor, and loopback `Ready`. The full suite passes 664/664.
+- **GitHub rename:** blocked externally — the requested new SSH endpoint
+  returns `Repository not found`, so `origin` remains on the working old
+  endpoint pending the exact task in `HUMAN_TASKS.md`.
+- **Hardware Stage A:** blocked by the unchanged live authorization gate; no
+  device or vendor-tree access occurred.

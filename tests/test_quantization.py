@@ -51,7 +51,7 @@ def _sample_errors(candidate_offset: float) -> list[dict[str, object]]:
 
 
 def _document() -> dict[str, object]:
-    from smolvla_mlx.quantization import (
+    from mlx_smolvla.quantization import (
         QuantizationAccuracy,
         QuantizationLatency,
         QuantizationProtocol,
@@ -112,9 +112,9 @@ def _document() -> dict[str, object]:
             "sha256": {
                 "scripts/benchmark_inference_comparison.py": "d" * 64,
                 "scripts/experiment_quantization.py": "e" * 64,
-                "smolvla_mlx/benchmark.py": "f" * 64,
-                "smolvla_mlx/policy.py": "1" * 64,
-                "smolvla_mlx/quantization.py": "2" * 64,
+                "mlx_smolvla/benchmark.py": "f" * 64,
+                "mlx_smolvla/policy.py": "1" * 64,
+                "mlx_smolvla/quantization.py": "2" * 64,
             },
         },
         "variants": variants,
@@ -123,7 +123,7 @@ def _document() -> dict[str, object]:
 
 
 def test_quantization_protocol_freezes_scope_gate_and_measurements() -> None:
-    from smolvla_mlx.quantization import QuantizationProtocol
+    from mlx_smolvla.quantization import QuantizationProtocol
 
     protocol = QuantizationProtocol()
     assert protocol.variants == ("dense-bf16", "vlm-8bit", "vlm-4bit")
@@ -139,7 +139,7 @@ def test_quantization_protocol_freezes_scope_gate_and_measurements() -> None:
 
 
 def test_expected_real_topology_is_vlm_linear_only() -> None:
-    from smolvla_mlx.quantization import (
+    from mlx_smolvla.quantization import (
         EXPECTED_QUANTIZED_SCALARS,
         expected_vlm_linear_paths,
     )
@@ -155,7 +155,7 @@ def test_expected_real_topology_is_vlm_linear_only() -> None:
 
 @pytest.mark.parametrize("bits", (8, 4))
 def test_quantize_vlm_linears_targets_only_connector_and_language(bits: int) -> None:
-    from smolvla_mlx.quantization import quantize_vlm_linears
+    from mlx_smolvla.quantization import quantize_vlm_linears
 
     policy = _ToyPolicy()
     manifest = quantize_vlm_linears(policy, bits=bits)
@@ -171,7 +171,7 @@ def test_quantize_vlm_linears_targets_only_connector_and_language(bits: int) -> 
 
 
 def test_quantization_rejects_ineligible_vlm_width_before_mutation() -> None:
-    from smolvla_mlx.quantization import quantize_vlm_linears
+    from mlx_smolvla.quantization import quantize_vlm_linears
 
     policy = _ToyPolicy(vlm_input_dims=63)
     with pytest.raises(ValueError, match="group size"):
@@ -188,12 +188,12 @@ def test_public_policy_opt_in_applies_exact_real_checkpoint_topology(
     preset: str,
     bits: int,
 ) -> None:
-    from smolvla_mlx.policy import SmolVLAMLX
-    from smolvla_mlx.quantization import expected_topology_manifest
+    from mlx_smolvla.policy import SmolVLAMLX
+    from mlx_smolvla.quantization import expected_topology_manifest
 
     policy = SmolVLAMLX.from_pretrained(
         checkpoint_dir,
-        cache_dir=Path(".cache/smolvla_mlx/quantization-public-api"),
+        cache_dir=Path(".cache/mlx_smolvla/quantization-public-api"),
         tokenizer_dir=base_vlm_dir,
         dtype="bfloat16",
         execution_mode="production",
@@ -208,7 +208,7 @@ def test_public_policy_opt_in_applies_exact_real_checkpoint_topology(
 
 
 def test_experiment_validator_recomputes_gates_timings_and_decision() -> None:
-    from smolvla_mlx.quantization import validate_quantization_document
+    from mlx_smolvla.quantization import validate_quantization_document
 
     document = _document()
     assert validate_quantization_document(document) == document
@@ -244,7 +244,7 @@ def test_experiment_script_has_isolated_accuracy_and_latency_workers() -> None:
 
 
 def test_committed_quantization_artifact_revalidates_from_raw_evidence() -> None:
-    from smolvla_mlx.quantization import validate_quantization_document
+    from mlx_smolvla.quantization import validate_quantization_document
 
     path = Path("QUANTIZATION_EXPERIMENT.json")
     artifact = json.loads(path.read_text(encoding="utf-8"))

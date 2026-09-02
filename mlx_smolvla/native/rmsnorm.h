@@ -4,7 +4,7 @@
 #include <mlx/stream.h>
 #include <mlx/utils.h>
 
-namespace smolvla_mlx::native {
+namespace mlx_smolvla::native {
 
 namespace mx = mlx::core;
 
@@ -27,4 +27,4 @@ mx::array reference_silu(
     const mx::array& input,
     mx::StreamOrDevice stream_or_device = {});
 
-} // namespace smolvla_mlx::native
+} // namespace mlx_smolvla::native

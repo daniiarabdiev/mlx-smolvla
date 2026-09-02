@@ -220,7 +220,7 @@ def test_training_composition_loads_real_checkpoint_in_bfloat16() -> None:
     model_module = __import__("training.model", fromlist=["SmolVLATrainingModel"])
 
     model = model_module.SmolVLATrainingModel.from_pretrained(
-        cache_dir=Path(".cache/smolvla_mlx/policy-float32"),
+        cache_dir=Path(".cache/mlx_smolvla/policy-float32"),
         dtype=mx.bfloat16,
     )
     parameters = tuple(tree_flatten(model.parameters()))

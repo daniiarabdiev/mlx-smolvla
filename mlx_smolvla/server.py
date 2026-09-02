@@ -39,10 +39,10 @@ from lerobot.configs import FeatureType, PolicyFeature
 from lerobot.transport import services_pb2, services_pb2_grpc
 from lerobot.transport.utils import MAX_MESSAGE_SIZE
 
-from smolvla_mlx.policy import ExecutionMode, QuantizationPreset, SmolVLAMLX
+from mlx_smolvla.policy import ExecutionMode, QuantizationPreset, SmolVLAMLX
 
 
-_LOG = logging.getLogger("smolvla_mlx.server")
+_LOG = logging.getLogger("mlx_smolvla.server")
 _MAX_OBSERVATION_BYTES = 64 * 1024 * 1024
 _CANCELLATION_POLL_SECONDS = 0.05
 

@@ -10,11 +10,11 @@ from typing import TYPE_CHECKING
 import mlx.core as mx
 import numpy as np
 
-from smolvla_mlx.flow import euler_sample
-from smolvla_mlx.language import pad_state_to_width
+from mlx_smolvla.flow import euler_sample
+from mlx_smolvla.language import pad_state_to_width
 
 if TYPE_CHECKING:
-    from smolvla_mlx.policy import SmolVLAMLX
+    from mlx_smolvla.policy import SmolVLAMLX
 
 
 _STAGE_NAMES = ("preprocessing", "vision", "prefix", "expert")

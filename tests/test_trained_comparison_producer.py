@@ -40,11 +40,11 @@ def test_producer_assembles_the_exact_frozen_comparison_schema() -> None:
             "sha256": parity.FROZEN_BASE_REPORT_SHA256,
         },
         "native_conversion_model": {
-            "path": ".cache/smolvla_mlx/converted/model.float32.safetensors",
+            "path": ".cache/mlx_smolvla/converted/model.float32.safetensors",
             "sha256": "a" * 64,
         },
         "native_conversion_name_map": {
-            "path": ".cache/smolvla_mlx/converted/name_map.json",
+            "path": ".cache/mlx_smolvla/converted/name_map.json",
             "sha256": "b" * 64,
         },
         "comparison_implementation": {
@@ -154,7 +154,7 @@ def test_invalid_floor_or_marker_stops_before_any_model_evaluation(
             comparison_path=Path(".cache/training/t3b/comparison.json"),
             outcome_path=Path(".cache/training/t3b/outcome.json"),
             cache_dir=Path(".cache/hf"),
-            native_cache=Path(".cache/smolvla_mlx/policy-float32"),
+            native_cache=Path(".cache/mlx_smolvla/policy-float32"),
             run_dir=Path(".cache/training/t3b"),
             evaluation_dir=Path(".cache/training/t3-evaluation"),
             base_report_path=Path(".cache/training/t3-base-evaluation.json"),

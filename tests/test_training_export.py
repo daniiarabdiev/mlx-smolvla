@@ -15,7 +15,7 @@ import numpy as np
 import pytest
 from safetensors import safe_open
 
-from smolvla_mlx.types import ProcessedObservation
+from mlx_smolvla.types import ProcessedObservation
 
 
 class IdentityBasePreprocessor:
@@ -121,7 +121,7 @@ def standard_export(tmp_path_factory: pytest.TempPathFactory):
         split.train_episodes,
     )
     model = model_module.SmolVLATrainingModel.from_pretrained(
-        cache_dir=Path(".cache/smolvla_mlx/policy-float32"),
+        cache_dir=Path(".cache/mlx_smolvla/policy-float32"),
         dtype=mx.bfloat16,
     )
     output = root / "checkpoint"
@@ -250,7 +250,7 @@ def test_bound_export_validator_reads_one_retained_export_tree(
         split.train_episodes,
     )
     model = model_module.SmolVLATrainingModel.from_pretrained(
-        cache_dir=Path(".cache/smolvla_mlx/policy-float32"),
+        cache_dir=Path(".cache/mlx_smolvla/policy-float32"),
         dtype=mx.bfloat16,
     )
     manifest = json.loads(
@@ -462,7 +462,7 @@ def test_reused_export_model_is_bound_to_current_merged_values(
         expected_metadata=manifest["metadata"],
     )
     model = model_module.SmolVLATrainingModel.from_pretrained(
-        cache_dir=Path(".cache/smolvla_mlx/policy-float32"),
+        cache_dir=Path(".cache/mlx_smolvla/policy-float32"),
         dtype=mx.bfloat16,
     )
     try:

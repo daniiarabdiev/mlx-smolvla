@@ -1,5 +1,5 @@
-#include "smolvla_mlx/native/rmsnorm.h"
-#include "smolvla_mlx/native/rope_prefix_corrections_v2.h"
+#include "mlx_smolvla/native/rmsnorm.h"
+#include "mlx_smolvla/native/rope_prefix_corrections_v2.h"
 
 #include <algorithm>
 #include <array>
@@ -22,7 +22,7 @@
 #include <mlx/ops.h>
 #include <mlx/primitives.h>
 
-namespace smolvla_mlx::native {
+namespace mlx_smolvla::native {
 namespace {
 
 constexpr int64_t kVLMWidth = 960;
@@ -771,4 +771,4 @@ mx::array reference_silu(
       {contiguous_input});
 }
 
-} // namespace smolvla_mlx::native
+} // namespace mlx_smolvla::native

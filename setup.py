@@ -5,7 +5,7 @@ from setuptools import find_packages, setup
 
 
 MACOSX_DEPLOYMENT_TARGET = os.environ.setdefault("MACOSX_DEPLOYMENT_TARGET", "14.0")
-BUILD_NATIVE = os.environ.get("SMOLVLA_MLX_BUILD_NATIVE", "1").lower() not in {
+BUILD_NATIVE = os.environ.get("MLX_SMOLVLA_BUILD_NATIVE", "1").lower() not in {
     "0",
     "false",
     "no",
@@ -13,8 +13,8 @@ BUILD_NATIVE = os.environ.get("SMOLVLA_MLX_BUILD_NATIVE", "1").lower() not in {
 
 PACKAGES = find_packages(
     include=(
-        "smolvla_mlx",
-        "smolvla_mlx.*",
+        "mlx_smolvla",
+        "mlx_smolvla.*",
         "training",
         "training.*",
         "reference",
@@ -23,7 +23,7 @@ PACKAGES = find_packages(
 )
 
 EXT_MODULES = (
-    [extension.CMakeExtension("smolvla_mlx._rmsnorm_native")]
+    [extension.CMakeExtension("mlx_smolvla._rmsnorm_native")]
     if BUILD_NATIVE
     else []
 )
@@ -36,9 +36,9 @@ if __name__ == "__main__":
         cmdclass=CMDCLASS,
         packages=PACKAGES,
         include_package_data=False,
-        package_data={"smolvla_mlx": ["*.so"]} if BUILD_NATIVE else {},
+        package_data={"mlx_smolvla": ["*.so"]} if BUILD_NATIVE else {},
         exclude_package_data=(
-            {} if BUILD_NATIVE else {"smolvla_mlx": ["*.so", "*.dylib"]}
+            {} if BUILD_NATIVE else {"mlx_smolvla": ["*.so", "*.dylib"]}
         ),
         zip_safe=False,
     )

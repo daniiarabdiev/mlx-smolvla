@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+from functools import lru_cache
+from importlib import metadata
+
 import mlx.core as mx
 import mlx.nn as nn
 
@@ -9,10 +12,24 @@ except ImportError:
     _rmsnorm_native = None
 
 
+_NATIVE_EXTENSION_MLX_ABI = "0.32.2"
+
+
+@lru_cache(maxsize=1)
+def _runtime_mlx_version() -> str:
+    try:
+        return metadata.version("mlx")
+    except metadata.PackageNotFoundError:
+        return "not installed"
+
+
 def native_extension_available() -> bool:
     """Return whether exact CPU-reference primitives are installed."""
 
-    return _rmsnorm_native is not None
+    return (
+        _rmsnorm_native is not None
+        and _runtime_mlx_version() == _NATIVE_EXTENSION_MLX_ABI
+    )
 
 
 def cpu_compatibility_backend() -> str:
@@ -59,7 +76,7 @@ def _pure_mlx_rms_norm(
 def reference_rope(states: mx.array, position_ids: mx.array) -> mx.array:
     """Run the CPU RoPE arithmetic order used by the pinned PyTorch reference."""
 
-    if _rmsnorm_native is not None:
+    if native_extension_available():
         return _rmsnorm_native.reference_rope(states, position_ids)
     return _pure_mlx_rope(states, position_ids)
 
@@ -67,7 +84,7 @@ def reference_rope(states: mx.array, position_ids: mx.array) -> mx.array:
 def reference_softmax(input: mx.array) -> mx.array:
     """Run the CPU softmax arithmetic used by the pinned PyTorch reference."""
 
-    if _rmsnorm_native is not None:
+    if native_extension_available():
         return _rmsnorm_native.reference_softmax(input)
     return mx.softmax(input.astype(mx.float32), axis=-1)
 
@@ -75,7 +92,7 @@ def reference_softmax(input: mx.array) -> mx.array:
 def reference_silu(input: mx.array) -> mx.array:
     """Run the CPU SiLU arithmetic used by the pinned PyTorch reference."""
 
-    if _rmsnorm_native is not None:
+    if native_extension_available():
         return _rmsnorm_native.reference_silu(input)
     return nn.silu(input.astype(mx.float32))
 
@@ -94,7 +111,7 @@ class ReferenceRMSNorm(nn.Module):
     def __call__(self, input: mx.array) -> mx.array:
         if mx.default_device() == mx.cpu:
             weight = self.weight.astype(mx.float32)
-            if _rmsnorm_native is not None:
+            if native_extension_available():
                 return _rmsnorm_native.rms_norm(input, weight, self.eps)
             return _pure_mlx_rms_norm(input, weight, self.eps)
         return mx.fast.rms_norm(input, self.weight, self.eps)

@@ -98,9 +98,9 @@ def differentiable_cpu_primitives() -> Iterator[None]:
             raise RuntimeError("differentiable CPU primitives are already active")
         _CPU_PRIMITIVES_ACTIVE = True
 
-        from smolvla_mlx import expert as expert_module
-        from smolvla_mlx import language as language_module
-        from smolvla_mlx import rmsnorm as rms_module
+        from mlx_smolvla import expert as expert_module
+        from mlx_smolvla import language as language_module
+        from mlx_smolvla import rmsnorm as rms_module
 
         replacements = (
             (rms_module.ReferenceRMSNorm, "__call__", _differentiable_rms_norm_call),

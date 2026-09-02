@@ -2523,3 +2523,90 @@
   public-tree hygiene, and the rule that neither the release tag nor the
   `PUBLIC RELEASE READY` line may be produced while a Section 6 blocker
   remains.
+
+## 2026-09-02 — Canonical `mlx-smolvla` rename in progress
+
+- Preserved the operator's normative identity/prior-art amendment as
+  `BRIEF_RENAME.md` and added its mandatory pre-Stage-D sequence to
+  `PLAN_PUBLIC_RELEASE.md`.
+- Read-only PyPI checks returned HTTP 404 for both
+  `https://pypi.org/pypi/mlx-smolvla/json` and
+  `https://pypi.org/simple/mlx-smolvla/` at `2026-09-02T11:48Z`; the name
+  therefore appears unclaimed but is not reserved.
+- The official Hugging Face model API reports
+  `tokimoa/smolvla-mlx` as public, created
+  `2026-07-29T06:04:59.000Z`, commit
+  `ce5e69cfeba236a68c03c1f6403fb91a5af728b9`; these primary-source facts
+  will ground the required README acknowledgement.
+- GitHub's requested endpoint remains unavailable: `git ls-remote
+  git@github.com:daniiarabdiev/mlx-smolvla.git` returned `Repository not
+  found`, while the existing `origin` still resolves `main` to `a77e820`.
+  Per the brief, `origin` remains unchanged and an exact operator task is
+  open; work and checkpoint pushes continue through the existing endpoint.
+- Added seven red-first rename/cache tests and observed all seven fail on the
+  old identity. Used the required `git mv smolvla_mlx mlx_smolvla`, migrated
+  imports and active code/build/test paths, changed the distribution and CLI
+  to `mlx-smolvla`, the default cache to `~/.cache/mlx_smolvla`, and the
+  canonical cache variable to `MLX_SMOLVLA_CACHE`.
+- Implemented the one-release `SMOLVLA_MLX_CACHE` shim with a `FutureWarning`;
+  the new variable wins if both are set, and the warning states when the old
+  value is ignored. Renamed the optional native-build toggle to
+  `MLX_SMOLVLA_BUILD_NATIVE` and rebuilt the editable native extension at the
+  new import path.
+- Focused rename, cache, CLI, doctor/compatibility, distribution, and runtime
+  isolation verification passes **37/37 tests in 11.11 seconds**. Public class
+  names, including `SmolVLAMLX`, are unchanged. No hardware, training, upload,
+  timing benchmark, or frozen evidence payload was touched.
+
+## 2026-09-02 — Stage B compatibility floor complete under the canonical name
+
+- Inspected the exact official CPython 3.12 macOS 14 arm64 `mlx` and
+  `mlx-metal` wheel pairs for MLX 0.32.0, 0.32.1, and 0.32.2. Every downloaded
+  file matched PyPI's SHA-256 metadata. `vtool` reports `minos 14.0` for each
+  release's MLX core extension, `libjaccl.dylib`, and `libmlx.dylib`.
+- Proved why the original host inspection reported a higher floor: this macOS
+  26.6.2 environment selected MLX 0.32.2's specialized macOS 26 wheel pair.
+  Its three installed binary hashes exactly match the official wheel contents,
+  and each reports `minos 26.2`; this does not describe the parallel official
+  macOS 14 wheel family.
+- In isolated MLX 0.32.0, 0.32.1, and 0.32.2 environments, the canonical
+  package passed six conversion tests and all 16 strict end-to-end goldens
+  across fp32 and bf16: **22/22** per version. The repeated times were 21.74,
+  20.63, and 19.10 seconds respectively; these are test durations, not product
+  performance claims.
+- The unchanged 50-frame production evidence passes for all three versions:
+  Torch fp32 MAE `55.783039437383415`, MLX fp32 MAE
+  `55.78303949207068` / ratio `1.0000000009803565`, and MLX bf16 MAE
+  `55.783584668189285` / ratio `1.0000097741322698`, both below the fixed
+  `1.05` ratio gate.
+- Installed the canonical wheel outside the checkout in every candidate
+  environment. Each exposed `mlx_smolvla` with no retired import package,
+  produced a finite six-component action with Hub access forced offline,
+  reported a verified macOS/MLX verdict and Metal default through
+  `mlx-smolvla doctor`, answered an actual LeRobot `Ready` RPC on an ephemeral
+  loopback port, and shut down cleanly. MLX 0.32.0/0.32.1 use the pure-MLX
+  RMSNorm ABI fallback; 0.32.2 uses the native reference extension.
+- The first trial wheel revealed stale pre-rename content in setuptools'
+  generated `build/` tree. It contained both import packages and inherited a
+  macOS 26 tag, so it was rejected and moved to the ignored diagnostic cache.
+  A clean rebuild has SHA-256
+  `d69f71a06c96ead38f54b6b127e14487cfc7b8e4ea3d62bc9435b66e3b8399e3`,
+  tag `cp312-cp312-macosx_14_0_arm64`, 26 canonical package entries, zero
+  legacy package entries, and project-extension `minos 14.0`. A new wheel
+  assertion prevents recurrence.
+- The first renamed full-suite run found only four migration failures: three
+  frozen evidence documents retained their historical source-path keys, and
+  one protected conversion existed only below the old local cache root. The
+  validators now canonicalize the two known package prefixes solely for
+  inventory comparison and return the original documents unchanged. The
+  protected conversion's two files are hard-linked into the new cache root;
+  inode and expected SHA-256 identity both match, so no evidence byte was
+  copied or changed.
+- Added `docs/evidence/MLX_COMPATIBILITY.md` and
+  `docs/evidence/mlx-compatibility.json` with primary sources, exact wheel and
+  binary hashes, fixed-gate outcomes, installed smokes, and the rejected-build
+  diagnosis. The authoritative rerun passes **664/664 tests in 591.91
+  seconds**, with no skips or xfails.
+- No trainer, floor computation, product timing benchmark, robot environment,
+  serial/camera device, hardware, or upload ran. The existing hardware and
+  GitHub-rename operator gates remain open.

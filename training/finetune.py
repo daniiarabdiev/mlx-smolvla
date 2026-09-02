@@ -40,7 +40,7 @@ from reference.discovery import (
     DATASET_ID,
     DATASET_REVISION,
 )
-from smolvla_mlx.types import ProcessedObservation
+from mlx_smolvla.types import ProcessedObservation
 from training.dataset import (
     BridgeBatch,
     SAMPLER_SEED,
@@ -1530,7 +1530,7 @@ class FineTuneConfig:
     """Frozen settings for one measured Stage T3 run."""
 
     cache_dir: Path = Path(".cache/hf")
-    native_cache: Path = Path(".cache/smolvla_mlx/policy-float32")
+    native_cache: Path = Path(".cache/mlx_smolvla/policy-float32")
     output_dir: Path = Path(".cache/training/t3")
     seed: int = SPLIT_SEED
     sampler_seed: int = SAMPLER_SEED
@@ -4571,7 +4571,7 @@ def _validate_t3b_conversion_from_stable_hardlinks(
 ) -> dict[str, object]:
     """Validate BF16 conversion semantics on hard links to captured inodes."""
 
-    from smolvla_mlx.convert import validate_converted_checkpoint
+    from mlx_smolvla.convert import validate_converted_checkpoint
 
     source_path = source_model_path.resolve(strict=True)
     source_before = _snapshot_regular_file(
@@ -6521,19 +6521,19 @@ def finetune_implementation_hashes() -> dict[str, str]:
     _require_t3b_runtime_provenance(allow_unfrozen=True)
     repository_root = Path(__file__).resolve().parents[1]
     relative_paths = (
-        "smolvla_mlx/__init__.py",
-        "smolvla_mlx/cache.py",
-        "smolvla_mlx/config.py",
-        "smolvla_mlx/connector.py",
-        "smolvla_mlx/convert.py",
-        "smolvla_mlx/expert.py",
-        "smolvla_mlx/flow.py",
-        "smolvla_mlx/language.py",
-        "smolvla_mlx/policy.py",
-        "smolvla_mlx/preprocessing.py",
-        "smolvla_mlx/rmsnorm.py",
-        "smolvla_mlx/types.py",
-        "smolvla_mlx/vision.py",
+        "mlx_smolvla/__init__.py",
+        "mlx_smolvla/cache.py",
+        "mlx_smolvla/config.py",
+        "mlx_smolvla/connector.py",
+        "mlx_smolvla/convert.py",
+        "mlx_smolvla/expert.py",
+        "mlx_smolvla/flow.py",
+        "mlx_smolvla/language.py",
+        "mlx_smolvla/policy.py",
+        "mlx_smolvla/preprocessing.py",
+        "mlx_smolvla/rmsnorm.py",
+        "mlx_smolvla/types.py",
+        "mlx_smolvla/vision.py",
         "training/finetune.py",
         "training/lora.py",
         "training/model.py",
@@ -6559,7 +6559,7 @@ def finetune_implementation_hashes() -> dict[str, str]:
             raise FileNotFoundError(f"fine-tune implementation input is unsafe: {relative}")
         result[relative] = _file_sha256(path)
     native_extensions = tuple(
-        sorted((repository_root / "smolvla_mlx").glob("_rmsnorm_native*.so"))
+        sorted((repository_root / "mlx_smolvla").glob("_rmsnorm_native*.so"))
     )
     if len(native_extensions) != 1:
         raise FileNotFoundError(
@@ -6587,7 +6587,7 @@ def finetune_implementation_hashes() -> dict[str, str]:
     import pyarrow  # noqa: F401
     import pyarrow.parquet  # noqa: F401
     import safetensors.torch  # noqa: F401
-    import smolvla_mlx.convert  # noqa: F401
+    import mlx_smolvla.convert  # noqa: F401
     import torch  # noqa: F401
     import torch.utils.data._utils.collate  # noqa: F401
     import training.evaluation  # noqa: F401

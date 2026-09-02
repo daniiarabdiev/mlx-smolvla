@@ -785,7 +785,7 @@ def test_native_conversion_is_cryptographically_bound_to_the_validated_export() 
         fromlist=["_validate_native_conversion_for_export"],
     )
     converted_path = Path(
-        ".cache/smolvla_mlx/policy-float32/converted/"
+        ".cache/mlx_smolvla/policy-float32/converted/"
         "b607b2937c1abf79/float32/model.float32.safetensors"
     )
 

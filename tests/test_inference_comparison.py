@@ -48,8 +48,8 @@ def _document() -> dict[str, object]:
                 "reference/benchmark.py": "e" * 64,
                 "reference/policy.py": "e" * 64,
                 "scripts/benchmark_inference_comparison.py": "f" * 64,
-                "smolvla_mlx/benchmark.py": "e" * 64,
-                "smolvla_mlx/policy.py": "e" * 64,
+                "mlx_smolvla/benchmark.py": "e" * 64,
+                "mlx_smolvla/policy.py": "e" * 64,
             },
         },
         "engines": [

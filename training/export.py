@@ -30,7 +30,7 @@ from reference.discovery import (
     CHECKPOINT_ID,
     CHECKPOINT_REVISION,
 )
-from smolvla_mlx.convert import source_tensor_names, target_name_for_source
+from mlx_smolvla.convert import source_tensor_names, target_name_for_source
 from training.gradients import canonical_parameter_name
 
 

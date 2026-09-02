@@ -30,7 +30,7 @@ from scripts.benchmark_inference_comparison import (
     _system_value,
     _tracked_worktree_is_clean,
 )
-from smolvla_mlx.profile import (
+from mlx_smolvla.profile import (
     ProfileProtocol,
     collect_dtype_profile,
     derive_dtype_analysis,
@@ -43,15 +43,15 @@ _MINIMUM_FREE_BYTES = 40 * 1024**3
 _SOURCE_FILES = (
     "scripts/benchmark_inference_comparison.py",
     "scripts/profile_inference_dtypes.py",
-    "smolvla_mlx/benchmark.py",
-    "smolvla_mlx/policy.py",
-    "smolvla_mlx/profile.py",
+    "mlx_smolvla/benchmark.py",
+    "mlx_smolvla/policy.py",
+    "mlx_smolvla/profile.py",
 )
 
 
 def _parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--native-cache", type=Path, default=Path(".cache/smolvla_mlx"))
+    parser.add_argument("--native-cache", type=Path, default=Path(".cache/mlx_smolvla"))
     parser.add_argument("--sample-root", type=Path, default=Path("tests/golden/sample_000"))
     parser.add_argument("--metadata", type=Path, default=Path("tests/golden/metadata.json"))
     parser.add_argument("--output", type=Path, default=Path("BF16_PROFILE.json"))
@@ -67,7 +67,7 @@ def _worker(args: argparse.Namespace) -> int:
     import mlx.core as mx
     import numpy as np
 
-    from smolvla_mlx.policy import SmolVLAMLX
+    from mlx_smolvla.policy import SmolVLAMLX
 
     policy = SmolVLAMLX.from_pretrained(
         CHECKPOINT_ID,

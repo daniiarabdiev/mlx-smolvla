@@ -11,8 +11,8 @@ import mlx.core as mx
 import numpy as np
 from tokenizers import Tokenizer
 
-from smolvla_mlx.config import SmolVLAConfig
-from smolvla_mlx.types import ProcessedObservation
+from mlx_smolvla.config import SmolVLAConfig
+from mlx_smolvla.types import ProcessedObservation
 
 
 _PREPROCESSOR_STATE = "policy_preprocessor_step_5_normalizer_processor.safetensors"

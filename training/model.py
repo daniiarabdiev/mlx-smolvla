@@ -8,11 +8,11 @@ from pathlib import Path
 import mlx.core as mx
 import mlx.nn as nn
 
-from smolvla_mlx.connector import Connector
-from smolvla_mlx.expert import ActionExpert
-from smolvla_mlx.language import TruncatedLanguageModel, pad_state_to_width
-from smolvla_mlx.types import ProcessedObservation
-from smolvla_mlx.vision import VisionEncoder
+from mlx_smolvla.connector import Connector
+from mlx_smolvla.expert import ActionExpert
+from mlx_smolvla.language import TruncatedLanguageModel, pad_state_to_width
+from mlx_smolvla.types import ProcessedObservation
+from mlx_smolvla.vision import VisionEncoder
 from training.objective import flow_matching_inputs, masked_velocity_mse
 
 
@@ -75,7 +75,7 @@ class SmolVLATrainingModel(nn.Module):
 
         if dtype not in (mx.float32, mx.bfloat16, "float32", "bfloat16"):
             raise ValueError("training weights must use float32 or bfloat16 storage")
-        from smolvla_mlx.policy import SmolVLAMLX
+        from mlx_smolvla.policy import SmolVLAMLX
 
         policy = SmolVLAMLX.from_pretrained(
             model_id=model_id,

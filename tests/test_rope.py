@@ -10,7 +10,7 @@ def test_cpu_reference_rope_matches_pytorch_cpu_exactly_for_the_fixed_prefix() -
 
     from lerobot.policies.smolvla.smolvlm_with_expert import apply_rope
 
-    from smolvla_mlx.language import _apply_reference_rope
+    from mlx_smolvla.language import _apply_reference_rope
 
     states = torch.linspace(
         -8.0,

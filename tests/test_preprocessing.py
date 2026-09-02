@@ -33,7 +33,7 @@ def test_preprocessing_matches_reference(
     checkpoint_dir: Path,
     base_vlm_dir: Path,
 ) -> None:
-    from smolvla_mlx.preprocessing import SmolVLAPreprocessor
+    from mlx_smolvla.preprocessing import SmolVLAPreprocessor
 
     preprocessor = SmolVLAPreprocessor.from_pretrained_files(checkpoint_dir, base_vlm_dir)
     actual = preprocessor(golden.observation())
@@ -59,7 +59,7 @@ def test_preprocessing_matches_reference(
 
 
 def test_effective_action_normalization_is_identity(checkpoint_dir: Path, base_vlm_dir: Path) -> None:
-    from smolvla_mlx.preprocessing import SmolVLAPreprocessor
+    from mlx_smolvla.preprocessing import SmolVLAPreprocessor
 
     preprocessor = SmolVLAPreprocessor.from_pretrained_files(checkpoint_dir, base_vlm_dir)
     action = mx.array([[[-1.0, -0.5, 0.0, 0.5, 1.0, 2.0]]], dtype=mx.float32)
@@ -73,7 +73,7 @@ def test_active_mean_std_state_and_action_match_reference_math(
     checkpoint_dir: Path,
     base_vlm_dir: Path,
 ) -> None:
-    from smolvla_mlx.preprocessing import SmolVLAPreprocessor
+    from mlx_smolvla.preprocessing import SmolVLAPreprocessor
 
     active = _stats_active_checkpoint(tmp_path, checkpoint_dir)
     preprocessor = SmolVLAPreprocessor.from_pretrained_files(active, base_vlm_dir)
@@ -111,7 +111,7 @@ def test_active_stats_reject_wrong_checkpoint_shape(
     checkpoint_dir: Path,
     base_vlm_dir: Path,
 ) -> None:
-    from smolvla_mlx.preprocessing import SmolVLAPreprocessor
+    from mlx_smolvla.preprocessing import SmolVLAPreprocessor
 
     active = _stats_active_checkpoint(tmp_path, checkpoint_dir)
     mx.save_safetensors(
@@ -132,7 +132,7 @@ def test_missing_observation_keys_name_checkpoint_contract(
     checkpoint_dir: Path,
     base_vlm_dir: Path,
 ) -> None:
-    from smolvla_mlx.preprocessing import SmolVLAPreprocessor
+    from mlx_smolvla.preprocessing import SmolVLAPreprocessor
 
     preprocessor = SmolVLAPreprocessor.from_pretrained_files(checkpoint_dir, base_vlm_dir)
     with pytest.raises(ValueError) as missing_camera:
@@ -165,7 +165,7 @@ def test_reference_three_camera_slot_uses_each_present_stream_and_no_implicit_pa
 ) -> None:
     from lerobot.policies.factory import make_pre_post_processors
     from lerobot.policies.smolvla.configuration_smolvla import SmolVLAConfig as TorchConfig
-    from smolvla_mlx.preprocessing import SmolVLAPreprocessor
+    from mlx_smolvla.preprocessing import SmolVLAPreprocessor
     import torch
 
     torch_config = TorchConfig.from_pretrained(checkpoint_dir)

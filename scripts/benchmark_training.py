@@ -31,7 +31,7 @@ _PROHIBITED_PROCESS_PATTERNS = (
     "floor_runtime",
     "make_training_goldens",
     "make_lora_evaluation",
-    "smolvla-mlx train",
+    "mlx-smolvla train",
     "pytest",
     "make test",
 )
@@ -117,7 +117,7 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--native-cache",
         type=Path,
-        default=Path(".cache/smolvla_mlx/policy-float32"),
+        default=Path(".cache/mlx_smolvla/policy-float32"),
     )
     return parser
 

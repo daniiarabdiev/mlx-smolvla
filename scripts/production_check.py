@@ -23,8 +23,8 @@ import mlx.core as mx
 import numpy as np
 
 from reference.goldens import GoldenStore
-from smolvla_mlx.policy import SmolVLAMLX
-from smolvla_mlx.production_evidence import ProductionDeterministicEvidence
+from mlx_smolvla.policy import SmolVLAMLX
+from mlx_smolvla.production_evidence import ProductionDeterministicEvidence
 
 
 _CHECKPOINT_FILES = (
@@ -46,7 +46,7 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--native-cache",
         type=Path,
-        default=Path(".cache/smolvla_mlx/production-evidence"),
+        default=Path(".cache/mlx_smolvla/production-evidence"),
     )
     parser.add_argument(
         "--output",
