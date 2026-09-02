@@ -2219,3 +2219,22 @@
   seconds**. No upload, hardware, robot directory, or serial port was used. The
   original T3 failure remains byte-identical at SHA-256
   `d6654131c4acf86de13206f210f1ea1a82e3aad18871e5b64428bdf1dbeed7c6`.
+
+## 2026-09-02 — Stage Q P2-1 comparative protocol frozen before timing
+
+- Added an initially red five-test contract for the first quality package,
+  then implemented the minimum protocol and coordinator needed to make it
+  green. Focused comparison/reference/benchmark/import-isolation coverage now
+  passes **12/12 in 17.75 seconds**.
+- The immutable comparison is the pinned base checkpoint and saved
+  `sample_000` observation/noise, fp32 on both engines, 5 excluded warmups and
+  50 synchronized measured chunks. Both standalone workers measure the same
+  preprocessing-through-normalized-action-chunk boundary. The PyTorch worker
+  clears inherited MPS switches and enables only fallback before importing
+  Torch or LeRobot.
+- The coordinator refuses a dirty tracked tree, less than 40 GiB free, a
+  competing trainer/floor/test/benchmark process, output overwrite, incomplete
+  input, or an output outside the repository. The machine-readable result will
+  retain every raw timing, recompute medians/p95/rates, bind input and source
+  hashes, and record environment and idle evidence. This source checkpoint is
+  intentionally committed before running `make inference-comparison`.

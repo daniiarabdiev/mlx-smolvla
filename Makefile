@@ -4,7 +4,7 @@ export SMOLVLA_MLX_CACHE := $(CURDIR)/.cache/smolvla_mlx
 
 TESTS ?= tests
 
-.PHONY: goldens test bench production-evidence cache-inventory clean-cache clean-cache-dry-run training-audit training-goldens training-parity optimizer-goldens optimizer-lockstep lora-benchmark lora-evaluation lora-finetune lora-finetune-resume lora-finetune-check training-resume-lora training-resume-full training-benchmark
+.PHONY: goldens test bench inference-comparison production-evidence cache-inventory clean-cache clean-cache-dry-run training-audit training-goldens training-parity optimizer-goldens optimizer-lockstep lora-benchmark lora-evaluation lora-finetune lora-finetune-resume lora-finetune-check training-resume-lora training-resume-full training-benchmark
 
 goldens:
 	uv run --extra reference python scripts/make_goldens.py --cache-dir $(HF_HOME) --output tests/golden
@@ -17,6 +17,9 @@ test:
 
 bench:
 	uv run python scripts/bench.py
+
+inference-comparison:
+	uv run --extra reference python scripts/benchmark_inference_comparison.py --reference-cache $(HF_HOME) --native-cache $(SMOLVLA_MLX_CACHE) --output $(CURDIR)/INFERENCE_COMPARISON.json
 
 production-evidence:
 	uv run --extra reference python scripts/production_check.py --output $(CURDIR)/.cache/production-deterministic.json

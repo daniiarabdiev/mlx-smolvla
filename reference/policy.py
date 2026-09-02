@@ -126,8 +126,14 @@ class ReferencePolicy:
         cache_dir: Path,
         *,
         checkpoint_dir: Path | None = None,
+        device: str = "cpu",
     ) -> "ReferencePolicy":
-        """Load the pinned or a matching local checkpoint on CPU in fp32."""
+        """Load a pinned/matching checkpoint in fp32; CPU remains the default."""
+
+        if device not in {"cpu", "mps"}:
+            raise ValueError("reference device must be 'cpu' or 'mps'")
+        if device == "mps" and not torch.backends.mps.is_available():
+            raise RuntimeError("PyTorch MPS is not available on this machine")
 
         vlm_snapshot = Path(
             snapshot_download(
@@ -147,7 +153,7 @@ class ReferencePolicy:
             revision=pretrained_revision,
             cache_dir=cache_dir,
         )
-        config.device = "cpu"
+        config.device = device
         config.load_vlm_weights = False
         config.push_to_hub = False
         config.vlm_model_name = str(vlm_snapshot)
@@ -158,14 +164,14 @@ class ReferencePolicy:
             config=config,
             strict=True,
         )
-        policy.to(device="cpu", dtype=torch.float32)
+        policy.to(device=device, dtype=torch.float32)
         policy.eval()
         preprocessor, postprocessor = make_pre_post_processors(
             config,
             pretrained_path=pretrained_path,
             pretrained_revision=pretrained_revision,
             preprocessor_overrides={
-                "device_processor": {"device": "cpu"},
+                "device_processor": {"device": device},
                 "tokenizer_processor": {"tokenizer_name": str(vlm_snapshot)},
             },
         )
