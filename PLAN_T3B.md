@@ -212,11 +212,10 @@ P1-4, Stage Q, or any command that reports performance timing.
 
 ### Task 4.2 — P0-2: stats-active conversion and loading
 
-**Status:** metadata discovery is complete. The selected public third target is
-`soonweihong0857/swhfypv3_smolvla_multitask_model` at revision
-`5e2491c809ec892427f54db1eb23bf8c4bbbf770`; source changes and large artifact
-downloads wait until T3B is absent because the running process revalidates its
-implementation bytes before export.
+**Status:** Complete. Dependency-light active mean/std loading, base identity
+preservation, checkpoint-derived diagnostics, observed camera-slot behavior,
+the synthetic stats-active target, and the pinned public fine-tune all pass the
+unchanged deterministic and 50-frame statistical gates in fp32 and bf16.
 
 - Place the true dataset statistics in the designated reference artifact tree and
   hash their provenance.

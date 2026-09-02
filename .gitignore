@@ -9,6 +9,9 @@ __pycache__/
 build/
 dist/
 tests/golden/
+tests/golden-stats-active/
+tests/golden-public-finetune/
+reference/artifacts/
 *.npy
 *.safetensors
 smolvla_mlx/*.so

@@ -15,6 +15,39 @@ from smolvla_mlx.config import SmolVLAConfig
 from smolvla_mlx.types import ProcessedObservation
 
 
+_PREPROCESSOR_STATE = "policy_preprocessor_step_5_normalizer_processor.safetensors"
+_POSTPROCESSOR_STATE = "policy_postprocessor_step_0_unnormalizer_processor.safetensors"
+_NORMALIZATION_EPSILON = 1e-8
+
+
+def _mean_std(
+    path: Path,
+    *,
+    key: str,
+    expected_shape: tuple[int, ...],
+) -> tuple[mx.array, mx.array]:
+    if not path.is_file():
+        raise FileNotFoundError(f"Active {key} normalization requires {path}")
+    tensors = mx.load(str(path))
+    names = (f"{key}.mean", f"{key}.std")
+    missing = [name for name in names if name not in tensors]
+    if missing:
+        raise ValueError(f"Active {key} normalization is missing {missing} in {path.name}")
+    values = []
+    for name in names:
+        value = tensors[name].astype(mx.float32)
+        mx.eval(value)
+        if tuple(value.shape) != expected_shape:
+            raise ValueError(f"{name} must have checkpoint shape {expected_shape}, got {value.shape}")
+        array = np.asarray(value)
+        if not np.isfinite(array).all():
+            raise ValueError(f"{name} contains non-finite values")
+        values.append(value)
+    if bool(mx.any(values[1] < 0)):
+        raise ValueError(f"{key}.std contains negative values")
+    return values[0], values[1]
+
+
 def _as_float_chw(value: object, key: str) -> np.ndarray:
     array = np.asarray(value)
     if array.ndim != 3:
@@ -103,6 +136,11 @@ class SmolVLAPreprocessor:
     config: SmolVLAConfig
     tokenizer: Tokenizer
     pad_token_id: int
+    state_mean: mx.array | None = None
+    state_std: mx.array | None = None
+    action_mean: mx.array | None = None
+    action_std: mx.array | None = None
+    normalization_epsilon: float = _NORMALIZATION_EPSILON
 
     @classmethod
     def from_pretrained_files(
@@ -115,7 +153,40 @@ class SmolVLAPreprocessor:
         if not tokenizer_path.is_file():
             raise FileNotFoundError(f"Tokenizer not found at {tokenizer_path}")
         tokenizer = Tokenizer.from_file(str(tokenizer_path))
-        return cls(config=config, tokenizer=tokenizer, pad_token_id=_pad_id(tokenizer, tokenizer_dir))
+        state_mean = state_std = None
+        if config.state_normalization == "mean_std":
+            state_mean, state_std = _mean_std(
+                checkpoint_dir / _PREPROCESSOR_STATE,
+                key="observation.state",
+                expected_shape=config.state_shape,
+            )
+        action_mean = action_std = None
+        if config.action_normalization == "mean_std":
+            action_mean, action_std = _mean_std(
+                checkpoint_dir / _POSTPROCESSOR_STATE,
+                key="action",
+                expected_shape=config.action_shape,
+            )
+            preprocessor_stats = checkpoint_dir / _PREPROCESSOR_STATE
+            if preprocessor_stats.is_file():
+                pre_mean, pre_std = _mean_std(
+                    preprocessor_stats,
+                    key="action",
+                    expected_shape=config.action_shape,
+                )
+                if not bool(mx.array_equal(action_mean, pre_mean)) or not bool(
+                    mx.array_equal(action_std, pre_std)
+                ):
+                    raise ValueError("Saved action normalization statistics disagree between pre/post processors")
+        return cls(
+            config=config,
+            tokenizer=tokenizer,
+            pad_token_id=_pad_id(tokenizer, tokenizer_dir),
+            state_mean=state_mean,
+            state_std=state_std,
+            action_mean=action_mean,
+            action_std=action_std,
+        )
 
     def _tokenize(self, task: object) -> tuple[np.ndarray, np.ndarray]:
         if not isinstance(task, str) or not task:
@@ -130,18 +201,27 @@ class SmolVLAPreprocessor:
         return input_ids, attention_mask
 
     def _state(self, value: object) -> np.ndarray:
+        if value is None:
+            raise ValueError(
+                f"Missing observation.state; checkpoint expects {self.config.input_contract}"
+            )
         state = np.asarray(value, dtype=np.float32)
         if state.ndim != 1 or state.shape[0] != self.config.state_dim:
             raise ValueError(f"observation.state must have shape ({self.config.state_dim},), got {state.shape}")
         if not np.isfinite(state).all():
             raise ValueError("observation.state contains non-finite values")
-        # The saved processor's statistics do not match observation.state for this checkpoint.
+        if self.state_mean is not None and self.state_std is not None:
+            state = (
+                state - np.asarray(self.state_mean)
+            ) / (np.asarray(self.state_std) + np.float32(self.normalization_epsilon))
         return state.reshape(1, -1)
 
     def __call__(self, observation: Mapping[str, object]) -> ProcessedObservation:
         present_keys = [key for key in self.config.image_keys if key in observation]
         if not present_keys:
-            raise ValueError(f"At least one configured camera is required; expected one of {self.config.image_keys}")
+            raise ValueError(
+                f"Missing configured camera; checkpoint expects {self.config.input_contract}"
+            )
         width, height = self.config.image_size
         images = [
             resize_with_top_left_padding(_as_float_chw(observation[key], key), height=height, width=width)
@@ -163,11 +243,17 @@ class SmolVLAPreprocessor:
         )
 
     def normalize_actions(self, actions: mx.array) -> mx.array:
-        """The pinned checkpoint's saved action stats do not match the `action` key."""
+        """Apply the checkpoint's effective action normalization."""
 
+        if self.action_mean is not None and self.action_std is not None:
+            return (actions.astype(mx.float32) - self.action_mean) / (
+                self.action_std + self.normalization_epsilon
+            )
         return actions
 
     def unnormalize_actions(self, actions: mx.array) -> mx.array:
-        """Mirror the reference postprocessor's effective identity transform."""
+        """Apply the checkpoint's effective action un-normalization."""
 
+        if self.action_mean is not None and self.action_std is not None:
+            return actions.astype(mx.float32) * self.action_std + self.action_mean
         return actions

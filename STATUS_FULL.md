@@ -108,11 +108,19 @@ all-56-case comparison measured normalized max absolute
 The post-verdict focused suite passes **132/132 in 17.89 seconds**, and the
 complete repository passes **544/544 in 482.16 seconds**.
 
+Stage R P0-2 is complete. The base checkpoint retains effective identity
+normalization; a pinned base-plus-real-dataset-stats variant and a pinned public
+multitask fine-tune both pass all eight deterministic cases and the 50-frame
+statistical gate in fp32 and bf16 at unchanged tolerances. The public target's
+MLX/reference MAE ratios are `1.0000005749451057` / `0.996050278176297`; its
+checkpoint-derived camera keys are `wrist_camera` and `top_camera`. The exact
+P0-2 tree passes **567/567 tests in 519.76 seconds**.
+
 ## Stage state
 
 | Stage | State | Evidence / next action |
 | --- | --- | --- |
-| R — Release | P0-1 implemented; safe audits active during T3B | Origin mirrors the canonical pushed history; canonical Apache-2.0 `LICENSE` and existing third-party `NOTICE` are linked and packaged. P0-2 has a revision-pinned public stats-active target, P0-3 has a read-only cache baseline, and P1-2/P1-3 have static gap audits. Source changes, cleanup, builds, command validation, and the full suite wait for an idle machine. |
+| R — Release | P0-1 and P0-2 complete | Origin mirrors canonical history; Apache-2.0 `LICENSE` and `NOTICE` are packaged. Base identity behavior, constructed stats-active behavior, and a pinned public multitask fine-tune pass the unchanged fp32/bf16 deterministic and 50-frame statistical gates. P0-3 cache hygiene is next. |
 | T0 — Training-readiness | Complete | 155/155 gradients finite and nonzero over 99,880,992 trainable scalars; 196.799 ms forward+backward and 2,509,594,126-byte peak MLX memory. See `TRAINING_FEASIBILITY.md`. |
 | T1 — Gradient parity | Complete | Identical real batch/draws; loss and all 155 gradients pass immutable gates. See `GRADIENT_PARITY.md`. |
 | T2 — Optimizer lockstep | Complete | 25/25 losses and 155/155 final tensors pass immutable gates. See `OPTIMIZER_LOCKSTEP.md`. |

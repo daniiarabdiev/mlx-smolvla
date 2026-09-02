@@ -8,6 +8,9 @@ TESTS ?= tests
 
 goldens:
 	uv run --extra reference python scripts/make_goldens.py --cache-dir $(HF_HOME) --output tests/golden
+	uv run --extra reference python scripts/make_stats_active_reference.py --cache-dir $(HF_HOME) --dataset-root $(HF_HOME)/datasets/svla_so101_pickplace --output reference/artifacts/stats-active-base
+	uv run --extra reference python scripts/make_goldens.py --cache-dir $(HF_HOME) --checkpoint reference/artifacts/stats-active-base --checkpoint-id lerobot/smolvla_base+svla_so101_pickplace-stats --checkpoint-revision c83c3163b8ca9b7e67c509fffd9121e66cb96205+f641879e22172be7e8161d5e6c1503c2d2feb657 --output tests/golden-stats-active
+	uv run --extra reference python scripts/make_public_finetune_goldens.py --cache-dir $(HF_HOME) --output tests/golden-public-finetune
 
 test:
 	uv run --extra reference pytest $(TESTS)

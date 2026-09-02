@@ -75,6 +75,42 @@ def load_dataset_observation(cache_dir: Path, index: int, episode: int = 0) -> R
     return ReferenceSample(observation=observation, action=item["action"].cpu().float())
 
 
+def load_checkpoint_dataset_observation(
+    *,
+    dataset_id: str,
+    dataset_revision: str,
+    dataset_root: Path,
+    checkpoint_camera_keys: tuple[str, ...],
+    index: int,
+    episode: int,
+    camera_mapping: Mapping[str, str] | None = None,
+) -> ReferenceSample:
+    """Load a frame and map dataset cameras to arbitrary checkpoint feature keys."""
+
+    dataset = LeRobotDataset(
+        dataset_id,
+        root=dataset_root,
+        episodes=[episode],
+        revision=dataset_revision,
+        video_backend="pyav",
+    )
+    if index < 0 or index >= len(dataset):
+        raise IndexError(f"Frame index {index} is outside episode {episode} with {len(dataset)} frames")
+    item = dataset[index]
+    mapping = dict(camera_mapping or {})
+    observation: dict[str, torch.Tensor | str] = {}
+    for checkpoint_key in checkpoint_camera_keys:
+        dataset_key = mapping.get(checkpoint_key, checkpoint_key)
+        if dataset_key not in item:
+            raise KeyError(
+                f"Dataset observation is missing {dataset_key!r} required for checkpoint key {checkpoint_key!r}"
+            )
+        observation[checkpoint_key] = item[dataset_key].cpu().float()
+    observation["observation.state"] = item["observation.state"].cpu().float()
+    observation["task"] = item["task"]
+    return ReferenceSample(observation=observation, action=item["action"].cpu().float())
+
+
 @dataclass(frozen=True)
 class ReferencePolicy:
     """Loaded reference policy with explicit deterministic runtime properties."""
@@ -85,8 +121,13 @@ class ReferencePolicy:
     vlm_snapshot: Path
 
     @classmethod
-    def load(cls, cache_dir: Path) -> "ReferencePolicy":
-        """Load the pinned checkpoint strictly on CPU and upcast it to fp32."""
+    def load(
+        cls,
+        cache_dir: Path,
+        *,
+        checkpoint_dir: Path | None = None,
+    ) -> "ReferencePolicy":
+        """Load the pinned or a matching local checkpoint on CPU in fp32."""
 
         vlm_snapshot = Path(
             snapshot_download(
@@ -96,9 +137,14 @@ class ReferencePolicy:
                 allow_patterns=list(_BASE_VLM_PROCESSOR_FILES),
             )
         )
+        pretrained_path: str | Path = CHECKPOINT_ID
+        pretrained_revision: str | None = CHECKPOINT_REVISION
+        if checkpoint_dir is not None:
+            pretrained_path = checkpoint_dir.resolve()
+            pretrained_revision = None
         config = SmolVLAConfig.from_pretrained(
-            CHECKPOINT_ID,
-            revision=CHECKPOINT_REVISION,
+            pretrained_path,
+            revision=pretrained_revision,
             cache_dir=cache_dir,
         )
         config.device = "cpu"
@@ -106,8 +152,8 @@ class ReferencePolicy:
         config.push_to_hub = False
         config.vlm_model_name = str(vlm_snapshot)
         policy = SmolVLAPolicy.from_pretrained(
-            CHECKPOINT_ID,
-            revision=CHECKPOINT_REVISION,
+            pretrained_path,
+            revision=pretrained_revision,
             cache_dir=cache_dir,
             config=config,
             strict=True,
@@ -116,8 +162,8 @@ class ReferencePolicy:
         policy.eval()
         preprocessor, postprocessor = make_pre_post_processors(
             config,
-            pretrained_path=CHECKPOINT_ID,
-            pretrained_revision=CHECKPOINT_REVISION,
+            pretrained_path=pretrained_path,
+            pretrained_revision=pretrained_revision,
             preprocessor_overrides={
                 "device_processor": {"device": "cpu"},
                 "tokenizer_processor": {"tokenizer_name": str(vlm_snapshot)},

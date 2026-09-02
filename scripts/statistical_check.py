@@ -24,7 +24,12 @@ import torch
 from huggingface_hub import snapshot_download
 
 from reference.discovery import CHECKPOINT_ID, CHECKPOINT_REVISION
-from reference.policy import ReferencePolicy, load_dataset_observation
+from reference.discovery import DATASET_ID, DATASET_REVISION
+from reference.policy import (
+    ReferencePolicy,
+    load_checkpoint_dataset_observation,
+    load_dataset_observation,
+)
 from smolvla_mlx.policy import SmolVLAMLX
 
 
@@ -46,6 +51,19 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument("--output", type=Path, default=Path(".cache/statistical.json"))
     parser.add_argument("--reference-cache", type=Path, default=Path(".cache/hf"))
     parser.add_argument("--native-cache", type=Path, default=Path(".cache/smolvla_mlx"))
+    parser.add_argument(
+        "--checkpoint",
+        type=Path,
+        help="Optional matching local checkpoint; defaults to the pinned base checkpoint.",
+    )
+    parser.add_argument("--checkpoint-label", default=CHECKPOINT_ID)
+    parser.add_argument("--dataset", default=DATASET_ID)
+    parser.add_argument("--dataset-revision", default=DATASET_REVISION)
+    parser.add_argument(
+        "--dataset-root",
+        type=Path,
+        help="Local LeRobot dataset root for a non-default checkpoint/dataset pair.",
+    )
     return parser.parse_args()
 
 
@@ -78,15 +96,21 @@ def main() -> int:
     reference_cache.mkdir(parents=True, exist_ok=True)
     native_cache.mkdir(parents=True, exist_ok=True)
 
-    reference = ReferencePolicy.load(cache_dir=reference_cache)
-    checkpoint_dir = Path(
-        snapshot_download(
-            CHECKPOINT_ID,
-            revision=CHECKPOINT_REVISION,
-            cache_dir=str(reference_cache),
-            allow_patterns=list(_CHECKPOINT_FILES),
-        )
+    reference = ReferencePolicy.load(
+        cache_dir=reference_cache,
+        checkpoint_dir=args.checkpoint,
     )
+    if args.checkpoint is None:
+        checkpoint_dir = Path(
+            snapshot_download(
+                CHECKPOINT_ID,
+                revision=CHECKPOINT_REVISION,
+                cache_dir=str(reference_cache),
+                allow_patterns=list(_CHECKPOINT_FILES),
+            )
+        )
+    else:
+        checkpoint_dir = args.checkpoint.resolve()
     with mx.stream(mx.cpu):
         native_fp32 = SmolVLAMLX.from_pretrained(
             checkpoint_dir,
@@ -113,7 +137,19 @@ def main() -> int:
             (1, native_fp32.config.chunk_size, native_fp32.config.max_action_dim),
             dtype=np.float32,
         )
-        sample = load_dataset_observation(reference_cache, index=frame_index, episode=episode)
+        if args.dataset == DATASET_ID and args.dataset_root is None:
+            sample = load_dataset_observation(reference_cache, index=frame_index, episode=episode)
+        else:
+            if args.dataset_root is None:
+                raise ValueError("--dataset-root is required for a non-default dataset")
+            sample = load_checkpoint_dataset_observation(
+                dataset_id=args.dataset,
+                dataset_revision=args.dataset_revision,
+                dataset_root=args.dataset_root,
+                checkpoint_camera_keys=tuple(reference.config.image_features),
+                index=frame_index,
+                episode=episode,
+            )
         target = sample.action.numpy()
         reference_prediction = reference.predict(sample.observation, torch.from_numpy(noise.copy()))
         torch_sum, torch_count = _absolute_error(reference_prediction.actions.numpy()[0, 0], target)
@@ -155,6 +191,8 @@ def main() -> int:
         raise RuntimeError("Reference MAE is zero; ratio is undefined")
     result = {
         "format_version": 1,
+        "checkpoint": args.checkpoint_label,
+        "dataset": {"id": args.dataset, "revision": args.dataset_revision},
         "sample_count": args.samples,
         "target": "ground-truth current action at deterministic episode-start frame",
         "noise_seed_base": _SEED,

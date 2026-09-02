@@ -133,6 +133,15 @@ def load_stats_aware_policy(
         dtype=dtype,
         tokenizer_dir=tokenizer_dir,
     )
+    if (
+        policy.config.state_normalization == "mean_std"
+        and policy.config.action_normalization == "mean_std"
+        and policy.preprocessor.state_mean is not None
+        and policy.preprocessor.state_std is not None
+        and policy.preprocessor.action_mean is not None
+        and policy.preprocessor.action_std is not None
+    ):
+        return policy
     policy.preprocessor = StatsAwareSmolVLAPreprocessor.from_pretrained_files(
         policy.preprocessor,
         checkpoint_dir,

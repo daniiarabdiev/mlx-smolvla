@@ -1838,3 +1838,62 @@
   passes **544/544 in 482.16 seconds**. An initial focused invocation named a
   nonexistent stale test path and collected no tests; it made no repository
   change and was immediately replaced by the correct target list.
+
+## 2026-09-02 — Stage R P0-2 stats-active checkpoint generality complete
+
+- The dependency-light public preprocessor now reads exact checkpoint
+  `observation.state.mean/std` and `action.mean/std` tensors, validates their
+  shapes and finite values, applies LeRobot's `1e-8` mean/std math, and checks
+  that saved pre/post action statistics agree. The base checkpoint remains
+  effective identity because its robot-prefixed stats do not match the runtime
+  keys. The training loader detects the new core behavior and no longer
+  double-normalizes exported checkpoints.
+- Matching local directories and arbitrary Hub identifiers use the same strict
+  loader. A complete public-API test resolves a non-hardcoded Hub identifier
+  through `SmolVLAMLX.from_pretrained` and consumes all 500 tensors. Unsupported
+  architecture and missing observation errors now name every checkpoint camera
+  key/shape plus `observation.state` shape.
+- Reference source inspection and a Torch conformance test establish exact
+  camera behavior: all configured streams present are used; absent configured
+  streams are skipped; only `empty_cameras` adds false-masked synthetic images.
+  The base's three configured keys and `empty_cameras=0` therefore yield three,
+  two, or one real streams based on input, with no implicit third-camera pad.
+- The pinned base-plus-dataset-stats artifact uses base model SHA-256
+  `7cd549ac2351fb069c0ddb3c34ad2d09cfc92b56a15dccdfc2e41467aaca01eb`
+  and dataset `lerobot/svla_so101_pickplace` revision
+  `f641879e22172be7e8161d5e6c1503c2d2feb657`. Its no-clobber/reusable artifact
+  manifest hashes to
+  `74b281cb476b4d5d8f76d02bbed0def7d9e00a22901d413da6c281a10f9d938d`;
+  its eight-case golden manifest/metadata hashes are
+  `b7e841821704fc338d075290b0e92a31d8249dc3b00f9992d57aa67d18627805`
+  / `529c4dce5b9a09c6d7fab259c8449d582d93ccf7201d306abfeea035e08a4ed0`.
+- Stats-active base deterministic maxima: image preprocessing
+  `3.5762786865234375e-7`, state `0.0`, normalized actions fp32
+  `2.8759241104125977e-6`, and normalized actions bf16
+  `0.0048642754554748535`; all pass unchanged `1e-5`, `1e-6`, `0.005`, and
+  `0.05` limits. Exact reference-action unnormalization differs by `0.0`.
+- Its 50-frame statistical record SHA-256 is
+  `96df60698ced61b227c8ce88cc90249130068de5d0be163fbfc71f76c6afdc38`.
+  Torch fp32 MAE is `2.889570787350337`; MLX fp32/bf16 MAE values are
+  `2.889570882717768` / `2.8853507562478384`, giving ratios
+  `1.0000000330040129` / `0.9985395647267157`, both below `1.05`.
+- The previously selected public target and all **1,197,819,154 model bytes**
+  plus its **471,239,739-byte** dataset were downloaded at their pinned
+  revisions. The public target's eight-case golden manifest/metadata hashes
+  are `98f593a35357203081e787f3900d3544bbdeeeca20881c532ed262c033a10d38`
+  / `5c46febfeb95f4140021333421e65ff12aef1a3068af766e29c89dea08f15e08`.
+  It exercises `wrist_camera` and `top_camera` at 480x640 with active stats.
+- Public fine-tune deterministic maxima: image `2.384185791015625e-7`, state
+  `0.0`, normalized fp32 `0.000034362077713012695`, normalized bf16
+  `0.004036039113998413`, and exact-reference unnormalization `0.0`; all fixed
+  gates pass. Its 50-frame statistical record SHA-256 is
+  `6ab112f49a84c98c7bd0bf93487f0132a3095d9e44c7027bc2097f4638577315`:
+  Torch MAE `0.4209008048971494`, MLX fp32/bf16 MAE
+  `0.4209010468920072` / `0.419238363802433`, ratios
+  `1.0000005749451057` / `0.996050278176297`.
+- `make goldens` now regenerates the base, stats-active, and public-fine-tune
+  reference sets from pinned inputs. Generated model/golden artifacts remain
+  ignored. The focused cross-lane suite passes **69/69 in 67.95 seconds**; the
+  first complete post-package tree passed **566/566 in 518.67 seconds**. The
+  added full Hub-ID public-API test passes **9/9** with its public-target group;
+  the exact final P0-2 tree passes **567/567 in 519.76 seconds**.

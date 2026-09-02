@@ -42,6 +42,13 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--cache-dir", type=Path, required=True)
     parser.add_argument("--output", type=Path, default=Path("tests/golden"))
     parser.add_argument(
+        "--checkpoint",
+        type=Path,
+        help="Optional matching local checkpoint; defaults to the pinned base checkpoint.",
+    )
+    parser.add_argument("--checkpoint-id", help="Identity recorded for --checkpoint metadata.")
+    parser.add_argument("--checkpoint-revision", help="Revision recorded for --checkpoint metadata.")
+    parser.add_argument(
         "--sample-index",
         type=int,
         action="append",
@@ -50,7 +57,11 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
     selected = _selected_specs(args.sample_index)
 
-    reference = ReferencePolicy.load(args.cache_dir)
+    if args.checkpoint is None and (args.checkpoint_id is not None or args.checkpoint_revision is not None):
+        raise ValueError("--checkpoint-id/--checkpoint-revision require --checkpoint")
+    if args.checkpoint is not None and (not args.checkpoint_id or not args.checkpoint_revision):
+        raise ValueError("--checkpoint requires --checkpoint-id and --checkpoint-revision")
+    reference = ReferencePolicy.load(args.cache_dir, checkpoint_dir=args.checkpoint)
     writer = GoldenWriter(args.output)
     samples = []
     for spec in selected:
@@ -71,7 +82,10 @@ def main(argv: list[str] | None = None) -> int:
     writer.write_metadata(
         {
             "format_version": 1,
-            "checkpoint": {"id": CHECKPOINT_ID, "revision": CHECKPOINT_REVISION},
+            "checkpoint": {
+                "id": args.checkpoint_id or CHECKPOINT_ID,
+                "revision": args.checkpoint_revision or CHECKPOINT_REVISION,
+            },
             "base_vlm": {"id": BASE_VLM_ID, "revision": BASE_VLM_REVISION},
             "dataset": {"id": DATASET_ID, "revision": DATASET_REVISION},
             "samples": samples,

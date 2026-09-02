@@ -249,8 +249,14 @@ def capture_sample(
     )
     tracer = _ForwardTraceCollector(writer, sample_name, reference)
 
-    writer.add(f"{sample_name}/raw/camera1", _tensor_observation(sample, "observation.images.camera1"))
-    writer.add(f"{sample_name}/raw/camera2", _tensor_observation(sample, "observation.images.camera2"))
+    camera_keys = tuple(key for key in reference.config.image_features if key in sample.observation)
+    if not camera_keys:
+        raise ValueError("Golden observation contains none of the checkpoint camera keys")
+    for camera_index, camera_key in enumerate(camera_keys, start=1):
+        writer.add(
+            f"{sample_name}/raw/camera{camera_index}",
+            _tensor_observation(sample, camera_key),
+        )
     writer.add(f"{sample_name}/raw/state", _tensor_observation(sample, "observation.state"))
     writer.add(f"{sample_name}/raw/action", sample.action)
     writer.add(f"{sample_name}/noise", noise)
@@ -324,4 +330,5 @@ def capture_sample(
         "frame_index": frame_index,
         "seed": seed,
         "task": task,
+        "camera_keys": list(camera_keys),
     }
