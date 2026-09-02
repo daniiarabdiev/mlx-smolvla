@@ -1,8 +1,10 @@
 # Distribution artifact manifest
 
 This manifest records the Stage R P1-2 artifacts built locally from source
-commit `3e30212604985dbaf2ad1360b1e4fc1023303cf6` on
-`2026-09-02T02:19:42Z`. Nothing was uploaded.
+commit `a50cd3b5720a061262a978130600215a30fb8fbd` on
+`2026-09-02T03:44:23Z`. Nothing was uploaded. The earlier P1-2 artifacts were
+moved intact to the ignored `.cache/release-build-backup/pre-a50cd3b` before
+this final P1-4 refresh.
 
 ## Build environment
 
@@ -30,20 +32,23 @@ the three environment values above and wrote to the top-level `dist/`.
 
 | Artifact | Bytes | SHA-256 | Wheel tag / contents | Native `minos` |
 | --- | ---: | --- | --- | ---: |
-| `smolvla_mlx-0.0.1.tar.gz` | 346,849 | `f689537bca083cf63a771e44b904e52b107d147a3a06df67517de64e6e2db81c` | No `.so`/`.dylib`; includes CMake and all native sources | Built smoke: 14.0 |
-| `smolvla_mlx-0.0.1-cp311-cp311-macosx_14_0_arm64.whl` | 308,734 | `9e814355869151d17711045e14f4e0a6a323084228febcf2c7e55ea7448f4d76` | `cp311-cp311-macosx_14_0_arm64` | 14.0 |
-| `smolvla_mlx-0.0.1-cp312-cp312-macosx_14_0_arm64.whl` | 307,730 | `f1ffafddeca298f4b7e96c71c2fc97cc0b7ce5cfcd1128dc1592598458ff2212` | `cp312-cp312-macosx_14_0_arm64` | 14.0 |
-| `smolvla_mlx-0.0.1-cp313-cp313-macosx_14_0_arm64.whl` | 307,767 | `56d8718c04dbd59f7f028a234fc5a5b1222156fff67078d695de4121ab590595` | `cp313-cp313-macosx_14_0_arm64` | 14.0 |
+| `smolvla_mlx-0.0.1.tar.gz` | 366,428 | `f778711e1cadcdf6251b4a249857281feb8c114941d1d37b93afc4739af61b35` | No `.so`/`.dylib`; includes CMake, server, tests, and all native sources | Built smoke: 14.0 |
+| `smolvla_mlx-0.0.1-cp311-cp311-macosx_14_0_arm64.whl` | 321,285 | `2a9e149025a0433829e2f7b3a150807409cf2838555b33da7ae357ce70a9014e` | `cp311-cp311-macosx_14_0_arm64`; server module included | 14.0 |
+| `smolvla_mlx-0.0.1-cp312-cp312-macosx_14_0_arm64.whl` | 320,279 | `4412160a2b6f613f237d881347d4a93d27e2c96d82c82bf3991f59e4efa612b1` | `cp312-cp312-macosx_14_0_arm64`; server module included | 14.0 |
+| `smolvla_mlx-0.0.1-cp313-cp313-macosx_14_0_arm64.whl` | 320,320 | `af93be38cd18bb3a45f94b039cd5f52a4a410fc8665d3aeb7eed3a5686a954fd` | `cp313-cp313-macosx_14_0_arm64`; server module included | 14.0 |
 
 Each wheel declares `Requires-Python: >=3.11,<3.14`. Its optional LeRobot and
-Torch reference requirements are guarded by `python_version >= "3.12"`.
+Torch reference requirements are guarded by `python_version >= "3.12"`; the
+separate `serve` extra declares exactly
+`lerobot[async]==0.6.1; python_version >= "3.12"`.
 
 ## Fresh-environment smoke matrix
 
 Each artifact was installed with dependencies into a newly created venv. The
 check ran from a directory outside the source checkout and asserted that the
 import path was inside that venv, the backend was `native-reference`, and
-Torch, LeRobot, and Transformers were both unimported and unavailable. With
+gRPC, Torch, LeRobot, and Transformers were both unimported and unavailable;
+protobuf's `google` package was also absent from the loaded module set. With
 `HF_HUB_OFFLINE=1` and `HF_DATASETS_OFFLINE=1`, the installed
 `smolvla-mlx predict --observation ...` command then emitted one finite
 six-component action from the retained real golden observation.
@@ -55,10 +60,18 @@ six-component action from the retained real golden observation.
 | cp312 wheel | CPython 3.12.13 | Pass | Pass | Pass |
 | cp313 wheel | CPython 3.13.14 | Pass | Pass | Pass |
 
+A fifth fresh CPython 3.12 environment installed the CPython 3.12 wheel with
+its `serve` extra. From outside the source checkout it imported
+`smolvla_mlx.server` from that environment, reproduced protobuf descriptor
+SHA-256 `e116fbf44dd1fc65b67ff255c04857000c28e69055211af5ef3df85ac8d81f8d`,
+bound an ephemeral loopback gRPC port, completed the reference `Ready` RPC,
+stopped cleanly, and rendered the installed `smolvla-mlx serve --help` surface.
+No model, hardware, serial port, or external service was contacted.
+
 The source tree also builds a genuinely extension-free `py3-none-any` wheel
 under `SMOLVLA_MLX_BUILD_NATIVE=0`; an isolated test proves that wheel contains
 no binary and reports `pure-mlx-fallback`. The exact native and forced-fallback
-paths both ran in the 584-test full suite.
+paths run in the protected full suite.
 
 ## Upstream binary floor caveat
 

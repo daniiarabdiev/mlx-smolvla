@@ -2103,3 +2103,37 @@
   explicitly pending. No hardware, robot directory, serial port, or upload was
   accessed. The original T3 failure remains byte-identical at SHA-256
   `d6654131c4acf86de13206f210f1ea1a82e3aad18871e5b64428bdf1dbeed7c6`.
+
+## 2026-09-02 — Stage R final artifact refresh and release closure
+
+- P1-4 source, tests, protocol audit, README, and initial status were committed
+  and pushed as `a50cd3b5720a061262a978130600215a30fb8fbd`. A clean detached worktree
+  was advanced to that exact commit before any final artifact build. The four
+  earlier P1-2 artifacts were moved intact to the ignored recoverable backup
+  `.cache/release-build-backup/pre-a50cd3b`; none was deleted or uploaded.
+- With repository-local uv/interpreter caches and
+  `MACOSX_DEPLOYMENT_TARGET=14.0`, the refresh produced one sdist and CPython
+  3.11/3.12/3.13 arm64 wheels. Their SHA-256 values are respectively
+  `f778711e...61b35`, `2a9e1490...9014e`, `4412160a...12b1`, and
+  `af93be38...54fd`; exact sizes and full hashes are in `DIST_MANIFEST.md`.
+  Every wheel contains `smolvla_mlx/server.py`, declares the guarded
+  `lerobot[async]==0.6.1` serve extra, retains its
+  `macosx_14_0_arm64` tag, and embeds a project extension whose Mach-O minimum
+  is 14.0. The pinned MLX dependency still declares 26.2 and remains the honest
+  upstream deployment limitation.
+- Four new base environments installed the sdist or matching wheel on CPython
+  3.11.15, 3.12.13, and 3.13.14. From outside the checkout, all imported from
+  their environment, used `native-reference`, kept gRPC/protobuf/Torch/LeRobot/
+  Transformers outside the base import graph, and emitted a finite six-value
+  action from the retained real observation with both Hub offline flags set.
+- A fifth fresh CPython 3.12 environment installed the wheel with `.[serve]`,
+  imported the packaged server, reproduced descriptor SHA-256
+  `e116fbf4...1f8d`, bound an ephemeral loopback port, completed the reference
+  `Ready` RPC, stopped cleanly, and rendered the installed serve help. No
+  checkpoint, external service, hardware, robot directory, or serial port was
+  used by that smoke.
+- The Stage R closing `make test` run passes **601/601 tests in 537.54
+  seconds**. All P0 and P1 acceptance criteria are green. `STATUS_RELEASE.md`
+  records the package matrix, cache reduction, limitations, safety boundary,
+  and no open human tasks, ending in the required `RELEASE READY` milestone.
+  Nothing was uploaded.
