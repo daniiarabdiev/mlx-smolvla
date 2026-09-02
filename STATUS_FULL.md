@@ -1,6 +1,6 @@
 # Full-Scope Status
 
-ACTIVE — STAGE Q QUALITY EXTRAS
+ACTIVE — STAGE Q P2-2 BF16 LATENCY ANOMALY
 
 T3B-1 COMPLETE — SELF-CONSISTENCY FLOOR RECORDED
 
@@ -23,6 +23,8 @@ RELEASE READY
 T4 COMPLETE — NATIVE TRAINING UX AND EXACT RESUME VERIFIED
 
 T5 COMPLETE — IDLE NATIVE TRAINING BENCHMARK RECORDED
+
+STAGE Q P2-1 COMPLETE — PYTORCH-MPS COMPARISON RECORDED
 
 The protected SmolVLA MLX v0.1 inference baseline is intact. At full-scope
 kickoff on 2026-08-31, `make test` passed **179/179** in **158.71 seconds** on
@@ -202,6 +204,17 @@ recomputes from `TRAINING_BENCHMARK.json`; its ignored full source artifact has
 SHA-256 `7112806471e55e55d98ae101bc2af8172c2cc18f01b3e0c2c0646446adba9423`.
 The exact T5 tree passes **613/613 tests in 520.69 seconds**.
 
+Stage Q P2-1 is complete. With the same pinned checkpoint, saved observation,
+saved noise, fp32 dtype, preprocessing-to-normalized-chunk boundary, 5 excluded
+warmups, and 50 synchronized samples, native MLX measured **110.751 ms** median
+and **9.029 chunks/s** versus PyTorch-MPS at **204.579 ms** and **4.888
+chunks/s**. MLX is **1.847×** faster for this bounded case. MPS fallback was
+enabled before Torch import; whether any individual operation used it was not
+instrumented. Framework memory counters are reported with an explicit
+non-equivalence caveat. `INFERENCE_COMPARISON.json` retains all raw timings and
+has SHA-256 `115ad58c0c618b65a6275018614f3ee6cf17dd02a9d4ad9c94aaf7e5a9842e48`.
+The exact P2-1 tree passes **620/620 tests in 522.71 seconds**.
+
 ## Stage state
 
 | Stage | State | Evidence / next action |
@@ -216,7 +229,7 @@ The exact T5 tree passes **613/613 tests in 520.69 seconds**.
 | T3B-3 — Expert-only LoRA | Statistical alpha | All 3,000 updates and the strict export completed. Fixed preprocessing, held-out-improvement, and round-trip gates pass. Prospective normalized parity is `0.013038858771324158` versus derived `0.005`; the new failure record preserves this result without changing tolerances. |
 | T4 — Training UX/full fine-tune | Complete | Unified CLI, explicit reference-full topology, 100-update real smoke, finite complete export, three-checkpoint retention, and LoRA/full exact-resume gates all pass. See `TRAINING_UX.md`. |
 | T5 — Training docs/benchmark | Complete | The frozen four-cell idle Metal matrix, exact commands, overnight projections, and Torch round-trip proof are published in `TRAINING_BENCHMARK.json`, `BENCHMARK.md`, and `README.md`. |
-| Q — Quality extras | In progress | Execute `BRIEF_RELEASE.md` P2-1 through P2-4 in order, with a full suite after each package. |
+| Q — Quality extras | P2-1 complete; P2-2 in progress | Same-boundary fp32 MLX/PyTorch-MPS evidence is committed in `INFERENCE_COMPARISON.json`; next profile the bf16 latency anomaly without changing a correctness gate. |
 | H — Hardware readiness | Unblocked; scheduled after Q | Documents and loopback-safe tooling only; no hardware access is authorized. |
 
 `TRAINING ALPHA (STATISTICAL)`, `RELEASE READY`, `T4 COMPLETE`, and `T5 COMPLETE` have been reached.
@@ -244,6 +257,7 @@ The exact T5 tree passes **613/613 tests in 520.69 seconds**.
 | `.cache/training/t4-resume-full-v2` | Exact-resume smoke | Evidence SHA-256 `2c46c621a08b59584701b1bc2171690cfc03c7a116e41d4e4fff35f217699748`; 155 fp32 master tensors, zero parameter/loss/metric drift, exact continuation state, and finite 500-tensor exports |
 | `TRAINING_BENCHMARK.json` | Tracked public record | SHA-256 `bca3ad9d0c2285fa70f4083885a6a6708e8c9d98b6c999d4cabd87b061cef07a`; four measured cells and mechanically verified derivations |
 | `.cache/training/t5-benchmark.json` | Full timing evidence | SHA-256 `7112806471e55e55d98ae101bc2af8172c2cc18f01b3e0c2c0646446adba9423`; clean protocol commit, raw synchronized timings, environment, idle declaration, and source hashes |
+| `INFERENCE_COMPARISON.json` | Tracked P2-1 timing evidence | SHA-256 `115ad58c0c618b65a6275018614f3ee6cf17dd02a9d4ad9c94aaf7e5a9842e48`; two isolated engines, 100 raw synchronized timings, fixed input/noise hashes, idle/environment/source evidence |
 | `.cache/hf` | 3,498,900 KiB | repository-local pinned source/dataset cache; unchanged by P0-3 cleanup |
 | `.cache/smolvla_mlx` | 52,764,872 KiB | post-P0-3 native cache; converted production weights retained and no cleanup candidates remain |
 | `dist/` | 4 artifacts | One sdist plus CPython 3.11/3.12/3.13 `macosx_14_0_arm64` wheels; exact hashes in `DIST_MANIFEST.md` |

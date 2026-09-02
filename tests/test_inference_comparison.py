@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import copy
+import hashlib
+import json
 import math
 from pathlib import Path
 
@@ -150,3 +152,29 @@ def test_reference_loader_rejects_non_cpu_or_mps_devices_before_resolution() -> 
 
     with pytest.raises(ValueError, match="cpu.*mps"):
         ReferencePolicy.load(Path("unused"), device="cuda")
+
+
+def test_committed_comparison_artifact_revalidates_from_raw_timings() -> None:
+    from reference.benchmark import validate_comparison_document
+
+    path = Path("INFERENCE_COMPARISON.json")
+    artifact = json.loads(path.read_text(encoding="utf-8"))
+    validated = validate_comparison_document(artifact)
+    assert validated == artifact
+    assert hashlib.sha256(path.read_bytes()).hexdigest() == (
+        "115ad58c0c618b65a6275018614f3ee6cf17dd02a9d4ad9c94aaf7e5a9842e48"
+    )
+
+
+def test_benchmark_document_traces_comparison_values_to_artifact() -> None:
+    artifact = json.loads(Path("INFERENCE_COMPARISON.json").read_text(encoding="utf-8"))
+    benchmark = Path("BENCHMARK.md").read_text(encoding="utf-8")
+    assert "## MLX versus PyTorch-MPS" in benchmark
+    assert "115ad58c0c618b65a6275018614f3ee6cf17dd02a9d4ad9c94aaf7e5a9842e48" in benchmark
+    for engine in artifact["engines"]:
+        assert f"{engine['median_ms']:.2f}" in benchmark
+        assert f"{engine['p95_ms']:.2f}" in benchmark
+        assert f"{engine['chunks_per_second']:.3f}" in benchmark
+        assert f"{engine['peak_memory_gib']:.2f}" in benchmark
+    speedup = artifact["engines"][1]["median_ms"] / artifact["engines"][0]["median_ms"]
+    assert f"{speedup:.3f}×" in benchmark

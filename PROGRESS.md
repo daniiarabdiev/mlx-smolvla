@@ -2238,3 +2238,28 @@
   retain every raw timing, recompute medians/p95/rates, bind input and source
   hashes, and record environment and idle evidence. This source checkpoint is
   intentionally committed before running `make inference-comparison`.
+
+## 2026-09-02 — Stage Q P2-1 MLX/PyTorch-MPS comparison complete
+
+- From clean, pushed protocol commit
+  `e210f7b76ae8657390a8101b76ee5815df1b15ab`, the idle check at
+  `2026-09-02T05:16:10.169655+00:00` found no trainer, floor worker, test suite,
+  or competing benchmark. Both engines then ran sequentially in fresh worker
+  processes on the same M5 Pro.
+- Native MLX fp32 measured 110.75147850351641 ms median, 111.19723780211643 ms
+  p95, 9.02922483304139 chunks/s, and 3,157,857,042 bytes of reported peak/
+  active framework memory. Pinned LeRobot/PyTorch-MPS fp32 measured
+  204.5789789990522 ms median, 206.45897294743918 ms p95,
+  4.888087744365138 chunks/s, and 2,321,498,112 bytes of maximum sampled MPS
+  driver allocation. The bounded median speedup is 1.847189597496495×.
+- `INFERENCE_COMPARISON.json` preserves all 100 raw timings, environment, fixed
+  observation/noise hashes, complete source hashes, and the clean source
+  commit. Its SHA-256 is
+  `115ad58c0c618b65a6275018614f3ee6cf17dd02a9d4ad9c94aaf7e5a9842e48`.
+  `BENCHMARK.md` records the common boundary, fallback environment, exclusions,
+  single-case limitation, and non-equivalent allocator semantics.
+- Publication coverage passes **14/14 in 17.68 seconds**. The package-closing
+  complete repository suite passes **620/620 tests in 522.71 seconds**. No
+  tolerance, upload, hardware, robot directory, or serial port was touched;
+  `FAILURE_LORA_FINETUNE.md` remains byte-identical at SHA-256
+  `d6654131c4acf86de13206f210f1ea1a82e3aad18871e5b64428bdf1dbeed7c6`.
