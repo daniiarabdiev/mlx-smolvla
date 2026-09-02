@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 import csv
+from copy import deepcopy
 from dataclasses import asdict, dataclass
+from datetime import datetime, timedelta, timezone
 import gc
 import hashlib
 import io
@@ -12,6 +14,7 @@ import math
 import os
 from pathlib import Path
 import shutil
+import time
 from typing import Callable, Mapping
 
 import mlx.core as mx
@@ -1943,6 +1946,375 @@ def run_finetune_outcome_evaluation(
     )
     report_sha256 = write_run_state(output_path, report)
     return report, report_sha256
+
+
+@dataclass(frozen=True)
+class TrainedComparisonStart:
+    """Validated floor and one-shot marker state captured before model work."""
+
+    floor: dict[str, object]
+    floor_sha256: str
+    floor_file_mtime_ns: int
+    floor_bundle_sha256: str
+    start_marker: dict[str, object]
+    start_marker_sha256: str
+    start_marker_file_mtime_ns: int
+    snapshots: tuple[object, ...]
+
+
+def validate_trained_comparison_start_files(
+    *,
+    floor_path: str | Path,
+    variant_root: str | Path,
+    start_marker_path: str | Path,
+    comparison_path: str | Path,
+) -> TrainedComparisonStart:
+    """Bind the prospective floor and marker before any comparison inference."""
+
+    from smolvla_mlx.training import trained_parity as parity
+
+    floor_path = Path(floor_path)
+    start_marker_path = Path(start_marker_path)
+    comparison_path = Path(comparison_path)
+    if len(
+        {
+            str(floor_path.resolve()),
+            str(start_marker_path.resolve()),
+            str(comparison_path.resolve()),
+        }
+    ) != 3:
+        raise ValueError("floor, start marker, and comparison paths must be distinct")
+    if comparison_path.exists() or comparison_path.is_symlink():
+        raise FileExistsError(f"comparison output already exists: {comparison_path}")
+
+    floor, floor_snapshot = parity._snapshot_json(
+        floor_path,
+        label="prospective self-consistency floor",
+    )
+    bundle = parity._load_floor_bundle(floor, variant_root=variant_root)
+    marker, marker_snapshot = parity._snapshot_json(
+        start_marker_path,
+        label="comparison start marker",
+    )
+    if not isinstance(floor, Mapping) or floor.get("purpose") != "prospective_gate":
+        raise ValueError("trained comparison requires a prospective floor")
+    if not isinstance(marker, Mapping):
+        raise ValueError("comparison start marker must be an object")
+    marker = parity.validate_comparison_start_marker(marker)
+    if Path(marker["comparison_path"]).resolve() != comparison_path.resolve():
+        raise ValueError("comparison start marker was issued for a different comparison path")
+    expected_marker_binding = {
+        "floor_sha256": floor_snapshot.sha256,
+        "floor_procedure_id": bundle.report["procedure_id"],
+        "floor_created_at_ns": bundle.report["created_at_ns"],
+        "floor_file_mtime_ns": floor_snapshot.mtime_ns,
+        "floor_bundle_sha256": bundle.bundle_sha256,
+        "checkpoint_path": bundle.report["checkpoint_path"],
+        "input_combined_sha256": bundle.report["input_sha256"]["combined_sha256"],
+    }
+    for field, expected in expected_marker_binding.items():
+        if marker[field] != expected:
+            raise ValueError(
+                f"comparison marker {field.replace('_', ' ')} differs from the floor file"
+            )
+    if not (
+        bundle.report["created_at_ns"]
+        <= floor_snapshot.mtime_ns
+        < marker["created_at_ns"]
+        <= marker_snapshot.mtime_ns
+    ):
+        raise ValueError("comparison marker chronology is invalid")
+    snapshots = (floor_snapshot, *bundle.snapshots, marker_snapshot)
+    parity._revalidate_snapshots(snapshots)
+    if comparison_path.exists() or comparison_path.is_symlink():
+        raise FileExistsError(f"comparison output already exists: {comparison_path}")
+    return TrainedComparisonStart(
+        floor=dict(bundle.report),
+        floor_sha256=floor_snapshot.sha256,
+        floor_file_mtime_ns=floor_snapshot.mtime_ns,
+        floor_bundle_sha256=bundle.bundle_sha256,
+        start_marker=dict(marker),
+        start_marker_sha256=marker_snapshot.sha256,
+        start_marker_file_mtime_ns=marker_snapshot.mtime_ns,
+        snapshots=snapshots,
+    )
+
+
+def _comparison_utc_from_ns(value_ns: int) -> str:
+    if isinstance(value_ns, bool) or not isinstance(value_ns, int) or value_ns <= 0:
+        raise ValueError("comparison timestamp must be a positive integer")
+    seconds, nanoseconds = divmod(value_ns, 1_000_000_000)
+    value = datetime.fromtimestamp(seconds, tz=timezone.utc) + timedelta(
+        microseconds=nanoseconds // 1_000
+    )
+    return value.isoformat(timespec="microseconds")
+
+
+def assemble_trained_comparison_report(
+    *,
+    floor: Mapping[str, object],
+    floor_sha256: str,
+    floor_file_mtime_ns: int,
+    floor_bundle_sha256: str,
+    start_marker: Mapping[str, object],
+    start_marker_sha256: str,
+    start_marker_file_mtime_ns: int,
+    floor_input_evidence: Mapping[str, object],
+    evidence_files: Mapping[str, Mapping[str, str]],
+    conversion_validation: Mapping[str, object],
+    base_mlx_evaluation: Mapping[str, object],
+    fine_mlx_evaluation: Mapping[str, object],
+    torch_evaluation: Mapping[str, object],
+    stats_active_parity: Mapping[str, object],
+    created_at_ns: int,
+) -> dict[str, object]:
+    """Assemble and schema-check the immutable trained comparison document."""
+
+    from smolvla_mlx.training import trained_parity as parity
+
+    parity_evidence = {
+        name: deepcopy(value)
+        for name, value in stats_active_parity.items()
+        if name != "passed"
+    }
+    metrics = {
+        "base_mlx_mae": float(base_mlx_evaluation["mlx_mae"]),
+        "fine_mlx_mae": float(fine_mlx_evaluation["mae"]),
+        "torch_mae": float(torch_evaluation["mae"]),
+        "image_preprocessing_max_abs": float(
+            parity_evidence["image_preprocessing_max_abs"]
+        ),
+        "state_preprocessing_max_abs": float(
+            parity_evidence["state_preprocessing_max_abs"]
+        ),
+        "normalized_action_max_abs": float(
+            parity_evidence["normalized_action_max_abs"]
+        ),
+    }
+    comparison = {
+        "format_version": 1,
+        "artifact_type": parity.COMPARISON_ARTIFACT_TYPE,
+        "procedure_id": parity.PROCEDURE_ID,
+        "created_at_utc": _comparison_utc_from_ns(created_at_ns),
+        "created_at_ns": created_at_ns,
+        "checkpoint_path": floor["checkpoint_path"],
+        "sample_count": floor["sample_count"],
+        "normalized_action_chunk_shape": deepcopy(
+            floor["normalized_action_chunk_shape"]
+        ),
+        "floor_binding": {
+            "floor_sha256": floor_sha256,
+            "floor_procedure_id": floor["procedure_id"],
+            "floor_created_at_ns": floor["created_at_ns"],
+            "floor_file_mtime_ns": floor_file_mtime_ns,
+            "input_combined_sha256": floor["input_sha256"]["combined_sha256"],
+            "floor_bundle_sha256": floor_bundle_sha256,
+        },
+        "start_marker_binding": {
+            "marker_sha256": start_marker_sha256,
+            "marker_created_at_ns": start_marker["created_at_ns"],
+            "marker_file_mtime_ns": start_marker_file_mtime_ns,
+            "floor_bundle_sha256": floor_bundle_sha256,
+        },
+        "source_identity": deepcopy(floor["source_identity"]),
+        "input_sha256": deepcopy(floor["input_sha256"]),
+        "floor_input_evidence": deepcopy(dict(floor_input_evidence)),
+        "case_identities": deepcopy(floor["case_identities"]),
+        "evidence_files": deepcopy(dict(evidence_files)),
+        "conversion_validation": deepcopy(dict(conversion_validation)),
+        "base_mlx_evaluation": deepcopy(dict(base_mlx_evaluation)),
+        "fine_mlx_evaluation": deepcopy(dict(fine_mlx_evaluation)),
+        "torch_evaluation": deepcopy(dict(torch_evaluation)),
+        "stats_active_parity": parity_evidence,
+        "metrics": metrics,
+    }
+    validated, _, _ = parity._validate_comparison(comparison)
+    return validated
+
+
+def _recorded_comparison_path(path: Path) -> str:
+    resolved = path.resolve(strict=True)
+    try:
+        return resolved.relative_to(_REPOSITORY_ROOT.resolve(strict=True)).as_posix()
+    except ValueError as error:
+        raise ValueError(f"comparison evidence is outside the repository: {path}") from error
+
+
+def _expected_native_conversion_path(export_dir: Path, native_cache: Path) -> Path:
+    identity = hashlib.sha256(str(export_dir.resolve()).encode("utf-8")).hexdigest()[:16]
+    return (
+        native_cache.resolve()
+        / "converted"
+        / identity
+        / "float32"
+        / "model.float32.safetensors"
+    )
+
+
+def run_trained_comparison_evaluation(
+    *,
+    floor_path: str | Path,
+    variant_root: str | Path,
+    start_marker_path: str | Path,
+    comparison_path: str | Path,
+    outcome_path: str | Path,
+    cache_dir: str | Path,
+    native_cache: str | Path,
+    run_dir: str | Path,
+    evaluation_dir: str | Path,
+    base_report_path: str | Path,
+    progress: Callable[[str, int, int], None] | None = None,
+) -> tuple[dict[str, object], str, dict[str, object], str]:
+    """Validate the floor first, then evaluate and install its bound comparison."""
+
+    from smolvla_mlx.training import trained_parity as parity
+    from training.self_consistency import (
+        collect_floor_input_evidence,
+        collect_floor_input_hashes,
+    )
+
+    start = validate_trained_comparison_start_files(
+        floor_path=floor_path,
+        variant_root=variant_root,
+        start_marker_path=start_marker_path,
+        comparison_path=comparison_path,
+    )
+    comparison_path = _require_repository_cache_path(
+        Path(comparison_path),
+        label="trained comparison output",
+    )
+    outcome_path = _require_repository_cache_path(
+        Path(outcome_path),
+        label="fine-tune outcome report",
+    )
+    if outcome_path.exists() or outcome_path.is_symlink():
+        raise FileExistsError(f"fine-tune outcome already exists: {outcome_path}")
+    _require_real_directory(
+        outcome_path.parent,
+        label="fine-tune outcome report parent directory",
+    )
+    if outcome_path.resolve() == comparison_path.resolve():
+        raise ValueError("fine-tune outcome and trained comparison paths must be distinct")
+
+    floor_inputs, _ = collect_floor_input_hashes(
+        checkpoint_dir=Path(run_dir) / "export",
+        evaluation_dir=evaluation_dir,
+        cache_dir=cache_dir,
+    )
+    if floor_inputs != start.floor["input_sha256"]:
+        raise ValueError("current comparison inputs differ from the prospective floor")
+    floor_input_evidence = collect_floor_input_evidence(
+        checkpoint_dir=Path(run_dir) / "export",
+        evaluation_dir=evaluation_dir,
+        cache_dir=cache_dir,
+    )
+    parity._validated_floor_input_evidence(
+        floor_input_evidence,
+        expected_inputs=start.floor["input_sha256"],
+    )
+    expected_checkpoint = _recorded_comparison_path(
+        _require_real_directory(Path(run_dir) / "export", label="merged export directory")
+    )
+    if start.floor["checkpoint_path"] != expected_checkpoint:
+        raise ValueError("comparison run export differs from the floor checkpoint")
+    parity._revalidate_snapshots(start.snapshots)
+
+    outcome, outcome_sha256 = run_finetune_outcome_evaluation(
+        cache_dir=cache_dir,
+        native_cache=native_cache,
+        run_dir=run_dir,
+        evaluation_dir=evaluation_dir,
+        base_report_path=base_report_path,
+        output_path=outcome_path,
+        progress=progress,
+    )
+    export_dir = _require_real_directory(
+        Path(run_dir) / "export",
+        label="merged export directory",
+    )
+    converted_path = _require_real_file(
+        _expected_native_conversion_path(export_dir, Path(native_cache)),
+        label="native converted checkpoint",
+    )
+    name_map_path = _require_real_file(
+        converted_path.with_name("name_map.json"),
+        label="native conversion name map",
+    )
+    conversion = validate_converted_checkpoint(
+        export_dir,
+        converted_path,
+        name_map_path,
+        dtype="float32",
+        expected_tensor_count=500,
+    )
+    if conversion.parameter_count != 450_046_176:
+        raise ValueError("native conversion parameter count differs from SmolVLA")
+    source_sha256 = outcome.get("source_sha256")
+    if not isinstance(source_sha256, Mapping) or (
+        source_sha256.get("native_conversion_model")
+        != conversion.converted_model_sha256
+        or source_sha256.get("native_conversion_name_map")
+        != conversion.name_map_sha256
+    ):
+        raise ValueError("outcome conversion evidence differs from the evaluated files")
+
+    base_report_path = _require_real_file(
+        Path(base_report_path),
+        label="base held-out evaluation",
+    )
+    implementation_path = _require_real_file(
+        Path(__file__),
+        label="comparison implementation",
+    )
+    evidence_files = {
+        "base_report": {
+            "path": _recorded_comparison_path(base_report_path),
+            "sha256": _require_sha256(
+                "base report",
+                source_sha256.get("base_report"),
+            ),
+        },
+        "native_conversion_model": {
+            "path": _recorded_comparison_path(converted_path),
+            "sha256": conversion.converted_model_sha256,
+        },
+        "native_conversion_name_map": {
+            "path": _recorded_comparison_path(name_map_path),
+            "sha256": conversion.name_map_sha256,
+        },
+        "comparison_implementation": {
+            "path": _recorded_comparison_path(implementation_path),
+            "sha256": hashlib.sha256(implementation_path.read_bytes()).hexdigest(),
+        },
+    }
+    conversion_validation = {
+        "source_model_sha256": conversion.source_model_sha256,
+        "converted_model_sha256": conversion.converted_model_sha256,
+        "name_map_sha256": conversion.name_map_sha256,
+        "dtype": conversion.dtype,
+        "tensor_count": conversion.tensor_count,
+        "parameter_count": conversion.parameter_count,
+    }
+    comparison = assemble_trained_comparison_report(
+        floor=start.floor,
+        floor_sha256=start.floor_sha256,
+        floor_file_mtime_ns=start.floor_file_mtime_ns,
+        floor_bundle_sha256=start.floor_bundle_sha256,
+        start_marker=start.start_marker,
+        start_marker_sha256=start.start_marker_sha256,
+        start_marker_file_mtime_ns=start.start_marker_file_mtime_ns,
+        floor_input_evidence=floor_input_evidence,
+        evidence_files=evidence_files,
+        conversion_validation=conversion_validation,
+        base_mlx_evaluation=outcome["base_mlx_evaluation"],
+        fine_mlx_evaluation=outcome["fine_mlx_evaluation"],
+        torch_evaluation=outcome["torch_evaluation"],
+        stats_active_parity=outcome["stats_active_parity"],
+        created_at_ns=time.time_ns(),
+    )
+    parity._revalidate_snapshots(start.snapshots)
+    comparison_sha256 = parity._atomic_json_no_clobber(comparison_path, comparison)
+    return comparison, comparison_sha256, outcome, outcome_sha256
 
 
 def capture_and_evaluate_base(

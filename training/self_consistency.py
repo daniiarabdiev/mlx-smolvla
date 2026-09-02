@@ -140,6 +140,18 @@ class Perturbation:
         return asdict(self)
 
 
+@dataclass(frozen=True)
+class FloorInputLocations:
+    """Concrete paths behind the five hashed floor-input groups."""
+
+    checkpoint_dir: Path
+    evaluation_dir: Path
+    cache_dir: Path
+    pinned_dataset_files: Mapping[str, Path]
+    tokenizer_snapshot: Path
+    implementation_files: Mapping[str, Path]
+
+
 def perturbation_plan(*, max_threads: int) -> tuple[Perturbation, ...]:
     """Return the exact T3B Section 1 perturbation set in execution order."""
 
@@ -367,13 +379,13 @@ def _require_floor_paths_disjoint(
         raise ValueError("self-consistency work directory and floor output overlap")
 
 
-def collect_floor_input_hashes(
+def _collect_floor_input_locations(
     *,
     checkpoint_dir: str | Path,
     evaluation_dir: str | Path,
     cache_dir: str | Path,
-) -> tuple[dict[str, object], Path]:
-    """Hash every checkpoint, case/noise, processor, and implementation input."""
+) -> FloorInputLocations:
+    """Resolve every checkpoint, case, processor, and implementation input."""
 
     checkpoint_dir = _require_cache_path(
         checkpoint_dir, label="self-consistency checkpoint"
@@ -478,22 +490,99 @@ def collect_floor_input_hashes(
         "distribution/tokenizers/RECORD": distribution_record("tokenizers"),
         "uv.lock": _REPOSITORY_ROOT / "uv.lock",
     }
+    return FloorInputLocations(
+        checkpoint_dir=checkpoint_dir,
+        evaluation_dir=evaluation_dir,
+        cache_dir=cache_dir,
+        pinned_dataset_files=pinned_dataset_files,
+        tokenizer_snapshot=tokenizer_snapshot,
+        implementation_files=implementation_files,
+    )
+
+
+def collect_floor_input_hashes(
+    *,
+    checkpoint_dir: str | Path,
+    evaluation_dir: str | Path,
+    cache_dir: str | Path,
+) -> tuple[dict[str, object], Path]:
+    """Hash every checkpoint, case/noise, processor, and implementation input."""
+
+    locations = _collect_floor_input_locations(
+        checkpoint_dir=checkpoint_dir,
+        evaluation_dir=evaluation_dir,
+        cache_dir=cache_dir,
+    )
     groups: dict[str, object] = {
         "checkpoint_export": hash_input_tree(
-            checkpoint_dir, allowed_root=_REPOSITORY_CACHE
+            locations.checkpoint_dir, allowed_root=_REPOSITORY_CACHE
         ),
         "evaluation_artifact": hash_input_tree(
-            evaluation_dir, allowed_root=_REPOSITORY_CACHE
+            locations.evaluation_dir, allowed_root=_REPOSITORY_CACHE
         ),
-        "pinned_dataset": _hash_named_files(pinned_dataset_files),
+        "pinned_dataset": _hash_named_files(locations.pinned_dataset_files),
         "tokenizer_snapshot": hash_input_tree(
-            tokenizer_snapshot, allowed_root=cache_dir
+            locations.tokenizer_snapshot, allowed_root=locations.cache_dir
         ),
-        "implementation": _hash_named_files(implementation_files),
+        "implementation": _hash_named_files(locations.implementation_files),
     }
     combined = hashlib.sha256(_canonical_json(groups)).hexdigest()
     inputs = {**groups, "combined_sha256": combined}
-    return _validated_input_hashes(inputs), tokenizer_snapshot
+    return _validated_input_hashes(inputs), locations.tokenizer_snapshot
+
+
+def _recorded_repository_path(path: Path) -> str:
+    root = _REPOSITORY_ROOT.resolve(strict=True)
+    resolved = path.resolve(strict=True)
+    try:
+        relative = resolved.relative_to(root)
+    except ValueError as error:
+        raise ValueError(f"floor input is outside the repository: {path}") from error
+    return relative.as_posix()
+
+
+def collect_floor_input_evidence(
+    *,
+    checkpoint_dir: str | Path,
+    evaluation_dir: str | Path,
+    cache_dir: str | Path,
+) -> dict[str, object]:
+    """Record the concrete repository paths behind every floor hash group."""
+
+    locations = _collect_floor_input_locations(
+        checkpoint_dir=checkpoint_dir,
+        evaluation_dir=evaluation_dir,
+        cache_dir=cache_dir,
+    )
+    return {
+        "checkpoint_export": {
+            "mode": "exact_tree",
+            "root": _recorded_repository_path(locations.checkpoint_dir),
+        },
+        "evaluation_artifact": {
+            "mode": "exact_tree",
+            "root": _recorded_repository_path(locations.evaluation_dir),
+        },
+        "pinned_dataset": {
+            "mode": "named_files",
+            "paths": {
+                name: _recorded_repository_path(path)
+                for name, path in sorted(locations.pinned_dataset_files.items())
+            },
+        },
+        "tokenizer_snapshot": {
+            "mode": "contained_symlink_tree",
+            "root": _recorded_repository_path(locations.tokenizer_snapshot),
+            "allowed_root": _recorded_repository_path(locations.cache_dir),
+        },
+        "implementation": {
+            "mode": "named_files",
+            "paths": {
+                name: _recorded_repository_path(path)
+                for name, path in sorted(locations.implementation_files.items())
+            },
+        },
+    }
 
 
 def _numpy_payload(value: np.ndarray) -> bytes:

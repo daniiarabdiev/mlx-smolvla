@@ -628,6 +628,44 @@ def test_self_consistency_cli_exposes_the_frozen_plan_without_model_loading() ->
     ]
 
 
+def test_floor_input_evidence_names_every_hashed_location() -> None:
+    module = __import__(
+        "training.self_consistency",
+        fromlist=["collect_floor_input_evidence", "collect_floor_input_hashes"],
+    )
+    arguments = {
+        "checkpoint_dir": ".cache/training/t3/export",
+        "evaluation_dir": ".cache/training/t3-evaluation",
+        "cache_dir": ".cache/hf",
+    }
+
+    inputs, tokenizer_snapshot = module.collect_floor_input_hashes(**arguments)
+    evidence = module.collect_floor_input_evidence(**arguments)
+
+    assert evidence["checkpoint_export"] == {
+        "mode": "exact_tree",
+        "root": ".cache/training/t3/export",
+    }
+    assert evidence["evaluation_artifact"] == {
+        "mode": "exact_tree",
+        "root": ".cache/training/t3-evaluation",
+    }
+    assert evidence["tokenizer_snapshot"] == {
+        "mode": "contained_symlink_tree",
+        "root": tokenizer_snapshot.relative_to(Path.cwd()).as_posix(),
+        "allowed_root": ".cache/hf",
+    }
+    for group_name in ("pinned_dataset", "implementation"):
+        assert evidence[group_name]["mode"] == "named_files"
+        assert set(evidence[group_name]["paths"]) == set(
+            inputs[group_name]["files"]
+        )
+        assert all(
+            (Path.cwd() / recorded_path).is_file()
+            for recorded_path in evidence[group_name]["paths"].values()
+        )
+
+
 def test_self_consistency_cli_assembles_completed_workers_without_rerunning_them() -> None:
     module = __import__(
         "training.self_consistency",

@@ -145,17 +145,35 @@ Create the marker immediately before the comparison producer begins MLX work:
 ```bash
 uv run python scripts/start_trained_comparison.py \
   --floor .cache/training/t3b/floor.json \
-  --variants .cache/training/t3b/floor-variants \
+  --variants .cache/training/t3b/self-consistency/variants \
   --comparison .cache/training/t3b/comparison.json \
   --output .cache/training/t3b/comparison-start.json
 ```
 
-After the bound comparison artifact exists:
+Produce the exact path bound by that marker. This command first reconstructs
+the floor bundle, rechecks its marker and all five input-hash groups, and only
+then begins MLX/Torch model evaluation:
+
+```bash
+uv run --extra reference python scripts/produce_trained_comparison.py \
+  --floor .cache/training/t3b/floor.json \
+  --variants .cache/training/t3b/self-consistency/variants \
+  --start-marker .cache/training/t3b/comparison-start.json \
+  --comparison .cache/training/t3b/comparison.json \
+  --outcome .cache/training/t3b/outcome.json \
+  --cache-dir .cache/hf \
+  --native-cache .cache/smolvla_mlx/policy-float32 \
+  --run-dir .cache/training/t3b \
+  --evaluation-dir .cache/training/t3-evaluation \
+  --base-report .cache/training/t3-base-evaluation.json
+```
+
+After the bound comparison artifact exists, install the authoritative verdict:
 
 ```bash
 uv run python scripts/evaluate_trained_parity.py \
   --floor .cache/training/t3b/floor.json \
-  --variants .cache/training/t3b/floor-variants \
+  --variants .cache/training/t3b/self-consistency/variants \
   --start-marker .cache/training/t3b/comparison-start.json \
   --comparison .cache/training/t3b/comparison.json \
   --evidence-root . \
@@ -177,6 +195,10 @@ symlinks; training-manifest and private-snapshot semantic-conversion validation;
 non-finite derived values; output/input overlap rejection; input replacement
 between validation and install; marker touching/path reuse; concurrent-writer
 preservation; persisted-result tampering; and the complete model-free CLI.
+Four additional producer tests cover the exact frozen comparison schema, real
+floor-bundle/marker validation, failure-before-model-execution ordering, and the
+model-free producer CLI. The floor-input suite separately verifies that every
+hashed input has a concrete evaluator-readable location.
 
 The distribution suite also performs a real wheel build, checks that the parity,
 training-contract, and reference modules are present, installs the wheel into an

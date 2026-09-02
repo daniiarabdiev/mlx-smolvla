@@ -1722,3 +1722,25 @@
   T3B fixed-step budget, expert-only adapter scope, and scope-bound support
   file hashes. The focused evaluator tests pass. No MLX-versus-PyTorch
   comparison of T3B has run, and no floor has yet been computed.
+
+## 2026-09-02 — T3B comparison producer finalized before floor
+
+- Added a floor-first producer that reconstructs and rehashes the prospective
+  floor bundle, verifies the one-shot marker's actual SHA-256 and `mtime_ns`,
+  validates every floor input group, and refuses an existing outcome or
+  comparison before it can invoke model evaluation.
+- The producer emits the legacy fixed-gate outcome for audit continuity and a
+  separate no-clobber `smolvla-trained-checkpoint-mlx-comparison` artifact with
+  all 56 MLX records, 56 Torch records, 56 stats-active parity records, exact
+  floor/marker bindings, concrete floor-input locations, and semantic native
+  conversion evidence.
+- Focused verification: **132 passed in 17.06s** across the complete
+  self-consistency, trained-parity, producer, and training-evaluation groups.
+  The producer-specific tests prove exact schema assembly, validation of a real
+  raw floor bundle and marker, failure before model execution for an invalid
+  floor/marker, and a model-free CLI path.
+- Full repository verification on the finalized pre-floor tree: **544 passed
+  in 482.22s**. This run was functional verification, not a latency benchmark;
+  no training or self-consistency worker was active.
+- No T3B floor, marker, MLX inference, or Torch/MLX comparison existed when
+  these implementation bytes and tests were finalized.
