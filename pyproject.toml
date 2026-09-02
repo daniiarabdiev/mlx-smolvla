@@ -54,6 +54,9 @@ Repository = "https://github.com/daniiarabdiev/mlx-smolvla"
 mlx-smolvla = "mlx_smolvla.cli:main"
 
 [project.optional-dependencies]
+hardware = [
+  "lerobot[async,hardware]==0.6.1; python_version >= '3.12'",
+]
 reference = [
   "lerobot[dataset,smolvla]==0.6.1; python_version >= '3.12'",
   "torch==2.11.0; python_version >= '3.12'",
