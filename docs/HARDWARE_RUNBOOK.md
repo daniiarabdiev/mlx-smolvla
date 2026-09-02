@@ -1,8 +1,10 @@
 # Supervised SO-101 first-contact runbook
 
-**Hardware validation status: NOT RUN.** This document and its telemetry path
-were prepared with software-only loopback tests. No robot directory, serial
-port, camera, motor, or physical arm was accessed.
+**Hardware validation status: follower read path and 60-second no-motion loop
+passed; motion has not run.** See the measured
+[first-contact status](../hardware/FIRST_CONTACT.md) and
+[preflight evidence](../hardware/PREFLIGHT.md). The project does not yet claim
+physical SO-101 actuation.
 
 ## Execution gate
 
@@ -15,8 +17,8 @@ ARM SESSION CONFIRMED
 
 Absent that exact line in the live session, this runbook is documentation only.
 The same words in this file, a commit, earlier chat context, or a shell log do
-not satisfy the gate. The agent must never execute the client commands below or
-inspect `~/robot/so101`; they belong to the operator.
+not satisfy the gate. The 2026-09-02 no-motion session was explicitly
+authorized; a later session requires its own live authorization.
 
 ## Roles and stop authority
 
@@ -39,35 +41,61 @@ Check every box before opening the client:
 - [ ] Secure the base, start near the already calibrated neutral pose, and
       confirm the existing calibration ID. Do not recalibrate during first
       contact.
+- [ ] Capture both cameras concurrently. The wrist view must be unobstructed
+      and the fixed view must contain the complete robot workspace; a merely
+      nonblack frame is not sufficient.
 - [ ] Verify the controller's established **torque and speed limits** are set
-      low using the operator's known-good hardware procedure. LeRobot 0.6.1's
-      client does not expose a global torque/current or profile-speed limit;
-      do not invent register values. If those limits cannot be verified, stop.
+      low using the operator's known-good Hiwonder procedure. Store their exact
+      readback in the client safety-profile JSON. Do not copy values from an
+      example or treat current defaults as approved. If those limits cannot be
+      verified, stop.
 - [ ] Confirm that cutting the physical power switch immediately removes motor
       power, and keep the operator's hand on the power switch.
-- [ ] Use only a local checkpoint whose provenance and intended task have
-      already been reviewed. Do not substitute a newly downloaded or unknown
-      checkpoint at the arm.
+- [ ] Use only a reviewed local checkpoint with effective six-axis
+      `observation.state` and `action` mean/std tensors matching this robot.
+      Raw `lerobot/smolvla_base` is suitable for no-motion diagnosis only; its
+      saved physical-stat keys do not bind to this interface.
 - [ ] Agree on one low-risk task and one commanded action as the complete first
       episode. No unattended or repeated episode is permitted.
 
-The client command below adds a **1.0-degree maximum relative target** per
-joint, requests one action per chunk, runs at 5 fps, and disables torque on
-disconnect. That software cap supplements—it does not replace—the verified
-low hardware torque and speed limits.
+The client command below applies a maximum one-public-unit change per step
+(one degree for body joints, one 0–100 unit for the gripper), requests one
+action per chunk, runs at 5 fps, and verifies torque-disabled shutdown. That
+software cap supplements—it does not replace—the verified low hardware torque
+and speed limits. The Hiwonder documentation marks the position-mode `Time`
+parameter as not applicable, so this client never presents `Goal_Time` as a
+speed control; its 200 ms command/dwell floor is an additional cadence limit,
+not a motor-speed guarantee. See the
+[BusLinker manual](https://docs.hiwonder.com/projects/BusLinker/en/latest/docs/1_BusLinker_V3.0_Servo_Debugging_Board_User_Manual.html).
+
+## One-time isolated environments
+
+Use separate serve-only and hardware-client environments. This keeps the
+server free of the PyAV dependency pulled by reference/training extras; an
+all-extras environment produced a duplicate AVFoundation-class warning and is
+not accepted for motion. Fresh separated environments were created and a
+loopback-only server startup was warning-free on 2026-09-02; recreate them
+after dependency changes and retain this separation for every motion session.
+
+```bash
+mkdir -p .cache/hardware
+uv venv --python 3.12 .cache/hardware/server-venv
+uv pip install --python .cache/hardware/server-venv/bin/python -e '.[serve]'
+uv venv --python 3.12 .cache/hardware/client-venv
+uv pip install --python .cache/hardware/client-venv/bin/python -e '.[hardware]'
+```
 
 ## Terminal A — native MLX server on this Mac
 
-From the checked-out `mlx_smolvla` repository, verify that both log names are
-new, then start the dense-bf16 default on loopback. Do not use a quantized
-preset for first contact.
+From the checked-out repository, verify that both log names are new, then
+start dense bfloat16 on loopback. Do not use a quantized preset for first
+contact.
 
 ```bash
-uv sync --extra serve --frozen
 test ! -e .cache/hardware/first-contact-latency.jsonl
 test ! -e .cache/hardware/first-contact-server.log
 set -o pipefail
-uv run --extra serve python scripts/serve_latency_smoke.py \
+.cache/hardware/server-venv/bin/python scripts/serve_latency_smoke.py \
   --output .cache/hardware/first-contact-latency.jsonl \
   --host 127.0.0.1 \
   --port 8080 \
@@ -83,52 +111,81 @@ Wait for the server's listening message. It loads the exact model path supplied
 by the client. If model loading, feature validation, or telemetry-file creation
 fails, stop here; do not work around the error at the robot.
 
-## Terminal B — operator-owned LeRobot client
+## Terminal B — repository-owned fail-closed client
 
-Only the physically present operator runs this from their existing,
-known-working `~/robot/so101` environment. Replace the four values once; the
-guards make empty placeholders fail before `RobotClient` connects.
+Only the physically present operator runs this command. The vendor checkout is
+read/import-only; never activate, install into, or modify its environment.
+Replace every placeholder with a value already verified during preflight.
 
 ```bash
-cd ~/robot/so101
-source .venv/bin/activate
+export VENDOR_CHECKOUT='<ABSOLUTE_PATH_TO_VENDOR_CHECKOUT>'
 export FOLLOWER_PORT='<YOUR_VERIFIED_FOLLOWER_PORT>'
 export CALIBRATION_ID='<YOUR_EXISTING_CALIBRATION_ID>'
-export LEROBOT_CAMERA_CONFIG='<YOUR_EXISTING_LEROBOT_CAMERA_CONFIG>'
-export SMOLVLA_CHECKPOINT='<ABSOLUTE_PATH_TO_REVIEWED_LOCAL_CHECKPOINT>'
+export FOLLOWER_SERIAL='<YOUR_VERIFIED_FOLLOWER_USB_SERIAL>'
+export WRIST_CAMERA_INDEX='<INTEGER>'
+export FIXED_CAMERA_INDEX='<INTEGER>'
+export SMOLVLA_CHECKPOINT='<ABSOLUTE_PATH_TO_REVIEWED_STATS_ACTIVE_CHECKPOINT>'
 export FIRST_TASK='<ONE_VALIDATED_LOW_RISK_TASK>'
-export CLIENT_LOG='logs/smolvla-first-contact-client.log'
+export CLIENT_TELEMETRY='.cache/hardware/first-contact-no-motion-client.jsonl'
+test -d "$VENDOR_CHECKOUT"
 test -n "$FOLLOWER_PORT"
 test -n "$CALIBRATION_ID"
-test -n "$LEROBOT_CAMERA_CONFIG"
+test -n "$FOLLOWER_SERIAL"
 test -n "$SMOLVLA_CHECKPOINT"
 test -n "$FIRST_TASK"
-test ! -e "$CLIENT_LOG"
+test ! -e "$CLIENT_TELEMETRY"
 set -o pipefail
-python -m lerobot.async_inference.robot_client \
-  --policy_type=smolvla \
-  --pretrained_name_or_path="$SMOLVLA_CHECKPOINT" \
-  --robot.type=so101_follower \
-  --robot.port="$FOLLOWER_PORT" \
-  --robot.id="$CALIBRATION_ID" \
-  --robot.cameras="$LEROBOT_CAMERA_CONFIG" \
-  --robot.use_degrees=true \
-  --robot.max_relative_target=1.0 \
-  --robot.disable_torque_on_disconnect=true \
-  --actions_per_chunk=1 \
-  --chunk_size_threshold=0.0 \
-  --task="$FIRST_TASK" \
-  --server_address=127.0.0.1:8080 \
-  --policy_device=cpu \
-  --client_device=cpu \
-  --fps=5 \
-  2>&1 | tee "$CLIENT_LOG"
+.cache/hardware/client-venv/bin/python \
+  examples/bring_your_own_robot/hiwonder_so101_client.py \
+  --no-motion \
+  --vendor-root "$VENDOR_CHECKOUT" \
+  --follower-port "$FOLLOWER_PORT" \
+  --calibration-id "$CALIBRATION_ID" \
+  --robot-serial "$FOLLOWER_SERIAL" \
+  --wrist-camera "$WRIST_CAMERA_INDEX" \
+  --fixed-camera "$FIXED_CAMERA_INDEX" \
+  --checkpoint "$SMOLVLA_CHECKPOINT" \
+  --task "$FIRST_TASK" \
+  --server-address 127.0.0.1:8080 \
+  --telemetry "$CLIENT_TELEMETRY"
 ```
 
-Watch for the first commanded action only. Immediately press Ctrl-C in the
-client after that single short horizon, even if motion looked correct. Confirm
-the client disconnected with torque disabled before moving a hand away from
-the power switch. Do not extend the run during first contact.
+This command must run for 60 seconds with the fixed 500 ms action watchdog and
+end with `duration_limit`, live camera cadence, zero timeouts, and no writes.
+Review all rejected/clipped/rate-limited counts before continuing.
+
+## Single-action command — only after every physical gate passes
+
+The safety-profile file is operator-owned and must contain the exact nine-
+register readback described in
+[`hardware/CLIENT_DESIGN.md`](../hardware/CLIENT_DESIGN.md). Its serial and the
+selected port must match. The client validates all of this, the checkpoint
+statistics, and the 10%-inset start pose before torque enable.
+
+```bash
+export HARDWARE_SAFETY_PROFILE='<ABSOLUTE_PATH_TO_OPERATOR_VERIFIED_PROFILE_JSON>'
+export CLIENT_TELEMETRY='.cache/hardware/first-contact-single-action-client.jsonl'
+test -f "$HARDWARE_SAFETY_PROFILE"
+test ! -e "$CLIENT_TELEMETRY"
+.cache/hardware/client-venv/bin/python \
+  examples/bring_your_own_robot/hiwonder_so101_client.py \
+  --single-action \
+  --vendor-root "$VENDOR_CHECKOUT" \
+  --follower-port "$FOLLOWER_PORT" \
+  --calibration-id "$CALIBRATION_ID" \
+  --robot-serial "$FOLLOWER_SERIAL" \
+  --wrist-camera "$WRIST_CAMERA_INDEX" \
+  --fixed-camera "$FIXED_CAMERA_INDEX" \
+  --checkpoint "$SMOLVLA_CHECKPOINT" \
+  --task "$FIRST_TASK" \
+  --server-address 127.0.0.1:8080 \
+  --hardware-safety-profile "$HARDWARE_SAFETY_PROFILE" \
+  --telemetry "$CLIENT_TELEMETRY"
+```
+
+The client applies one enveloped action, holds, returns slowly to the recorded
+start pose, verifies torque off, and exits. Do not invoke `--continuous` until
+the single-action evidence has been reviewed and accepted.
 
 ## What to observe
 
@@ -145,13 +202,12 @@ During the one-action episode, call out and later record:
   nonnegative on this same-machine run;
 - whether rollback was invoked and why.
 
-The latency JSONL contains no observation payload or action values. For each
-successfully returned chunk it records the client observation timestamp,
-timestep, server receipt/chunk-ready UTC times, monotonic server-receive-to-
-chunk latency, inference latency, action count, and policy configuration. The
-client-wall-clock value is meaningful only when client and server clocks are
-synchronized; the monotonic server value is the robust local measure. The
-logger makes no pass/fail assertion about the robot.
+Neither JSONL contains observation, image, task, state, position, target, or
+action payload values. Server telemetry records timestamps, latency, action
+count, and policy identity. Client telemetry records mode/caps, cadence,
+observation-to-chunk and observation-to-first-write summaries, aggregate clip/
+rate-limit/rejection reasons, watchdog counts, and the stop reason. The logger
+makes no pass/fail assertion about physical behavior.
 
 ## Rollback
 
@@ -169,7 +225,7 @@ disconnect, Ctrl-C the server, then power off. Preserve all files unchanged.
       `model.safetensors` SHA-256.
 - [ ] `.cache/hardware/first-contact-latency.jsonl` (**latency JSONL**).
 - [ ] `.cache/hardware/first-contact-server.log` (**server log**).
-- [ ] `$CLIENT_LOG` from the operator environment (**client log**).
+- [ ] `.cache/hardware/first-contact-*-client.jsonl` (**client telemetry**).
 - [ ] Written one-action **observed motion** notes: direction, approximate
       displacement/speed, gripper behavior, camera freshness, and anomalies.
 - [ ] Whether emergency or normal **rollback** was used, with the exact reason

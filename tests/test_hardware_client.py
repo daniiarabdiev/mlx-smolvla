@@ -207,7 +207,7 @@ def _matching_profile(safety):
         for register in safety.REQUIRED_SAFETY_REGISTERS
     }
     profile = safety.HardwareSafetyProfile(
-        robot_serial="5C82107541",
+        robot_serial="TEST-FOLLOWER-001",
         verified_at="2026-09-02T00:00:00Z",
         procedure="Operator-verified with Hiwonder ServoStudio and physical power cut tested.",
         expected_registers=expected,
@@ -755,7 +755,7 @@ def test_motion_profile_requires_exact_safe_register_readback_and_torque_off() -
         for register in safety.REQUIRED_SAFETY_REGISTERS
     }
     profile = safety.HardwareSafetyProfile(
-        robot_serial="5C82107541",
+        robot_serial="TEST-FOLLOWER-001",
         verified_at="2026-09-02T00:00:00Z",
         procedure="Operator-verified with Hiwonder ServoStudio and physical power cut tested.",
         expected_registers=expected,
@@ -810,7 +810,7 @@ def test_hardware_profile_loader_requires_exact_json_schema(tmp_path: Path) -> N
     path.write_text(
         json.dumps(
             {
-                "robot_serial": "5C82107541",
+                "robot_serial": "TEST-FOLLOWER-001",
                 "verified_at": "2026-09-02T12:00:00Z",
                 "procedure": "Operator verified the low limits and physical power cut.",
                 "expected_registers": expected,
@@ -821,7 +821,7 @@ def test_hardware_profile_loader_requires_exact_json_schema(tmp_path: Path) -> N
 
     profile = safety.load_hardware_safety_profile(path)
 
-    assert profile.robot_serial == "5C82107541"
+    assert profile.robot_serial == "TEST-FOLLOWER-001"
     assert profile.expected_registers == expected
 
     document = json.loads(path.read_text(encoding="utf-8"))
@@ -837,7 +837,7 @@ def test_hardware_profile_loader_rejects_non_utc_attestation(tmp_path: Path) -> 
     path.write_text(
         json.dumps(
             {
-                "robot_serial": "5C82107541",
+                "robot_serial": "TEST-FOLLOWER-001",
                 "verified_at": "2026-09-02 12:00:00",
                 "procedure": "Operator verified the low limits and physical power cut.",
                 "expected_registers": {
@@ -908,7 +908,7 @@ def test_vendor_adapter_refuses_limit_mismatch_before_torque_enable() -> None:
         robot,
         joint_names=JOINTS,
         safety_profile=profile,
-        robot_serial="5C82107541",
+        robot_serial="TEST-FOLLOWER-001",
     )
 
     with pytest.raises(RuntimeError, match="Maximum_Acceleration.elbow_flex"):
@@ -927,7 +927,7 @@ def test_vendor_adapter_enables_torque_only_after_exact_limit_readback() -> None
         robot,
         joint_names=JOINTS,
         safety_profile=profile,
-        robot_serial="5C82107541",
+        robot_serial="TEST-FOLLOWER-001",
     )
 
     adapter.prepare_motion(move_time_ms=200)
@@ -958,7 +958,7 @@ def test_position_write_uses_public_units_and_dwell_not_goal_time_register() -> 
         robot,
         joint_names=JOINTS,
         safety_profile=profile,
-        robot_serial="5C82107541",
+        robot_serial="TEST-FOLLOWER-001",
         sleep=sleeps.append,
     )
     adapter.prepare_motion(move_time_ms=200)
@@ -996,7 +996,7 @@ def test_position_write_records_timestamp_before_bus_write_and_dwell() -> None:
         robot,
         joint_names=JOINTS,
         safety_profile=profile,
-        robot_serial="5C82107541",
+        robot_serial="TEST-FOLLOWER-001",
         sleep=advance,
         clock=clock,
     )
@@ -1029,7 +1029,7 @@ def test_armed_vendor_adapter_rejects_malformed_write(
         robot,
         joint_names=JOINTS,
         safety_profile=profile,
-        robot_serial="5C82107541",
+        robot_serial="TEST-FOLLOWER-001",
     )
     adapter.prepare_motion(move_time_ms=200)
 
@@ -1049,7 +1049,7 @@ def test_vendor_adapter_disables_torque_with_readback_verification() -> None:
         robot,
         joint_names=JOINTS,
         safety_profile=profile,
-        robot_serial="5C82107541",
+        robot_serial="TEST-FOLLOWER-001",
     )
     adapter.prepare_motion(move_time_ms=200)
 
@@ -1069,7 +1069,7 @@ def test_closing_armed_vendor_adapter_disables_before_port_close() -> None:
         robot,
         joint_names=JOINTS,
         safety_profile=profile,
-        robot_serial="5C82107541",
+        robot_serial="TEST-FOLLOWER-001",
     )
     adapter.prepare_motion(move_time_ms=200)
 
@@ -1090,7 +1090,7 @@ def test_close_releases_cameras_and_port_even_if_torque_disable_errors() -> None
         robot,
         joint_names=JOINTS,
         safety_profile=profile,
-        robot_serial="5C82107541",
+        robot_serial="TEST-FOLLOWER-001",
     )
     adapter.prepare_motion(move_time_ms=200)
     robot.bus.fail_disable = True
@@ -1418,7 +1418,7 @@ def test_control_loop_finishes_server_setup_before_enabling_torque() -> None:
         robot,
         joint_names=JOINTS,
         safety_profile=profile,
-        robot_serial="5C82107541",
+        robot_serial="TEST-FOLLOWER-001",
     )
 
     class FailingTransport:
@@ -1459,7 +1459,7 @@ def test_motion_latency_ends_at_first_motor_write_not_after_dwell() -> None:
         robot,
         joint_names=JOINTS,
         safety_profile=profile,
-        robot_serial="5C82107541",
+        robot_serial="TEST-FOLLOWER-001",
         sleep=lambda seconds: setattr(clock, "now", clock.now + seconds),
         clock=clock,
     )
@@ -1691,7 +1691,7 @@ def test_standalone_modes_resolve_to_non_overridable_safety_caps(tmp_path: Path)
     profile_path.write_text(
         json.dumps(
             {
-                "robot_serial": "5C82107541",
+                "robot_serial": "TEST-FOLLOWER-001",
                 "verified_at": "2026-09-02T12:00:00Z",
                 "procedure": "Operator verified the low limits and physical power cut.",
                 "expected_registers": {
@@ -1705,9 +1705,9 @@ def test_standalone_modes_resolve_to_non_overridable_safety_caps(tmp_path: Path)
     checkpoint = _write_stats_active_checkpoint(tmp_path / "checkpoint")
     base = [
         "--vendor-root", str(tmp_path),
-        "--follower-port", "/dev/tty.usbmodem5C821075411",
+        "--follower-port", "/dev/tty.usbmodemTEST-FOLLOWER-001",
         "--calibration-id", "follower",
-        "--robot-serial", "5C82107541",
+        "--robot-serial", "TEST-FOLLOWER-001",
         "--wrist-camera", "1",
         "--fixed-camera", "2",
         "--checkpoint", str(checkpoint),
@@ -1744,9 +1744,9 @@ def test_standalone_motion_requires_profile_and_matching_serial(tmp_path: Path) 
         [
             "--single-action",
             "--vendor-root", str(tmp_path),
-            "--follower-port", "/dev/tty.usbmodem5C821075411",
+            "--follower-port", "/dev/tty.usbmodemTEST-FOLLOWER-001",
             "--calibration-id", "follower",
-            "--robot-serial", "5C82107541",
+            "--robot-serial", "TEST-FOLLOWER-001",
             "--wrist-camera", "1",
             "--fixed-camera", "2",
             "--checkpoint", str(checkpoint),

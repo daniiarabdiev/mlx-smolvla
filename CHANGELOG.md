@@ -22,9 +22,13 @@ Initial public release candidate.
 
 ### Known limitations
 
-- Physical SO-101 integration has not yet passed the separately authorized
-  hardware-validation protocol; no real-robot claim is made in this release
-  candidate.
+- Connected Hiwonder SO-101 state/camera capture and two 60-second no-motion
+  MLX loops pass, but the single-action and bounded-continuous gates have not
+  run; no real-robot motion claim is made in this release candidate.
+- Raw `lerobot/smolvla_base` output lacks effective generic-key physical
+  statistics and is restricted to no-motion diagnostics by the fail-closed
+  client. Motion requires a reviewed stats-active checkpoint and an
+  operator-attested hardware-limit profile.
 - Native MLX training is a preview: lockstep primitives and exported-checkpoint
   round trips pass, while the deterministic parity gap for an MLX-trained
   checkpoint remains documented and unresolved.

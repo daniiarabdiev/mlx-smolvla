@@ -1,7 +1,8 @@
 # Hardware demo media slot
 
-No hardware demo is published because the supervised SO-101 validation gate is
-still open. After that protocol passes, the operator may add
+No hardware demo is published because only the no-motion portion of the
+supervised SO-101 validation gate has passed. After the motion protocol passes,
+the operator may add
 `so101-first-contact.webp` here: at most 20 seconds, at most 8 MiB, with no
 audio, credentials, serial identifiers, private screens, or bystanders.
 

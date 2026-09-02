@@ -9,10 +9,12 @@ On the pinned Apple M5 Pro test case, MLX fp32 produced a 50-action chunk in
 while that chunk represents **1.67 s** at 30 fps (about **15.0× real-time
 duration**); scope and raw timings are in the [benchmark evidence](docs/BENCHMARK.md#mlx-versus-pytorch-mps).
 
-> **Hardware demo slot:** physical SO-101 validation is still blocked on the
-> separately authorized safety session, so this release candidate does not
-> claim real-robot operation. See the [first-contact status](hardware/FIRST_CONTACT.md)
-> and [media guidance](docs/media/README.md).
+> **Hardware demo slot:** live follower/camera I/O and two 60-second no-motion
+> MLX loops now pass, but physical actuation is blocked by the documented
+> camera, start-pose, and controller-limit gates. This release candidate does
+> not claim real-robot motion. See the
+> [first-contact status](hardware/FIRST_CONTACT.md) and
+> [media guidance](docs/media/README.md).
 
 ## Requirements
 
@@ -68,11 +70,15 @@ Or predict from a saved observation directory:
 mlx-smolvla predict --model lerobot/smolvla_base --observation /path/to/saved-observation
 ```
 
-`select_action` returns one physical action and queues the remainder of the
-50-action horizon; call `policy.reset()` between episodes. Local LeRobot-style
-checkpoint directories and complete Hub repository IDs use the same strict
-configuration/tensor loader. Quantized `vlm-8bit` and `vlm-4bit` presets are
-explicit production-only opt-ins documented in the [benchmark](docs/BENCHMARK.md#vlm-only-quantization).
+`select_action` returns one checkpoint-domain action and queues the remainder
+of the 50-action horizon; call `policy.reset()` between episodes. It is a
+physical-unit action only when the checkpoint contains effective statistics
+for the exact robot state/action interface. The upstream base checkpoint's
+saved stats do not bind to `observation.state` and `action`, so do not send its
+raw output to a robot. Local LeRobot-style checkpoint directories and complete
+Hub repository IDs use the same strict configuration/tensor loader. Quantized
+`vlm-8bit` and `vlm-4bit` presets are explicit production-only opt-ins
+documented in the [benchmark](docs/BENCHMARK.md#vlm-only-quantization).
 
 ```bash
 mlx-smolvla predict --observation /path/to/saved-observation --quantization vlm-8bit
@@ -97,7 +103,7 @@ robot and camera configuration:
 ```bash
 python -m lerobot.async_inference.robot_client \
   --policy_type=smolvla \
-  --pretrained_name_or_path=lerobot/smolvla_base \
+  --pretrained_name_or_path=<REVIEWED_LOCAL_CHECKPOINT_WITH_MATCHING_ROBOT_STATS> \
   --robot.type=so101_follower \
   --robot.port=<FOLLOWER_PORT> \
   --robot.id=<CALIBRATION_ID> \
@@ -109,13 +115,15 @@ python -m lerobot.async_inference.robot_client \
 ```
 
 The server implements the audited four-RPC LeRobot protocol, but robot I/O and
-safety remain the client's responsibility. Do not run the command against
-hardware until you have reviewed the [hardware runbook](docs/HARDWARE_RUNBOOK.md)
-and [current first-contact status](hardware/FIRST_CONTACT.md). The
-[bring-your-own-robot guide](examples/bring_your_own_robot/README.md) describes
-the adapter boundary for non-mainline clients. Remote serving is an explicit
-trusted-network-only mode because LeRobot 0.6.1 uses unauthenticated pickle
-payloads.
+safety remain the client's responsibility. The generic command above is a
+protocol example, not authorization to actuate hardware. This repository now
+ships a fail-closed Hiwonder SO-101 client under the optional `hardware` extra;
+its no-motion loop passed on a connected follower, while motion remains
+blocked. Review the [hardware runbook](docs/HARDWARE_RUNBOOK.md),
+[current first-contact status](hardware/FIRST_CONTACT.md), and
+[bring-your-own-robot guide](examples/bring_your_own_robot/README.md). Remote
+serving is an explicit trusted-network-only mode because LeRobot 0.6.1 uses
+unauthenticated pickle payloads.
 
 ## Run your own fine-tune
 
@@ -188,7 +196,8 @@ CPU compatibility path for bit-close deterministic comparison with PyTorch CPU.
 
 ## Limitations
 
-- Physical SO-101 integration is not yet validated; [first-contact evidence](hardware/FIRST_CONTACT.md) currently records the authorization block, not a robot result.
+- Connected SO-101 state/camera capture and no-motion MLX RPC loops are validated, but single-action and bounded-continuous motion are not; [first-contact evidence](hardware/FIRST_CONTACT.md) records the results and open physical gates.
+- Raw `lerobot/smolvla_base` output is not a physical-action interface because its saved state/action statistics do not bind to the generic keys. Motion clients must use a reviewed checkpoint with effective statistics matching the robot.
 - Production Metal fp32 passes the statistical gate but fails the strict `0.005` deterministic maximum; use strict mode for that contract and see the [mode table](docs/BENCHMARK.md#default-production-correctness-metal).
 - Native training remains statistical alpha because its derived deterministic checkpoint gate fails; the unchanged result is in the [T3B failure record](docs/evidence/FAILURE_LORA_FINETUNE_B.md).
 - Checkpoints must match the audited SmolVLA/SmolVLM2 configuration and complete tensor inventory described in the [architecture](docs/ARCHITECTURE.md).

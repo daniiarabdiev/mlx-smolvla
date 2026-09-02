@@ -2,69 +2,70 @@
 
 Date: 2026-09-02
 
-`mlx-smolvla` is a verified 0.1.0 software release candidate on the renamed
-GitHub repository. Four of the five public-sharing blockers are clear. The
-supervised SO-101 hardware gate is not clear, so the version tag, uploads,
-visibility change, release creation, announcement, and hardware claim remain
-withheld.
+`mlx-smolvla` is a 0.1.0 software release candidate on the canonical renamed
+GitHub repository. The connected-follower read path and two bounded no-motion
+RPC loops now pass, but physical motion has not run. The version tag, uploads,
+visibility change, release creation, announcement, and hardware-motion claim
+remain withheld.
 
 ## Stage outcomes
 
 | Stage | Outcome | Evidence |
 | --- | --- | --- |
-| A — real SO-101 | **BLOCKED** | The operator has not supplied the exact standalone live-session authorization. [`hardware/FIRST_CONTACT.md`](../../hardware/FIRST_CONTACT.md) therefore remains explicitly not performed; no device, vendor tree, or robot was accessed. |
+| A — real SO-101 | **Partial: no-motion complete; motion blocked** | The live `ARM SESSION CONFIRMED` gate was supplied. Follower-only calibration/state reads, two cameras, and two 60-second native-MLX no-motion loops completed with all six torque bits off and zero motor writes. Camera framing, neutral start pose, low-limit attestation, and the physical checklist block single-action and continuous modes. See [`FIRST_CONTACT.md`](../../hardware/FIRST_CONTACT.md) and [`PREFLIGHT.md`](../../hardware/PREFLIGHT.md). |
 | B — macOS / MLX floor | **Complete** | Official macOS 14 arm64 wheels for MLX 0.32.0, 0.32.1, and 0.32.2 were hash- and Mach-O-verified, then passed the unchanged correctness and installed-runtime gates. See [`MLX_COMPATIBILITY.md`](../evidence/MLX_COMPATIBILITY.md). |
-| C — public-release preparation | **Complete** | Canonical distribution/import/CLI/cache/GitHub identities, prior-project acknowledgment, community metadata, hobbyist-first README, agent guide, root hygiene, and a sub-two-minute fast lane are committed. |
-| D — software verification | **Complete; publication held** | The canonical artifacts passed archive, Twine, fresh-install, offline prediction, doctor, quantization, and loopback-serving checks. The fast suite passed 387/387 and the complete suite passed 678/678. See [`DIST_MANIFEST.md`](../evidence/DIST_MANIFEST.md) and [`DOCTOR.txt`](../evidence/DOCTOR.txt). |
+| C — public-release preparation | **Complete** | Canonical distribution/import/CLI/cache/GitHub identities, prior-project acknowledgment, community metadata, hobbyist-first README, agent guide, and root hygiene are committed. Hardware wording is restricted to the observed no-motion result. |
+| D — software verification | **Refresh in progress; publication held** | The earlier canonical artifacts passed archive, Twine, fresh-install, prediction, doctor, quantization, and serving checks. The new optional hardware package surface and client require a fresh artifact matrix and closing full-suite result before this row can return to complete. See [`DIST_MANIFEST.md`](../evidence/DIST_MANIFEST.md). |
 
-## Closing verification
+## Hardware continuation evidence
 
-- `make test-fast`: 387 passed, 291 deliberately slow tests deselected, no
-  skips or xfails, 93.71 test seconds / 96.50 seconds wall. An idle-process
-  preflight found no trainer, floor worker, pytest, or other Make test process.
-- `make test`: 678 passed, no skips or xfails, 572.61 test seconds / 575.49
-  seconds wall. The same idle-process preflight passed first.
-- Focused public/hygiene/distribution/rename/cache/compatibility/hardware slice:
-  50/50.
-- Sdist plus CPython 3.11/3.12/3.13 native wheels: canonical names only,
-  project-extension `minos 14.0`, all four accepted by Twine and all four
-  freshly installed outside the checkouts.
-- Fresh installed behavior: four base `doctor` and finite offline prediction
-  passes; one serve-extra descriptor/ephemeral-loopback `Ready` pass; finite
-  VLM 8-bit and 4-bit offline predictions; cache-variable compatibility shim
-  warning and precedence pass.
-- `uv lock --check` resolved 111 packages. Actionlint passed with only the
-  intentional constant-false diagnostic for the documented disabled hosted
-  macOS workflow excluded.
-- Public-document first-port-claim scan, stale-project-identity scan,
-  tracked-root/link/personal-path tests, secret-pattern scan, tracked-file
-  size audit, skip/xfail scan, and `git diff --check` passed.
-- The protected first LoRA failure record remains byte-identical at SHA-256
-  `d6654131c4acf86de13206f210f1ea1a82e3aad18871e5b64428bdf1dbeed7c6`.
-  The protected bf16, inference-comparison, quantization, second-attempt, and
-  training-benchmark evidence also matches the clean source checkpoint.
-- A final read-only fetch confirmed the canonical origin. Both official PyPI
-  endpoints returned HTTP 404 at 2026-09-02T14:45:08Z, so `mlx-smolvla`
-  appeared unclaimed at that instant but is not reserved.
-- Nothing was uploaded. No tolerance changed. No training run, floor
-  computation, hardware access, camera access, serial access, or vendor-tree
-  access occurred during this release pass.
+- The raw-base no-motion run processed 295 observations/chunks in 60.027 s at
+  4.914 sampled camera FPS. Observation-to-chunk latency was 149.313 ms median
+  and 151.139 ms p95; 281 chunks were held outside the public action domain,
+  with zero timeouts and zero writes.
+- The same weights plus effective SO-101 state/action statistics processed 295
+  observations and 294 chunks in 60.022 s at 4.915 sampled camera FPS. Latency
+  was 149.746 ms median and 152.502 ms p95; 12 chunks were held outside the
+  public action domain, with zero timeouts and zero writes.
+- The repository-owned client is fail-closed around exact follower identity,
+  calibration, torque-off readback, camera validity, checkpoint statistics,
+  controller-limit profile, inset start pose, action shape/domain, rate limit,
+  watchdog, duration/chunk caps, rollback, and torque-off shutdown.
+- Fresh ignored Python 3.12 `serve` and `hardware` environments were installed
+  separately. PyAV is absent from the server environment; its CLI import and
+  loopback-only startup/shutdown completed without the duplicate
+  AVFoundation-class warning seen in the all-extras environment.
+- Focused hardware, server, import-isolation, and distribution regressions pass
+  **115/115**. Final fast/full suite and artifact refresh are still pending in
+  this checkpoint.
+- The leader was never opened. The vendor checkout was neither installed nor
+  modified; its 696-file tracked-content composite remained
+  `d280efa881ab9e412cd071bbef38d8d9ec5050e484b49b5a2397df2a39bdb764`.
 
 ## Public-sharing blocker table
 
 | Blocker | Status | Reason |
 | --- | --- | --- |
-| Serve untested on hardware | **BLOCKED** | The separately authorized no-motion, single-action, and bounded-continuous protocol has not run. |
+| Serve untested on hardware | **Partial / blocked for motion** | The connected no-motion stage passes. Both camera views are operationally misframed, lift/elbow are outside the 10%-inset start envelope, no operator-attested low controller profile exists, and the workspace/base/power checklist is not recorded. |
 | macOS / MLX floor | **Clear** | MLX 0.32.0–0.32.2 and their official macOS 14 wheel family passed the fixed software gates. |
-| Claims exceed evidence | **Clear** | Public first-port language was removed, the earlier independent Hub port is acknowledged factually, performance numbers resolve to evidence, training is a preview, and hardware is explicitly unvalidated. |
-| Operator material in tree | **Clear** | The public root is allowlisted, local agent configuration is ignored/untracked, no private home path is present outside history, and scans found no credential pattern or oversized tracked artifact. |
-| First-page friction | **Clear** | The README leads with requirements/install/run/serve/train paths, installed `doctor` works, and the unfiltered fast lane is under two minutes. |
+| Claims exceed evidence | **Clear** | Public language distinguishes live no-motion RPC evidence from unperformed physical motion; no claim says the model drives the arm. |
+| Operator material in tree | **Clear** | Exact device serials, private paths, telemetry, camera frames, and the bystander-containing image remain ignored and untracked. Public evidence is redacted. |
+| First-page friction | **Clear, pending artifact refresh** | The README leads with requirements/install/run/serve/train paths and links the new hardware evidence; fresh-install checks will be repeated for the rebuilt artifacts. |
 
 ## Exact next gate
 
-The operator actions and commands are maintained in
-[`HUMAN_TASKS.md`](HUMAN_TASKS.md). The next prerequisite is a genuinely live,
-supervised hardware session beginning with the exact standalone authorization
-specified there. Until its graduated protocol passes and its evidence is
-committed, do not tag, publish, make the repository public, create a GitHub
-Release, announce hardware support, or share the release as complete.
+The physical prerequisites and exact new statement are maintained in
+[`HUMAN_TASKS.md`](HUMAN_TASKS.md). Power the follower off before manually
+reframing cameras or moving the arm. Motion may resume only after both cameras
+show the complete workspace, lift/elbow are manually inside their inset ranges,
+an operator-known procedure has produced an exact low-limit JSON profile, and
+the workspace/base/power checklist is true. The required new in-session phrase
+is:
+
+```text
+MOTION PREREQUISITES CONFIRMED: cameras framed, arm neutral, low limits profiled, workspace clear, base secure, hand on power.
+```
+
+Until single-action and bounded-continuous results are reviewed and committed,
+do not tag, publish, make the repository public, create a GitHub Release,
+announce hardware motion support, or share the release as complete.

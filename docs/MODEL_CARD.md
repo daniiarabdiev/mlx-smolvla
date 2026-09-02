@@ -45,8 +45,12 @@ Thresholds were fixed before evaluation and are indexed in
 
 ## Limitations
 
-- Physical SO-101 operation has not completed the gated hardware protocol and
-  is not claimed.
+- Connected Hiwonder SO-101 state/camera capture and no-motion RPC serving have
+  completed, but physical motion has not passed the gated protocol and is not
+  claimed.
+- Raw `lerobot/smolvla_base` output does not have effective physical
+  state/action statistics for the generic keys. A motion client must use a
+  reviewed checkpoint whose statistics match the target robot.
 - Production Metal fp32 passes the statistical gate but not the strict
   deterministic `0.005` maximum; strict CPU mode owns that contract.
 - Native training is statistical alpha: standard export and Torch/MLX

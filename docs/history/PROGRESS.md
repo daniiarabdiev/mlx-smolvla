@@ -2807,3 +2807,48 @@
   changed. No hardware, camera, serial port, vendor tree, upload, tag, release,
   visibility change, or announcement was attempted; the live hardware gate
   remains the sole public-release blocker.
+
+## 2026-09-02 — supervised follower preflight and no-motion protocol
+
+- Received the exact live `ARM SESSION CONFIRMED` gate. Enumerated the two
+  connected serial roles, opened only the follower, and never opened the
+  leader. Loaded the existing six-joint calibration, required exact controller
+  agreement, and observed all six torque bits disabled before and after the
+  session.
+- Added a repository-owned Hiwonder client and safety module through four
+  pushed checkpoints ending at `4044671`. The default/no-motion path cannot
+  write torque or position. Motion modes require a serial-bound exact register
+  profile, effective state/action checkpoint statistics, an inset start pose,
+  finite `(1, 6)` actions in the full driver domain, calibration clipping,
+  one-unit/2%-span rate limiting, a 500 ms watchdog, fixed duration/chunk caps,
+  slow return, and torque-off readback during cleanup.
+- Captured both cameras concurrently for five seconds. Wrist sustained 8.575
+  FPS and fixed sustained 29.968 FPS, with every sampled frame nonblack. Visual
+  review nevertheless failed the physical gate: the wrist view was obstructed
+  and the fixed view did not contain the arm workspace. No frame was committed;
+  one contained a bystander.
+- Completed two 60-second no-motion MLX server/client loops at a requested 5
+  Hz. Raw base handled 295 observations/chunks with 149.313 ms median and
+  151.139 ms p95 observation-to-chunk latency, 281 invalid holds, zero
+  timeouts, and zero writes. The same weights plus effective SO-101 statistics
+  handled 295 observations/294 chunks at 149.746/152.502 ms, 12 invalid holds,
+  zero timeouts, and zero writes. The final boundary observation was discarded
+  normally rather than written.
+- Diagnosed raw `lerobot/smolvla_base` statistics as ineffective for the public
+  `observation.state`/`action` keys and made motion reject such checkpoints.
+  Created a local same-weight stats-active diagnostic artifact; neither local
+  artifact nor telemetry was uploaded.
+- Preserved no-clobber private JSONL hashes in `hardware/PREFLIGHT.md`. The
+  vendor checkout remained uninstalled and unmodified: the sorted digest over
+  all 696 tracked files was exactly
+  `d280efa881ab9e412cd071bbef38d8d9ec5050e484b49b5a2397df2a39bdb764`
+  before and after access.
+- Built fresh ignored Python 3.12 serve-only and client-only environments. PyAV
+  is absent from the server environment, and its CLI import plus loopback-only
+  startup/shutdown had no duplicate AVFoundation-class warning. Focused
+  hardware, server, import-isolation, distribution, and runbook coverage passes
+  **115/115**.
+- Motion remains fail-closed: lift/elbow must be placed manually inside the
+  inset start range with torque off, both cameras must be reframed, a known-good
+  low controller-limit profile must be supplied, and the workspace/base/power
+  checklist must be true. No single-action or continuous command ran.

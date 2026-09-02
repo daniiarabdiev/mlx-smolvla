@@ -14,6 +14,8 @@ needed to make a safe, reviewable contribution.
   from the base runtime.
 - `tests/`: unit, parity, statistical, packaging, serving, and training tests.
 - `scripts/`: reproducible evidence and benchmark entry points.
+- `hardware/`: redacted first-contact evidence, preflight results, and the
+  fail-closed client design contract.
 - `docs/`: architecture, operations, development guidance, and evidence.
 
 ## Validate changes

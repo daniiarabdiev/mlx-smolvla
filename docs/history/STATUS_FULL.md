@@ -389,3 +389,46 @@ Training evidence is intentionally ignored by Git and has not been uploaded.
   endpoint pending the exact task in `HUMAN_TASKS.md`.
 - **Hardware Stage A:** blocked by the unchanged live authorization gate; no
   device or vendor-tree access occurred.
+
+## 2026-09-02 supervised hardware continuation
+
+This section supersedes the earlier hardware and origin snapshots above.
+
+- **Source checkpoints:** the fail-closed client was implemented and pushed in
+  four reviewable commits ending at `4044671`. The canonical origin is
+  `git@github.com:daniiarabdiev/mlx-smolvla.git`; local and fetched `main`
+  matched at that checkpoint.
+- **Authorization and boundary:** the operator supplied `ARM SESSION
+  CONFIRMED`. Only the follower port was opened. The separate leader was
+  detected but never opened. The vendor checkout remained at `a24998f` and its
+  696 tracked files retained the identical composite SHA-256
+  `d280efa881ab9e412cd071bbef38d8d9ec5050e484b49b5a2397df2a39bdb764`.
+- **Physical preflight:** all six controller torque bits were zero before and
+  after access, and calibration matched controller readback. Both cameras were
+  live, but the wrist view was obstructed and the fixed view omitted the robot
+  workspace. Lift and elbow were outside the required 10%-inset start range.
+  Existing controller settings were recorded but were not assumed safe; no
+  operator-attested low-limit profile exists.
+- **No-motion result:** two bounded 60-second native MLX RPC loops completed at
+  about 4.915 sampled camera FPS, with zero action timeouts and zero motor or
+  torque writes. Raw-base observation-to-chunk latency was 149.313 ms median /
+  151.139 ms p95; the stats-active run was 149.746 / 152.502 ms. The latter
+  processed 294 chunks and held 12 outside the full public action domain.
+- **Safety implementation:** motion modes now require exact follower identity,
+  torque-off and calibration readback, finite camera data, effective six-axis
+  state/action statistics, an exact nine-register operator profile, an inset
+  start pose, valid `(1, 6)` finite actions, domain/envelope/rate checks, fixed
+  watchdog/session caps, and verified torque-off cleanup. No-motion mode has no
+  torque or actuator write path.
+- **Environment isolation:** fresh ignored Python 3.12 `serve` and `hardware`
+  environments were installed separately. The server environment has no PyAV;
+  CLI import and loopback-only startup/shutdown emitted no duplicate
+  AVFoundation-class warning.
+- **Current gate:** the connected no-motion milestone is complete; single-
+  action and bounded-continuous motion remain blocked on camera framing,
+  manual neutral placement, a known-good low-limit profile, and the
+  workspace/base/physical-power checklist. No tag, upload, release, visibility
+  change, or hardware-motion claim is authorized.
+- **Verification at this checkpoint:** focused hardware/server/import/
+  distribution coverage passes 115/115. Artifact rebuild and closing fast/full
+  suites remain to be recorded in a later section.

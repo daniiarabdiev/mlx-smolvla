@@ -33,21 +33,39 @@ def test_hardware_runbook_has_exact_gate_commands_safety_and_evidence() -> None:
     assert "Absent that exact line" in runbook
     assert "scripts/serve_latency_smoke.py" in runbook
     assert "--output .cache/hardware/first-contact-latency.jsonl" in runbook
-    assert "python -m lerobot.async_inference.robot_client" in runbook
-    assert "--robot.type=so101_follower" in runbook
-    assert "--robot.max_relative_target=1.0" in runbook
-    assert "--robot.disable_torque_on_disconnect=true" in runbook
-    assert "--actions_per_chunk=1" in runbook
-    assert "--fps=5" in runbook
+    assert "examples/bring_your_own_robot/hiwonder_so101_client.py" in runbook
+    assert "--no-motion" in runbook
+    assert "--single-action" in runbook
+    assert "--hardware-safety-profile" in runbook
+    assert "500 ms action watchdog" in runbook
+    assert "60 seconds" in runbook
+    assert "one-public-unit" in runbook
     assert "hand on the power switch" in runbook
     assert "torque and speed limits" in runbook
     assert "kill the server, then power off" in runbook
-    assert "Hardware validation status: NOT RUN" in runbook
+    assert "follower read path and 60-second no-motion loop" in runbook
+    assert "motion has not run" in runbook
+    assert "Raw `lerobot/smolvla_base` is suitable for no-motion diagnosis only" in runbook
+    assert ".cache/hardware/server-venv" in runbook
+    assert ".cache/hardware/client-venv" in runbook
     for evidence in (
         "latency JSONL",
         "server log",
-        "client log",
+        "client telemetry",
         "observed motion",
         "rollback",
     ):
         assert evidence in runbook
+
+
+def test_public_hardware_status_is_explicitly_no_motion_only() -> None:
+    first_contact = Path("hardware/FIRST_CONTACT.md").read_text(encoding="utf-8")
+    readme = Path("README.md").read_text(encoding="utf-8")
+    prose = " ".join(first_contact.split())
+
+    assert "no-motion protocol complete; physical motion blocked" in first_contact
+    assert "No torque-enable or goal-position write occurred" in prose
+    assert "single-action nor bounded- continuous stage ran" in prose
+    assert "drives a real SO-101 from a MacBook” is **not** evidenced" in first_contact
+    assert "Raw `lerobot/smolvla_base` output is not a physical-action interface" in readme
+    assert "single-action and bounded-continuous motion are not" in readme

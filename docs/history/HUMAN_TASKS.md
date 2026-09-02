@@ -2,10 +2,51 @@
 
 ## Open — complete the hardware gate before announcing v0.1.0
 
-- First complete the existing supervised-session task below. Only after
-  `hardware/FIRST_CONTACT.md` contains passing no-motion, single-action, and
-  bounded-continuous results may the release candidate claim hardware support,
-  receive the `v0.1.0` tag, or be announced.
+- The follower/camera preflight and two 60-second no-motion loops completed on
+  2026-09-02. First clear the physical prerequisites below, then complete the
+  single-action and bounded-continuous stages. Only after
+  `hardware/FIRST_CONTACT.md` contains passing results for all three graduated
+  modes may the release candidate claim hardware motion support, receive the
+  `v0.1.0` tag, or be announced.
+
+## Open — clear the physical prerequisites for one action
+
+- Power the follower off before touching or repositioning the cameras or arm.
+  Re-aim and secure the wrist camera so its full workspace is visible, and aim
+  the fixed camera at the complete arm workspace. Remove bystanders from both
+  views. Then repeat the concurrent five-second camera check from
+  [`../../hardware/PREFLIGHT.md`](../../hardware/PREFLIGHT.md); a nonblack but
+  obstructed frame does not pass.
+- With torque disabled, manually place `shoulder_lift` and `elbow_flex` near
+  their calibrated neutral positions. At minimum, readback must be inside
+  −83.833°–83.833° for lift and −77.187°–77.187° for elbow. Do not recalibrate
+  or command the motors to reach that pose.
+- Using the operator's known-good Hiwonder/ServoStudio procedure, establish low
+  torque, current, velocity, and acceleration limits. Do not copy the observed
+  defaults in `PREFLIGHT.md`. Save the exact readback for every joint and every
+  required register as a JSON safety profile outside the tracked tree, then
+  validate it without opening hardware:
+
+  ```sh
+  .cache/hardware/client-venv/bin/python -c \
+    'from mlx_smolvla.hardware_safety import load_hardware_safety_profile; import sys; print(load_hardware_safety_profile(sys.argv[1]))' \
+    '<ABSOLUTE_PATH_TO_OPERATOR_VERIFIED_PROFILE_JSON>'
+  ```
+
+- Clear the motion envelope, secure the base, test the physical power cut, and
+  keep one hand on the switch. Use the already validated serve-only/client-only
+  environment split in `docs/HARDWARE_RUNBOOK.md`; do not substitute the
+  all-extras development environment.
+- After all four items are physically true, send this exact new in-session
+  statement before a single-action attempt:
+
+  ```text
+  MOTION PREREQUISITES CONFIRMED: cameras framed, arm neutral, low limits profiled, workspace clear, base secure, hand on power.
+  ```
+
+- Then follow only the `--single-action` command in the runbook. Do not run
+  `--continuous` until the one-action direction, displacement, speed, gripper,
+  cameras, telemetry, return-to-start, and torque-off results are reviewed.
 
 ## Open — make the GitHub repository public
 
@@ -134,21 +175,21 @@
 - **Sources:** <https://pypi.org/pypi/mlx-smolvla/json> and
   <https://pypi.org/simple/mlx-smolvla/>.
 
-## Open — confirm the supervised hardware session
+## Done — confirm the supervised hardware session
 
-- **Status:** open — the exact live-session gate has not been supplied.
-- **Action:** while physically present with the follower arm and both cameras
-  connected and with immediate access to the physical power switch, type this
-  exact line in the current interactive task:
+- **Status:** done — the operator supplied the exact gate in the live task on
+  2026-09-02. Follower serial/calibration reads, both cameras, and two bounded
+  no-motion MLX loops then ran. The leader was not opened and no motor or torque
+  write occurred.
+- **Gate supplied:**
 
   ```text
   ARM SESSION CONFIRMED
   ```
 
-- **Why:** the words currently appear only inside the supplied specification.
-  `docs/HARDWARE_RUNBOOK.md` explicitly says quoted file content does not authorize
-  serial, camera, vendor-tree, or motion access. Until this is done, Stage A is
-  blocked and the hardware claim must remain unpublished.
+- **Remaining scope:** this resolved device-read/no-motion authorization, not
+  the failed physical prerequisites listed above. Motion and the public
+  hardware claim remain blocked.
 
 ## Done — provide the normative release brief
 
