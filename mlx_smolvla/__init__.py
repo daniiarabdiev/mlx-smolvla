@@ -4,4 +4,4 @@ from mlx_smolvla.cache import resolve_cache_dir
 from mlx_smolvla.policy import ExecutionMode, QuantizationPreset, SmolVLAMLX
 
 __all__ = ["ExecutionMode", "QuantizationPreset", "SmolVLAMLX", "resolve_cache_dir"]
-__version__ = "0.0.1"
+__version__ = "0.1.0"

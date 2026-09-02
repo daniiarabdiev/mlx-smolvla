@@ -1,0 +1,46 @@
+name: Bug report
+description: Report a reproducible mlx-smolvla defect
+title: "[Bug]: "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for helping improve mlx-smolvla. Remove secrets and personal paths from all pasted output.
+  - type: textarea
+    id: description
+    attributes:
+      label: What happened?
+      description: Describe the observed behavior and what you expected.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Minimal reproduction
+      description: Include the exact command or smallest code sample and immutable checkpoint revision.
+      render: shell
+    validations:
+      required: true
+  - type: textarea
+    id: doctor
+    attributes:
+      label: Doctor output
+      description: Run `mlx-smolvla doctor` and paste the JSON output after reviewing it for private paths.
+      render: json
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant logs
+      description: Paste the shortest useful traceback or log excerpt, with secrets and personal paths removed.
+      render: shell
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checks
+      options:
+        - label: I searched existing issues and removed secrets, tokens, private paths, and private data.
+          required: true

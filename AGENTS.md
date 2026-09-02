@@ -1,33 +1,81 @@
-# AGENTS.md — smolvla-mlx
+# Coding-agent guide
 
-This repository ports SmolVLA inference (checkpoint `lerobot/smolvla_base`) to MLX with proven numerical parity against LeRobot's PyTorch implementation. The full specification is `BRIEF.md`. Read it completely at the start of every session before acting. This file holds the rules that apply at all times.
+`mlx-smolvla` is a native MLX implementation of SmolVLA inference, serving,
+and training for Apple Silicon. This file gives any coding agent the contracts
+needed to make a safe, reviewable contribution.
 
-## Where you are running
+## Repository map
 
-- The operator's Apple Silicon Mac (M5 Pro, 48 GB unified memory). MLX runs on Metal here; this machine is the source of truth for correctness and for the benchmark.
-- Sandbox: `workspace-write`. Only this repository is writable. Route every cache inside it: set `HF_HOME=$PWD/.cache/hf`, `UV_CACHE_DIR=$PWD/.cache/uv`, and `SMOLVLA_MLX_CACHE=$PWD/.cache/smolvla_mlx` (all gitignored) in the `Makefile` and in every command you run. If a tool insists on writing elsewhere, do not try to escalate; add a `HUMAN_TASKS.md` entry naming the exact path and continue.
-- `~/robot/so101` is the operator's live robot-control environment (a vendor LeRobot fork). Never read it as a reference, never activate its venv, never touch serial ports or hardware. Use mainline LeRobot from PyPI or GitHub as the reference, installed in this repo's own venv.
+- `mlx_smolvla/`: dependency-light conversion and inference runtime, CLI,
+  diagnostics, and serving adapter.
+- `training/`: native MLX objectives, gradients, optimizers, LoRA/full
+  fine-tuning, checkpointing, and export.
+- `reference/`: pinned PyTorch/LeRobot evidence-generation lane; never import it
+  from the base runtime.
+- `tests/`: unit, parity, statistical, packaging, serving, and training tests.
+- `scripts/`: reproducible evidence and benchmark entry points.
+- `docs/`: architecture, operations, development guidance, and evidence.
 
-## Hard rules
+## Validate changes
 
-1. Tolerances in `BRIEF.md` Section 6 are immutable. Tighten if you like; never loosen. If you think one is wrong, argue it in `PROGRESS.md` with numbers and leave the value unchanged.
-2. The runtime package `smolvla_mlx` never imports `torch`, `lerobot`, or `transformers`. A test enforces this; keep it passing.
-3. No mocking of model components, no skipped tests, no `xfail` without a matching `FAILURE_<module>.md`.
-4. No secrets in the repo. No uploads to the Hugging Face Hub. No pushes to any remote other than this repo's `origin`.
-5. Commit after every passing test. If `origin` exists, push at least hourly. Message format: `phase-N: <what> (<test> passes)`.
-6. Do not end your turn to ask questions. Do not wait for approval between phases. End a turn only at a stop condition or Definition of Done (`BRIEF.md` Sections 8 and 9).
-7. Prefer small, boring, verifiable steps over clever ones.
+Run the dependency-light lane while iterating:
 
-## Files you maintain
+```bash
+make test-fast
+```
 
-- `PLAN.md` — written first, updated whenever the plan changes.
-- `PROGRESS.md` — append an entry after every meaningful step: what, evidence (test names and numbers), decisions, open questions, next step.
-- `HUMAN_TASKS.md` — your only channel to the operator. Use it for a writable path you need, a failed push, or a decision only they can make. Give exact commands. Continue with other work while waiting; check it at the start of each session.
-- `STATUS.md` — written at every stop condition, and the line `DEFINITION OF DONE MET` when v0.1 is complete.
-- `ARCHITECTURE.md`, `REUSE_DECISIONS.md`, `BENCHMARK.md`, `FAILURE_<module>.md` as specified in `BRIEF.md`.
+Before completing behavior, model, packaging, or release work, run:
 
-## Session start checklist
+```bash
+make test
+```
 
-- Read `BRIEF.md`, `PLAN.md`, the last three entries of `PROGRESS.md`, and `HUMAN_TASKS.md`.
-- Run `make test` and confirm the state matches `PROGRESS.md`.
-- Continue from the "next step" of the last `PROGRESS.md` entry.
+The full lane uses pinned local model/dataset artifacts. Never hide a failure
+with a skip or expected-failure marker.
+
+## Invariants
+
+1. Published numerical tolerances are immutable: diagnose regressions and
+   never loosen a gate after it has judged an implementation.
+2. Importing `mlx_smolvla` must not import Torch, Transformers, or LeRobot.
+   Keep reference, dataset, serving, and training dependencies behind their
+   explicit optional paths.
+3. `execution_mode="production"` remains the default Metal path.
+   `execution_mode="strict"` remains an explicit CPU compatibility path for
+   deterministic parity work.
+4. Conversion must stay strict about configuration, tensor names, shapes, and
+   complete consumption. Offline reload must reproduce the same converted
+   artifact.
+5. Never upload models, datasets, distributions, releases, or telemetry as an
+   implicit development step. Never commit credentials, caches, or generated
+   model weights.
+
+## Common workflows
+
+Inspect the environment:
+
+```bash
+mlx-smolvla doctor
+```
+
+Serve a checkpoint to a trusted LeRobot 0.6.1 async client over loopback:
+
+```bash
+mlx-smolvla serve --host 127.0.0.1 --port 8080
+```
+
+Run a native MLX training smoke on a local LeRobot dataset:
+
+```bash
+mlx-smolvla train /path/to/dataset --lora --steps 2 --batch-size 1 \
+  --output .cache/training/smoke
+```
+
+## Adding a checkpoint target
+
+Start with an immutable repository revision and a configuration/tensor
+inventory. Reuse the closest native modules, add an explicit total weight-name
+mapping, and write real-observation deterministic/statistical gates before
+comparing outputs. Cover conversion, offline reload, import isolation, and a
+fresh-installed artifact. See [CONTRIBUTING.md](CONTRIBUTING.md) and the
+[evidence index](docs/evidence/README.md) for the complete review contract.

@@ -1,0 +1,32 @@
+name: Feature request
+description: Propose a scoped improvement or checkpoint target
+title: "[Feature]: "
+labels:
+  - enhancement
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What concrete workflow or limitation should this address?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed behavior
+      description: Describe the smallest useful public interface and any compatibility tradeoffs.
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence plan
+      description: For model changes, include immutable revisions, tensor/config differences, representative observations, and gates written before comparison.
+  - type: checkboxes
+    id: invariants
+    attributes:
+      label: Project contracts
+      options:
+        - label: This proposal keeps base-runtime import isolation and does not rely on loosening an existing numerical tolerance.
+          required: true

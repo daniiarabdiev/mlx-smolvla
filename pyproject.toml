@@ -9,11 +9,29 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "mlx-smolvla"
-version = "0.0.1"
-description = "Native MLX inference for SmolVLA on Apple Silicon"
+version = "0.1.0"
+description = "Native MLX inference, serving, and training tools for SmolVLA on Apple Silicon"
 readme = "README.md"
 requires-python = ">=3.11,<3.14"
 license = "Apache-2.0"
+keywords = [
+  "apple-silicon",
+  "lerobot",
+  "mlx",
+  "robotics",
+  "smolvla",
+  "vision-language-action",
+]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Environment :: MacOS X",
+  "Operating System :: MacOS",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
 dependencies = [
   "huggingface-hub==1.29.0",
   "mlx>=0.32.0,<0.32.3",
@@ -22,6 +40,13 @@ dependencies = [
   "safetensors==0.8.0",
   "tokenizers==0.22.2",
 ]
+
+[project.urls]
+Changelog = "https://github.com/daniiarabdiev/mlx-smolvla/blob/main/CHANGELOG.md"
+Documentation = "https://github.com/daniiarabdiev/mlx-smolvla/tree/main/docs"
+Homepage = "https://github.com/daniiarabdiev/mlx-smolvla"
+Issues = "https://github.com/daniiarabdiev/mlx-smolvla/issues"
+Repository = "https://github.com/daniiarabdiev/mlx-smolvla"
 
 [project.scripts]
 mlx-smolvla = "mlx_smolvla.cli:main"

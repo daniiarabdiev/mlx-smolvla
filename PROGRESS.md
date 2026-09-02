@@ -2610,3 +2610,37 @@
 - No trainer, floor computation, product timing benchmark, robot environment,
   serial/camera device, hardware, or upload ran. The existing hardware and
   GitHub-rename operator gates remain open.
+
+## 2026-09-02 — GitHub rename gate resolved
+
+- Committed and pushed the Stage B/canonical-code checkpoint as `da1bb4d`
+  (`phase-B: verify macOS 14 compatibility and canonical identity (664 tests
+  pass)`). The push through the old URL returned GitHub's authoritative
+  moved-repository notice naming `git@github.com:daniiarabdiev/mlx-smolvla.git`.
+- Repeated the required read-only lookup. The new endpoint then resolved
+  `HEAD` and `refs/heads/main` to `da1bb4d`. Only after that success, changed
+  `origin` to the new SSH URL and fetched `main`; local `HEAD` and
+  `origin/main` match exactly.
+- Closed the GitHub-rename operator task. The supervised hardware gate remains
+  the only current external gate.
+
+## 2026-09-02 — public metadata and contributor surface
+
+- Wrote `docs/dev/RELEASE_CHECKLIST.md` from current primary GitHub, PyPA,
+  MLX-LM, MLX-VLM, and LeRobot guidance, with a direct source link on every
+  adapted item.
+- Added red public-release tests and observed five intended failures covering
+  version/metadata, community files, the public agent guide, and prior-art
+  acknowledgment.
+- Set the source and distribution version to `0.1.0`; completed SPDX license,
+  classifiers, keywords, Python range, README, and canonical
+  `daniiarabdiev/mlx-smolvla` URLs. Current setuptools rejected the redundant
+  legacy Apache license classifier alongside the SPDX expression, so the SPDX
+  expression remains authoritative.
+- Added the changelog, contribution/citation/security/conduct surfaces, YAML
+  issue forms, and a generic coding-agent guide. Preserved the original
+  operator guide byte-for-byte at `docs/history/AGENTS.operator.md`.
+- Focused release/rename/distribution verification: `22 passed, 1 deselected`
+  in `13.76s`. The one deselection is the intentionally still-red README slice,
+  which is implemented in C5 rather than weakened.
+- No training, timing benchmark, hardware/device access, or upload ran.

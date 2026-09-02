@@ -1,8 +1,8 @@
 # Human Tasks
 
-## Open — finish the GitHub repository rename
+## Done — finish the GitHub repository rename
 
-- **Status:** open — at `2026-09-02T11:53:16Z`, read-only SSH lookup of
+- **Status:** done — at `2026-09-02T11:53:16Z`, read-only SSH lookup of
   `git@github.com:daniiarabdiev/mlx-smolvla.git` returned `Repository not
   found`, while the existing `origin` still fetched `main` at `a77e820` from
   `git@github.com:daniiarabdiev/smolvla-mlx.git`.
@@ -18,6 +18,10 @@
   is fetchable. The local package, import, CLI, cache, and public text can be
   migrated independently; pushes continue safely to the existing `origin`
   until this endpoint resolves.
+- **Resolution:** the Stage B checkpoint push returned GitHub's authoritative
+  moved-repository notice. A subsequent `git ls-remote` of the new endpoint
+  resolved `main` to `da1bb4d`; `origin` was then changed to the new SSH URL,
+  fetched successfully, and matched local `HEAD` exactly.
 
 ## Done — check the `mlx-smolvla` PyPI name
 
