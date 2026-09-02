@@ -12,7 +12,7 @@ name = "smolvla-mlx"
 version = "0.0.1"
 description = "Native MLX inference for SmolVLA on Apple Silicon"
 readme = "README.md"
-requires-python = ">=3.12,<3.13"
+requires-python = ">=3.11,<3.14"
 license = "Apache-2.0"
 dependencies = [
   "huggingface-hub==1.29.0",
@@ -28,8 +28,8 @@ smolvla-mlx = "smolvla_mlx.cli:main"
 
 [project.optional-dependencies]
 reference = [
-  "lerobot[dataset,smolvla]==0.6.1",
-  "torch==2.11.0",
+  "lerobot[dataset,smolvla]==0.6.1; python_version >= '3.12'",
+  "torch==2.11.0; python_version >= '3.12'",
 ]
 train = []
 

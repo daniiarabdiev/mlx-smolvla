@@ -46,13 +46,19 @@ def _parser() -> argparse.ArgumentParser:
     bench.add_argument("--output", type=Path)
     bench.set_defaults(handler=_bench)
 
-    predict = subcommands.add_parser("predict", help="predict one action from a real LeRobot dataset frame")
+    predict = subcommands.add_parser(
+        "predict",
+        help="predict one action from a saved observation or real LeRobot dataset frame",
+    )
     predict.add_argument("--model", default="lerobot/smolvla_base")
     predict.add_argument("--cache-dir", type=Path)
     predict.add_argument("--tokenizer-dir", type=Path)
-    predict.add_argument("--dataset", required=True)
-    predict.add_argument("--index", required=True, type=int)
+    source = predict.add_mutually_exclusive_group(required=True)
+    source.add_argument("--dataset")
+    source.add_argument("--observation", type=Path)
+    predict.add_argument("--index", type=int)
     predict.add_argument("--episode", type=int, default=0)
+    predict.add_argument("--metadata", type=Path, default=Path("tests/golden/metadata.json"))
     predict.add_argument("--camera1-key", default="observation.images.side")
     predict.add_argument("--camera2-key", default="observation.images.up")
     predict.add_argument("--dtype", choices=("float32", "bfloat16"), default="bfloat16")
@@ -93,16 +99,28 @@ def _test(args: argparse.Namespace) -> int:
     return completed.returncode
 
 
-def _golden_observation(sample_root: Path, metadata_path: Path) -> Mapping[str, object]:
+def _saved_observation(sample_root: Path, metadata_path: Path) -> Mapping[str, object]:
     if not metadata_path.is_file():
         raise FileNotFoundError(f"Golden metadata is absent at {metadata_path}; run make goldens first")
     raw = json.loads(metadata_path.read_text(encoding="utf-8"))
     samples = raw.get("samples")
-    if not isinstance(samples, list) or not samples or not isinstance(samples[0], dict):
-        raise ValueError("Golden metadata has no first sample")
-    task = samples[0].get("task")
+    if not isinstance(samples, list) or not samples:
+        raise ValueError("Golden metadata has no samples")
+    sample = next(
+        (
+            candidate
+            for candidate in samples
+            if isinstance(candidate, dict) and candidate.get("name") == sample_root.name
+        ),
+        None,
+    )
+    if sample is None:
+        raise ValueError(
+            f"Golden metadata has no sample named {sample_root.name!r} for {sample_root}"
+        )
+    task = sample.get("task")
     if not isinstance(task, str):
-        raise ValueError("Golden metadata first sample has no task string")
+        raise ValueError(f"Golden metadata sample {sample_root.name!r} has no task string")
     return {
         "observation.images.camera1": np.load(sample_root / "raw/camera1.npy"),
         "observation.images.camera2": np.load(sample_root / "raw/camera2.npy"),
@@ -116,7 +134,7 @@ def _bench(args: argparse.Namespace) -> int:
     policy = _load_policy(args, cache_dir)
     result = run_benchmark(
         policy,
-        _golden_observation(args.sample_root, args.metadata),
+        _saved_observation(args.sample_root, args.metadata),
         measured_runs=args.runs,
         warmup_runs=args.warmups,
     )
@@ -130,6 +148,9 @@ def _bench(args: argparse.Namespace) -> int:
 
 def _dataset_observation(args: argparse.Namespace, cache_dir: Path) -> Mapping[str, object]:
     """Extract a frame in a child process so the runtime module never imports LeRobot."""
+
+    if args.index is None:
+        raise ValueError("predict --dataset requires --index")
 
     with tempfile.TemporaryDirectory(prefix="dataset-frame-", dir=cache_dir) as temporary_name:
         temporary = Path(temporary_name)
@@ -191,7 +212,11 @@ Path(configuration['task_output']).write_text(json.dumps(item['task']), encoding
 def _predict(args: argparse.Namespace) -> int:
     cache_dir = _cache(args)
     policy = _load_policy(args, cache_dir)
-    observation = _dataset_observation(args, cache_dir)
+    observation = (
+        _saved_observation(args.observation, args.metadata)
+        if args.observation is not None
+        else _dataset_observation(args, cache_dir)
+    )
     action = policy.select_action(observation)
     _emit(model=args.model, cache=str(cache_dir), dtype=args.dtype, output="action", action=action.tolist())
     return 0

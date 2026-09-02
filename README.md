@@ -7,13 +7,14 @@ flow-matching sampler.
 
 ## Install
 
-On Apple Silicon with a supported Python 3.12 environment:
+On Apple Silicon with Python 3.11, 3.12, or 3.13:
 
 ```bash
 pip install .
 ```
 
-For repository development and the optional PyTorch reference lane:
+For repository development and the optional PyTorch reference lane (Python
+3.12 or 3.13; LeRobot 0.6.1 requires Python 3.12+):
 
 ```bash
 uv sync --extra reference
@@ -93,13 +94,16 @@ statistics, so its effective transform is identity.
 smolvla-mlx convert --model lerobot/smolvla_base --dtype bfloat16
 smolvla-mlx test
 smolvla-mlx bench --runs 50 --warmups 5
+smolvla-mlx predict --observation tests/golden/sample_000
 smolvla-mlx predict --dataset lerobot/svla_so101_pickplace --episode 0 --index 0
 ```
 
-`bench` uses a saved real golden observation by default; run `make goldens`
-first if the local golden files are absent. `predict --dataset` extracts a
-dataset frame through the optional child-process LeRobot bridge, so the
-core-only installation remains dependency-isolated.
+`bench` and `predict --observation` use a saved real golden observation; run
+`make goldens` first if the local golden files are absent. `predict --dataset`
+extracts a dataset frame through the optional child-process LeRobot bridge, so
+the core-only installation remains dependency-isolated. Exact CPU-reference
+arithmetic uses the packaged native extension when present; source builds may
+set `SMOLVLA_MLX_BUILD_NATIVE=0` for the tested pure-MLX fallback.
 
 ## Correctness
 
