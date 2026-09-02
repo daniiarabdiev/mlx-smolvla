@@ -4,7 +4,7 @@ export SMOLVLA_MLX_CACHE := $(CURDIR)/.cache/smolvla_mlx
 
 TESTS ?= tests
 
-.PHONY: goldens test bench inference-comparison profile-bf16 production-evidence cache-inventory clean-cache clean-cache-dry-run training-audit training-goldens training-parity optimizer-goldens optimizer-lockstep lora-benchmark lora-evaluation lora-finetune lora-finetune-resume lora-finetune-check training-resume-lora training-resume-full training-benchmark
+.PHONY: goldens test bench inference-comparison profile-bf16 quantization-experiment production-evidence cache-inventory clean-cache clean-cache-dry-run training-audit training-goldens training-parity optimizer-goldens optimizer-lockstep lora-benchmark lora-evaluation lora-finetune lora-finetune-resume lora-finetune-check training-resume-lora training-resume-full training-benchmark
 
 goldens:
 	uv run --extra reference python scripts/make_goldens.py --cache-dir $(HF_HOME) --output tests/golden
@@ -23,6 +23,9 @@ inference-comparison:
 
 profile-bf16:
 	uv run python scripts/profile_inference_dtypes.py --native-cache $(SMOLVLA_MLX_CACHE) --output $(CURDIR)/BF16_PROFILE.json
+
+quantization-experiment:
+	uv run --extra reference python scripts/experiment_quantization.py --reference-cache $(HF_HOME) --native-cache $(SMOLVLA_MLX_CACHE) --dataset-root $(HF_HOME)/datasets/svla_so101_pickplace --dense-statistical $(CURDIR)/.cache/statistical-production.json --output $(CURDIR)/QUANTIZATION_EXPERIMENT.json
 
 production-evidence:
 	uv run --extra reference python scripts/production_check.py --output $(CURDIR)/.cache/production-deterministic.json

@@ -49,6 +49,7 @@ _COMPETING_MARKERS = (
     "self_consistency.py",
     "scripts/bench.py",
     "profile_inference_dtypes.py",
+    "experiment_quantization.py",
 )
 _MPS_ENVIRONMENT_KEYS = (
     "PYTORCH_DEBUG_MPS_ALLOCATOR",

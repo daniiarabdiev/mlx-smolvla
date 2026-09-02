@@ -2320,3 +2320,30 @@
   upload, hardware, robot directory, or serial port was touched; the original
   T3 failure remains byte-identical at SHA-256
   `d6654131c4acf86de13206f210f1ea1a82e3aad18871e5b64428bdf1dbeed7c6`.
+
+## 2026-09-02 — Stage Q P2-3 quantization protocol frozen before comparison
+
+- Reviewed the current upstream MLX `nn.quantize`/`QuantizedLinear` contract and
+  `mlx-vlm`'s predicate-based loader pattern. The local experiment reuses MLX's
+  official affine weight-only primitive directly; it does not import
+  `mlx_vlm`, copy its broad runtime, or weaken this package's dependency
+  isolation.
+- Added a seven-test red contract, then implemented a fixed matrix that passes
+  **8/8 focused quantization/import-isolation tests in 0.22 seconds**. The
+  variants are dense bf16, VLM 8-bit, and VLM 4-bit with affine group size 64.
+  Accuracy is the existing 50 episode-start population and unchanged `<=1.05`
+  Torch-MAE ratio. Latency is `sample_000`, fixed noise, 5 excluded warmups,
+  and 50 measured chunks per variant.
+- The audited quantization population is exactly 114 connector/language Linear
+  modules / 216,391,680 weights. The token embedding, 72 vision linears, state
+  projection, and all 116 expert linears remain dense bf16. A non-timed real
+  model smoke proved that exact topology for both 8-bit and 4-bit and emitted a
+  finite `[1, 50, 6]` action from each.
+- The coordinator runs all three latency workers first and sequentially after
+  a clean/idle preflight, then evaluates each quantized variant on the 50 fixed
+  real cases. It binds the prior dense production statistical artifact at
+  SHA-256 `c506ddcfdde50297e97b9905a299d55f117680a93b257e0af335ae6c9ad5fe07`,
+  raw per-case errors, raw timing samples, topology, sources, inputs, and
+  environment. A preset becomes eligible only by the unchanged gate; the
+  default is fixed as unchanged. No accuracy comparison or timing has run from
+  this dirty protocol tree.
