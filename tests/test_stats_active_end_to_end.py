@@ -68,6 +68,7 @@ def stats_active_policy(request: pytest.FixtureRequest) -> tuple[SmolVLAMLX, str
                     "snapshots/7b375e1b73b11138ff12fe22c8f2822d8fe03467"
                 )
             ),
+            execution_mode="strict",
         )
     return policy, request.param
 

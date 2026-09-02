@@ -52,6 +52,12 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument("--reference-cache", type=Path, default=Path(".cache/hf"))
     parser.add_argument("--native-cache", type=Path, default=Path(".cache/smolvla_mlx"))
     parser.add_argument(
+        "--execution-mode",
+        choices=("production", "strict"),
+        default="strict",
+        help="Native inference engine: strict CPU parity or production Metal.",
+    )
+    parser.add_argument(
         "--checkpoint",
         type=Path,
         help="Optional matching local checkpoint; defaults to the pinned base checkpoint.",
@@ -79,8 +85,8 @@ def _native_first_action(
     observation: dict[str, object],
     noise: np.ndarray,
 ) -> np.ndarray:
-    with mx.stream(mx.cpu):
-        normalized = policy.predict_action_chunk(observation, noise=mx.array(noise))
+    normalized = policy.predict_action_chunk(observation, noise=mx.array(noise))
+    with mx.stream(policy.execution_device):
         action = policy.preprocessor.unnormalize_actions(normalized)
         mx.eval(action)
     array = np.asarray(action.astype(mx.float32))
@@ -111,19 +117,20 @@ def main() -> int:
         )
     else:
         checkpoint_dir = args.checkpoint.resolve()
-    with mx.stream(mx.cpu):
-        native_fp32 = SmolVLAMLX.from_pretrained(
-            checkpoint_dir,
-            cache_dir=native_cache / "statistical-fp32",
-            dtype=mx.float32,
-            tokenizer_dir=reference.vlm_snapshot,
-        )
-        native_bf16 = SmolVLAMLX.from_pretrained(
-            checkpoint_dir,
-            cache_dir=native_cache / "statistical-bf16",
-            dtype=mx.bfloat16,
-            tokenizer_dir=reference.vlm_snapshot,
-        )
+    native_fp32 = SmolVLAMLX.from_pretrained(
+        checkpoint_dir,
+        cache_dir=native_cache / "statistical-fp32",
+        dtype=mx.float32,
+        tokenizer_dir=reference.vlm_snapshot,
+        execution_mode=args.execution_mode,
+    )
+    native_bf16 = SmolVLAMLX.from_pretrained(
+        checkpoint_dir,
+        cache_dir=native_cache / "statistical-bf16",
+        dtype=mx.bfloat16,
+        tokenizer_dir=reference.vlm_snapshot,
+        execution_mode=args.execution_mode,
+    )
 
     totals = {"torch": 0.0, "mlx_fp32": 0.0, "mlx_bf16": 0.0}
     counts = {"torch": 0, "mlx_fp32": 0, "mlx_bf16": 0}
@@ -190,8 +197,10 @@ def main() -> int:
     if torch_mae == 0.0:
         raise RuntimeError("Reference MAE is zero; ratio is undefined")
     result = {
-        "format_version": 1,
+        "format_version": 2,
         "checkpoint": args.checkpoint_label,
+        "execution_mode": args.execution_mode,
+        "device": "Device(gpu, 0)" if args.execution_mode == "production" else "Device(cpu, 0)",
         "dataset": {"id": args.dataset, "revision": args.dataset_revision},
         "sample_count": args.samples,
         "target": "ground-truth current action at deterministic episode-start frame",

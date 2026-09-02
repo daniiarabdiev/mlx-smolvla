@@ -529,6 +529,7 @@ def load_base_stats_policy(
             checkpoint,
             cache_dir=native_cache,
             dtype=mx.float32,
+            execution_mode="strict",
         )
         policy.preprocessor = StatsAwareSmolVLAPreprocessor(
             base=policy.preprocessor,

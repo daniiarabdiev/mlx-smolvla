@@ -36,6 +36,12 @@ def test_predict_requires_exactly_one_observation_source() -> None:
     saved = parser.parse_args(["predict", "--observation", "sample"])
     assert saved.observation.name == "sample"
     assert saved.dataset is None
+    assert saved.execution_mode == "production"
+
+    strict = parser.parse_args(
+        ["predict", "--observation", "sample", "--execution-mode", "strict"]
+    )
+    assert strict.execution_mode == "strict"
 
 
 def test_saved_observation_loads_arrays_and_matching_task(tmp_path) -> None:

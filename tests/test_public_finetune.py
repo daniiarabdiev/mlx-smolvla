@@ -90,6 +90,7 @@ def public_finetune_policy(
             cache_dir=Path(".cache/smolvla_mlx") / f"public-finetune-{request.param}",
             dtype=request.param,
             tokenizer_dir=base_vlm_dir,
+            execution_mode="strict",
         )
     return policy, request.param
 
@@ -190,6 +191,7 @@ def test_from_pretrained_accepts_matching_hub_identifier(
             cache_dir=Path(".cache/smolvla_mlx/public-finetune-float32"),
             dtype="float32",
             tokenizer_dir=base_vlm_dir,
+            execution_mode="strict",
         )
     assert len(policy.loaded_parameter_names) == 500
     assert policy.config.image_keys == (

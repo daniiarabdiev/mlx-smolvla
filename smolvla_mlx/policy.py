@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections import deque
 import hashlib
 from pathlib import Path
-from typing import Mapping
+from typing import Literal, Mapping
 
 import mlx.core as mx
 import mlx.nn as nn
@@ -40,6 +40,20 @@ _TOKENIZER_FILES = (
     "tokenizer.json",
     "tokenizer_config.json",
 )
+
+ExecutionMode = Literal["production", "strict"]
+
+
+def _normalize_execution_mode(value: object) -> ExecutionMode:
+    if value == "production":
+        return "production"
+    if value == "strict":
+        return "strict"
+    raise ValueError("execution_mode must be 'production' or 'strict'")
+
+
+def _execution_device(execution_mode: ExecutionMode):
+    return mx.gpu if execution_mode == "production" else mx.cpu
 
 
 def _dtype_name(dtype: object) -> str:
@@ -113,6 +127,7 @@ class SmolVLAMLX:
         expert: ActionExpert,
         converted_weights_path: Path,
         loaded_parameter_names: tuple[str, ...],
+        execution_mode: ExecutionMode,
     ) -> None:
         self.config = config
         self.preprocessor = preprocessor
@@ -123,6 +138,7 @@ class SmolVLAMLX:
         self.expert = expert
         self._converted_weights_path = converted_weights_path
         self._loaded_parameter_names = loaded_parameter_names
+        self._execution_mode = execution_mode
         self._queue: deque[np.ndarray] = deque()
         self._last_prefix_evaluations = 0
 
@@ -134,14 +150,37 @@ class SmolVLAMLX:
         dtype: object = mx.bfloat16,
         *,
         tokenizer_dir: str | Path | None = None,
+        execution_mode: ExecutionMode = "production",
     ) -> "SmolVLAMLX":
-        """Download-or-open a checkpoint, convert it once, and load every tensor strictly.
+        """Load a checkpoint for explicit production-Metal or strict-CPU execution.
 
         ``tokenizer_dir`` is an optional offline injection point. Typical callers
         need only ``model_id``: the audited SmolVLM tokenizer is downloaded into
-        the same native cache automatically.
+        the same native cache automatically. ``production`` is the default and
+        owns MLX's Metal device context; ``strict`` owns the CPU context used by
+        the immutable PyTorch parity ladder.
         """
 
+        normalized_mode = _normalize_execution_mode(execution_mode)
+        with mx.stream(_execution_device(normalized_mode)):
+            return cls._from_pretrained(
+                model_id=model_id,
+                cache_dir=cache_dir,
+                dtype=dtype,
+                tokenizer_dir=tokenizer_dir,
+                execution_mode=normalized_mode,
+            )
+
+    @classmethod
+    def _from_pretrained(
+        cls,
+        *,
+        model_id: str | Path,
+        cache_dir: str | Path | None,
+        dtype: object,
+        tokenizer_dir: str | Path | None,
+        execution_mode: ExecutionMode,
+    ) -> "SmolVLAMLX":
         resolved_cache = resolve_cache_dir(cache_dir)
         resolved_cache.mkdir(parents=True, exist_ok=True)
         checkpoint_dir = _resolve_checkpoint(model_id, resolved_cache)
@@ -194,6 +233,7 @@ class SmolVLAMLX:
             expert=expert,
             converted_weights_path=output_path,
             loaded_parameter_names=tuple(sorted(loaded_names)),
+            execution_mode=execution_mode,
         )
         if set(policy._runtime_parameter_names()) != loaded_names:
             missing = sorted(loaded_names - set(policy._runtime_parameter_names()))
@@ -212,6 +252,18 @@ class SmolVLAMLX:
         """The exact canonical tensor names consumed by the strict native loader."""
 
         return self._loaded_parameter_names
+
+    @property
+    def execution_mode(self) -> ExecutionMode:
+        """The policy-owned execution contract: production Metal or strict CPU."""
+
+        return self._execution_mode
+
+    @property
+    def execution_device(self):
+        """The MLX device selected for every public inference call."""
+
+        return _execution_device(self._execution_mode)
 
     @property
     def queued_actions(self) -> int:
@@ -251,7 +303,17 @@ class SmolVLAMLX:
         observation: Mapping[str, object],
         noise: mx.array | np.ndarray | None = None,
     ) -> mx.array:
-        """Return one normalized action chunk in the checkpoint's physical action width."""
+        """Return one normalized action chunk on this policy's owned device."""
+
+        with mx.stream(self.execution_device):
+            return self._predict_action_chunk(observation, noise=noise)
+
+    def _predict_action_chunk(
+        self,
+        observation: Mapping[str, object],
+        noise: mx.array | np.ndarray | None = None,
+    ) -> mx.array:
+        """Execute a chunk inside the already-selected policy device context."""
 
         self._last_prefix_evaluations = 0
         cache = self._prepare_prefix_cache(observation)
@@ -279,15 +341,16 @@ class SmolVLAMLX:
     ) -> np.ndarray:
         """Return one postprocessed action and refill the FIFO only when it is empty."""
 
-        if not self._queue:
-            normalized = self.predict_action_chunk(observation, noise=noise)
-            actions = self.preprocessor.unnormalize_actions(normalized)
-            action_array = np.asarray(actions.astype(mx.float32))
-            expected_shape = (1, self.config.chunk_size, self.config.action_dim)
-            if action_array.shape != expected_shape:
-                raise ValueError(f"action chunk must have shape {expected_shape}, got {action_array.shape}")
-            self._queue.extend(action.copy() for action in action_array[0, : self.config.n_action_steps])
-        return self._queue.popleft()
+        with mx.stream(self.execution_device):
+            if not self._queue:
+                normalized = self._predict_action_chunk(observation, noise=noise)
+                actions = self.preprocessor.unnormalize_actions(normalized)
+                action_array = np.asarray(actions.astype(mx.float32))
+                expected_shape = (1, self.config.chunk_size, self.config.action_dim)
+                if action_array.shape != expected_shape:
+                    raise ValueError(f"action chunk must have shape {expected_shape}, got {action_array.shape}")
+                self._queue.extend(action.copy() for action in action_array[0, : self.config.n_action_steps])
+            return self._queue.popleft()
 
     def reset(self) -> None:
         """Clear all queued action state before beginning a new episode."""

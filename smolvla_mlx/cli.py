@@ -27,6 +27,7 @@ def _parser() -> argparse.ArgumentParser:
     convert.add_argument("--cache-dir", type=Path)
     convert.add_argument("--tokenizer-dir", type=Path)
     convert.add_argument("--dtype", choices=("float32", "bfloat16"), default="bfloat16")
+    convert.add_argument("--execution-mode", choices=("production", "strict"), default="production")
     convert.set_defaults(handler=_convert)
 
     test = subcommands.add_parser("test", help="run the repository test suite")
@@ -41,6 +42,7 @@ def _parser() -> argparse.ArgumentParser:
     bench.add_argument("--sample-root", type=Path, default=Path("tests/golden/sample_000"))
     bench.add_argument("--metadata", type=Path, default=Path("tests/golden/metadata.json"))
     bench.add_argument("--dtype", choices=("float32", "bfloat16"), default="bfloat16")
+    bench.add_argument("--execution-mode", choices=("production", "strict"), default="production")
     bench.add_argument("--runs", type=int, default=50)
     bench.add_argument("--warmups", type=int, default=5)
     bench.add_argument("--output", type=Path)
@@ -62,6 +64,7 @@ def _parser() -> argparse.ArgumentParser:
     predict.add_argument("--camera1-key", default="observation.images.side")
     predict.add_argument("--camera2-key", default="observation.images.up")
     predict.add_argument("--dtype", choices=("float32", "bfloat16"), default="bfloat16")
+    predict.add_argument("--execution-mode", choices=("production", "strict"), default="production")
     predict.set_defaults(handler=_predict)
     return parser
 
@@ -78,6 +81,7 @@ def _load_policy(args: argparse.Namespace, cache_dir: Path) -> SmolVLAMLX:
         cache_dir=cache_dir,
         dtype=args.dtype,
         tokenizer_dir=args.tokenizer_dir,
+        execution_mode=args.execution_mode,
     )
 
 
@@ -88,14 +92,27 @@ def _emit(**values: object) -> None:
 def _convert(args: argparse.Namespace) -> int:
     cache_dir = _cache(args)
     policy = _load_policy(args, cache_dir)
-    _emit(model=args.model, cache=str(cache_dir), dtype=args.dtype, output=str(policy.converted_weights_path))
+    _emit(
+        model=args.model,
+        cache=str(cache_dir),
+        dtype=args.dtype,
+        execution_mode=policy.execution_mode,
+        output=str(policy.converted_weights_path),
+    )
     return 0
 
 
 def _test(args: argparse.Namespace) -> int:
     cache_dir = _cache(args)
     completed = subprocess.run([sys.executable, "-m", "pytest", *args.tests], check=False)
-    _emit(model=None, cache=str(cache_dir), dtype=None, output="pytest", returncode=completed.returncode)
+    _emit(
+        model=None,
+        cache=str(cache_dir),
+        dtype=None,
+        execution_mode=None,
+        output="pytest",
+        returncode=completed.returncode,
+    )
     return completed.returncode
 
 
@@ -142,7 +159,14 @@ def _bench(args: argparse.Namespace) -> int:
     if args.output is not None:
         args.output.parent.mkdir(parents=True, exist_ok=True)
         args.output.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
-    _emit(model=args.model, cache=str(cache_dir), dtype=args.dtype, output=str(args.output) if args.output else None, result=payload)
+    _emit(
+        model=args.model,
+        cache=str(cache_dir),
+        dtype=args.dtype,
+        execution_mode=policy.execution_mode,
+        output=str(args.output) if args.output else None,
+        result=payload,
+    )
     return 0
 
 
@@ -218,7 +242,14 @@ def _predict(args: argparse.Namespace) -> int:
         else _dataset_observation(args, cache_dir)
     )
     action = policy.select_action(observation)
-    _emit(model=args.model, cache=str(cache_dir), dtype=args.dtype, output="action", action=action.tolist())
+    _emit(
+        model=args.model,
+        cache=str(cache_dir),
+        dtype=args.dtype,
+        execution_mode=policy.execution_mode,
+        output="action",
+        action=action.tolist(),
+    )
     return 0
 
 

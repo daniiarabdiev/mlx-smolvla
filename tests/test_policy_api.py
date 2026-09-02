@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import inspect
 from pathlib import Path
 
 import mlx.core as mx
@@ -30,6 +31,7 @@ def native_policy(
             cache_dir=Path(".cache/smolvla_mlx") / f"policy-{request.param}",
             dtype=request.param,
             tokenizer_dir=base_vlm_dir,
+            execution_mode="strict",
         )
     return _PolicyParts(policy=policy, dtype=request.param)
 
@@ -40,6 +42,44 @@ def test_from_pretrained_initializes_every_converted_checkpoint_parameter(native
     converted = mx.load(str(native_policy.policy.converted_weights_path))
     assert len(converted) == 500
     assert native_policy.policy.loaded_parameter_names == tuple(sorted(converted))
+
+
+def test_public_execution_mode_contract_is_explicit(native_policy: _PolicyParts) -> None:
+    policy = native_policy.policy
+    assert inspect.signature(SmolVLAMLX.from_pretrained).parameters["execution_mode"].default == "production"
+    assert policy.execution_mode == "strict"
+    assert policy.execution_device == mx.cpu
+
+
+def test_unknown_execution_mode_is_rejected_before_checkpoint_resolution(tmp_path: Path) -> None:
+    with pytest.raises(ValueError, match="execution_mode"):
+        SmolVLAMLX.from_pretrained(tmp_path / "missing", execution_mode="automatic")
+
+
+@pytest.mark.parametrize(
+    ("execution_mode", "outer_device", "expected_device"),
+    (("production", mx.cpu, mx.gpu), ("strict", mx.gpu, mx.cpu)),
+)
+def test_policy_owns_its_execution_device_context(
+    monkeypatch: pytest.MonkeyPatch,
+    execution_mode: str,
+    outer_device,
+    expected_device,
+) -> None:
+    policy = object.__new__(SmolVLAMLX)
+    policy._execution_mode = execution_mode
+    observed = []
+
+    def probe(self, observation, noise=None):
+        observed.append(mx.default_device())
+        return mx.array([1.0])
+
+    monkeypatch.setattr(SmolVLAMLX, "_predict_action_chunk", probe, raising=False)
+    with mx.stream(outer_device):
+        result = policy.predict_action_chunk({})
+        mx.eval(result)
+
+    assert observed == [expected_device]
 
 
 @pytest.mark.parametrize("golden", [0], indirect=True)

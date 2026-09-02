@@ -39,6 +39,7 @@ class BenchmarkResult:
     peak_memory_bytes: int
     device: str
     dtype: str
+    execution_mode: str
 
     @classmethod
     def from_stage_samples(
@@ -49,6 +50,7 @@ class BenchmarkResult:
         peak_memory_bytes: int,
         device: str,
         dtype: str,
+        execution_mode: str,
     ) -> "BenchmarkResult":
         """Summarize measured samples only; warmups are never added to a percentile."""
 
@@ -65,6 +67,8 @@ class BenchmarkResult:
             raise ValueError(f"warmup_runs must be non-negative, got {warmup_runs}")
         if peak_memory_bytes < 0:
             raise ValueError(f"peak_memory_bytes must be non-negative, got {peak_memory_bytes}")
+        if execution_mode not in {"production", "strict"}:
+            raise ValueError(f"Unknown benchmark execution mode {execution_mode!r}")
 
         def summary(values: Sequence[float]) -> TimingSummary:
             array = np.asarray(values, dtype=np.float64)
@@ -80,6 +84,7 @@ class BenchmarkResult:
             peak_memory_bytes=peak_memory_bytes,
             device=device,
             dtype=dtype,
+            execution_mode=execution_mode,
         )
 
     def as_dict(self) -> dict[str, object]:
@@ -90,6 +95,7 @@ class BenchmarkResult:
             "warmup_runs": self.warmup_runs,
             "device": self.device,
             "dtype": self.dtype,
+            "execution_mode": self.execution_mode,
             "peak_memory_bytes": self.peak_memory_bytes,
             "total_ms": {"median": self.total_ms.median, "p95": self.total_ms.p95},
             "stages": {
@@ -161,31 +167,33 @@ def run_benchmark(
         raise ValueError(f"measured_runs must be positive, got {measured_runs}")
     if warmup_runs < 0:
         raise ValueError(f"warmup_runs must be non-negative, got {warmup_runs}")
-    if noise is None:
-        noise = mx.random.normal(
-            (1, policy.config.chunk_size, policy.config.max_action_dim)
-        ).astype(mx.float32)
-    else:
-        noise = mx.array(noise).astype(mx.float32)
-    expected_shape = (1, policy.config.chunk_size, policy.config.max_action_dim)
-    if noise.shape != expected_shape:
-        raise ValueError(f"noise must have shape {expected_shape}, got {noise.shape}")
+    with mx.stream(policy.execution_device):
+        if noise is None:
+            noise = mx.random.normal(
+                (1, policy.config.chunk_size, policy.config.max_action_dim)
+            ).astype(mx.float32)
+        else:
+            noise = mx.array(noise).astype(mx.float32)
+        expected_shape = (1, policy.config.chunk_size, policy.config.max_action_dim)
+        if noise.shape != expected_shape:
+            raise ValueError(f"noise must have shape {expected_shape}, got {noise.shape}")
 
-    for _ in range(warmup_runs):
-        _run_staged(policy, observation, noise)
-    mx.reset_peak_memory()
-    stage_samples = {name: [] for name in (*_STAGE_NAMES, "total")}
-    for _ in range(measured_runs):
-        timings = _run_staged(policy, observation, noise)
-        for name, value in timings.items():
-            stage_samples[name].append(value)
-    peak_memory_bytes = int(max(mx.get_peak_memory(), mx.get_active_memory()))
-    storage_dtype = policy.expert.action_in_proj.weight.dtype
-    dtype = "bfloat16" if storage_dtype == mx.bfloat16 else "float32"
-    return BenchmarkResult.from_stage_samples(
-        stage_samples,
-        warmup_runs=warmup_runs,
-        peak_memory_bytes=peak_memory_bytes,
-        device=str(mx.default_device()),
-        dtype=dtype,
-    )
+        for _ in range(warmup_runs):
+            _run_staged(policy, observation, noise)
+        mx.reset_peak_memory()
+        stage_samples = {name: [] for name in (*_STAGE_NAMES, "total")}
+        for _ in range(measured_runs):
+            timings = _run_staged(policy, observation, noise)
+            for name, value in timings.items():
+                stage_samples[name].append(value)
+        peak_memory_bytes = int(max(mx.get_peak_memory(), mx.get_active_memory()))
+        storage_dtype = policy.expert.action_in_proj.weight.dtype
+        dtype = "bfloat16" if storage_dtype == mx.bfloat16 else "float32"
+        return BenchmarkResult.from_stage_samples(
+            stage_samples,
+            warmup_runs=warmup_runs,
+            peak_memory_bytes=peak_memory_bytes,
+            device=str(mx.default_device()),
+            dtype=dtype,
+            execution_mode=policy.execution_mode,
+        )

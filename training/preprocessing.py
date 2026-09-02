@@ -132,6 +132,7 @@ def load_stats_aware_policy(
         cache_dir=cache_dir,
         dtype=dtype,
         tokenizer_dir=tokenizer_dir,
+        execution_mode="strict",
     )
     if (
         policy.config.state_normalization == "mean_std"

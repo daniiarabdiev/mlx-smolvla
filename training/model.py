@@ -82,6 +82,7 @@ class SmolVLATrainingModel(nn.Module):
             cache_dir=cache_dir,
             dtype=dtype,
             tokenizer_dir=tokenizer_dir,
+            execution_mode="strict",
         )
         model = cls(
             vision=policy.vision,

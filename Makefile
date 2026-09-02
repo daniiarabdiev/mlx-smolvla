@@ -4,7 +4,7 @@ export SMOLVLA_MLX_CACHE := $(CURDIR)/.cache/smolvla_mlx
 
 TESTS ?= tests
 
-.PHONY: goldens test bench cache-inventory clean-cache clean-cache-dry-run training-audit training-goldens training-parity optimizer-goldens optimizer-lockstep lora-benchmark lora-evaluation lora-finetune lora-finetune-resume lora-finetune-check
+.PHONY: goldens test bench production-evidence cache-inventory clean-cache clean-cache-dry-run training-audit training-goldens training-parity optimizer-goldens optimizer-lockstep lora-benchmark lora-evaluation lora-finetune lora-finetune-resume lora-finetune-check
 
 goldens:
 	uv run --extra reference python scripts/make_goldens.py --cache-dir $(HF_HOME) --output tests/golden
@@ -17,6 +17,11 @@ test:
 
 bench:
 	uv run python scripts/bench.py
+
+production-evidence:
+	uv run --extra reference python scripts/production_check.py --output $(CURDIR)/.cache/production-deterministic.json
+	uv run --extra reference python scripts/statistical_check.py --execution-mode strict --output $(CURDIR)/.cache/statistical-strict-production-report.json --reference-cache $(HF_HOME) --native-cache $(SMOLVLA_MLX_CACHE)/strict-production-report
+	uv run --extra reference python scripts/statistical_check.py --execution-mode production --output $(CURDIR)/.cache/statistical-production.json --reference-cache $(HF_HOME) --native-cache $(SMOLVLA_MLX_CACHE)/production-statistical
 
 cache-inventory:
 	uv run python -m smolvla_mlx.cache_cleanup --repository-root $(CURDIR) --cache-dir $(SMOLVLA_MLX_CACHE) --inventory
