@@ -2852,3 +2852,46 @@
   inset start range with torque off, both cameras must be reframed, a known-good
   low controller-limit profile must be supplied, and the workspace/base/power
   checklist must be true. No single-action or continuous command ran.
+
+## 2026-09-02 — hardware-aware artifact refresh and closing suites
+
+- Added and tested the missing README statement that the `hardware` extra,
+  like the other LeRobot-backed extras, requires Python 3.12–3.13. Pushed the
+  exact clean artifact source as
+  `9c549557f2e3a355bf5c0206e6c86fa54ad191bf`.
+- Built the sdist and CPython 3.11/3.12/3.13 native arm64 wheels from a detached
+  worktree at that commit. Twine accepted all four; canonical identity and
+  entry points pass; the hardware modules and extra metadata are present; no
+  retired import path or prebuilt binary entered the sdist; and every project
+  extension reports macOS `minos 14.0`.
+- Four fresh base installs outside the checkouts pass installed-module origin,
+  bridge-dependency isolation, `native-reference`, `doctor`, package integrity,
+  and a finite six-component offline prediction. A fresh serve-extra install
+  passes descriptor identity, ephemeral `Ready`, CLI surfaces, 8-bit and 4-bit
+  finite predictions, and has no PyAV. A fresh hardware-extra install passes
+  gRPC/LeRobot/serial/camera availability, PyAV absence, module origin,
+  stats-active checkpoint validation, camera mapping, and the example help
+  surface without opening a device.
+- Replaced the ignored `dist/` contents with those four verified 0.1.0 files.
+  The retired 0.0.1 directory remains recoverable at
+  `.cache/dist-pre-canonical-refresh-20260902`. Exact artifact bytes are frozen
+  in `docs/evidence/DIST_MANIFEST.md` and its evidence update was pushed as
+  `d151b9c`.
+- The first functional fast run passed 478 tests but overlapped an unrelated
+  external pytest process, so its timing was not accepted. After the machine
+  became idle, the final lane passed **479/479** selected tests with 291 slow
+  tests deselected in **104.95 test seconds / 108.16 seconds wall**.
+- With a clean process preflight, the complete suite passed **770/770** in
+  **703.76 test seconds / 707.22 seconds wall**, with no skip or xfail.
+- The final focused public/hardware/distribution/privacy slice passes 118/118.
+  The lock resolves 122 packages and dependency checking passes. Actionlint
+  emits only the intentional constant-false hosted-CI diagnostic. Current-tree
+  scans find no exact device serial, private home path, credential pattern,
+  explicit skip/xfail, or tracked file over 10 MiB. All four `dist/` files
+  compare byte-for-byte with the manifest source, and the protected first LoRA
+  failure remains at its required SHA-256
+  `d6654131c4acf86de13206f210f1ea1a82e3aad18871e5b64428bdf1dbeed7c6`.
+- Nothing was uploaded or tagged. No training, floor computation, tolerance
+  change, motion write, or additional hardware access occurred. The remaining
+  work requires physical camera/arm/profile/checklist changes and a new exact
+  in-session motion-prerequisite statement.

@@ -432,3 +432,37 @@ This section supersedes the earlier hardware and origin snapshots above.
 - **Verification at this checkpoint:** focused hardware/server/import/
   distribution coverage passes 115/115. Artifact rebuild and closing fast/full
   suites remain to be recorded in a later section.
+
+## 2026-09-02 hardware release-candidate closure
+
+- The final package-surface correction explicitly includes the `hardware`
+  extra in the Python-3.12+ requirements line and is pushed at source commit
+  `9c549557f2e3a355bf5c0206e6c86fa54ad191bf`.
+- A clean detached worktree at that commit produced one sdist and CPython
+  3.11/3.12/3.13 `macosx_14_0_arm64` wheels. All four pass Twine and canonical
+  archive inspection; the sdist has 148 entries, each wheel has 73, and every
+  packaged or sdist-installed project extension reports `minos 14.0`.
+- Four new base environments pass canonical import/isolation,
+  `native-reference`, `doctor`, dependency integrity, and finite offline
+  prediction. A fifth serve-extra environment passes protobuf descriptor
+  identity, ephemeral loopback `Ready`, CLI surfaces, and both VLM quantization
+  presets. A sixth hardware-extra environment passes dependency integrity,
+  installed-module origin, stats-active checkpoint validation, camera mapping,
+  and all graduated-mode help without device access.
+- Ignored `dist/` now contains only the four verified `mlx_smolvla-0.1.0`
+  files; its retired 0.0.1 contents were preserved under ignored `.cache/`.
+  Exact sizes and SHA-256 values are in `docs/evidence/DIST_MANIFEST.md`.
+- A clean idle `make test-fast` passes 479/479 selected tests with 291 slow
+  tests deselected in 104.95 test seconds / 108.16 seconds wall. The closing
+  `make test` passes all 770/770 tests in 703.76 test seconds / 707.22 seconds
+  wall. Neither reports a skip or xfail.
+- The closing static audit resolves 122 lockfile packages, passes dependency
+  checking and all focused public/hardware/link/privacy tests, and finds no
+  exact hardware serial, private home path, credential pattern, explicit
+  skip/xfail, or tracked file over 10 MiB. `actionlint` reports only the
+  intentional constant-false hosted-CI guard. The original LoRA failure hash
+  remains `d6654131c4acf86de13206f210f1ea1a82e3aad18871e5b64428bdf1dbeed7c6`.
+- Software verification is complete. `PUBLIC RELEASE READY` is not reached:
+  the camera, neutral-pose, low-limit-profile, and physical checklist blockers
+  still prohibit a single action, bounded continuous motion, tagging,
+  publication, visibility changes, release creation, and hardware claims.
