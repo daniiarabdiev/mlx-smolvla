@@ -2644,3 +2644,22 @@
   in `13.76s`. The one deselection is the intentionally still-red README slice,
   which is implemented in C5 rather than weakened.
 - No training, timing benchmark, hardware/device access, or upload ran.
+
+## 2026-09-02 — fast-test lane classified and measured
+
+- Added the red `make test-fast` contract, observed its missing-target failure,
+  then implemented `pytest -m 'not slow'` while leaving `make test` unchanged.
+- Marked checkpoint-, golden-, dataset-, full-pipeline-, provenance-, and
+  real optimizer-lockstep tests as slow. They remain collected and executed by
+  the unchanged full suite; no test body, tolerance, skip, or xfail changed.
+- The first diagnostic exceeded the ceiling in runtime provenance (interrupted
+  at 137.47 test seconds). The second completed in 144.75 seconds and isolated
+  real optimizer lockstep plus self-consistency orchestration as the remaining
+  full-lane work.
+- On an otherwise idle machine, the resulting lane passed 378 selected tests
+  with 292 marker/known-README deselections in 92.76 test seconds and 95.32
+  seconds wall time. It reported no skips or xfails. The only explicit `-k`
+  deselection was the still-red prior-art README contract scheduled for C5;
+  the unfiltered `make test-fast` will be rerun after that implementation.
+- No training run or floor computation was active during any timing; no product
+  performance measurement, hardware/device access, or upload ran.

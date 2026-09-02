@@ -6,6 +6,19 @@ syntactically valid, manually dispatchable, and unconditionally disabled at
 the job level. It has no `push` or `pull_request` trigger. A manual dispatch
 therefore creates a skipped job rather than spending runner time.
 
+## Local test lanes
+
+`make test-fast` runs every test not marked `slow`. The marker is reserved for
+tests that load pinned model/dataset artifacts, execute complete model/evidence
+pipelines, or run the isolated provenance/optimizer processes those artifacts
+require. It does not skip or alter those tests: `make test` still runs the
+complete suite with the same semantics and gates.
+
+On 2026-09-02 the fast lane selected 378 tests and passed them in 92.76 seconds
+(95.32 seconds wall clock) on an otherwise idle Apple Silicon validation host.
+One still-red README contract was filtered from that intermediate measurement;
+the release audit repeats the unfiltered target after the README is complete.
+
 ## Why GitHub-hosted macOS is disabled
 
 GitHub's runner reference, checked on 2026-09-02, lists the standard arm64
@@ -44,7 +57,7 @@ The workflow is disabled, so it intentionally schedules no billable work.
 Before removing the workflow's `if: ${{ false }}` guard:
 
 1. Register a dedicated **self-hosted Apple Silicon** runner with the labels
-   `self-hosted`, `macOS`, `ARM64`, and `smolvla-mlx-ci`.
+   `self-hosted`, `macOS`, `ARM64`, and `mlx-smolvla-ci`.
 2. Provide at least **48 GiB** unified memory and **80 GiB** free SSD at job
    start. The 80 GiB floor leaves room for regenerated inputs and MLX scratch
    while preserving the brief's mandatory 40 GiB free-space floor.

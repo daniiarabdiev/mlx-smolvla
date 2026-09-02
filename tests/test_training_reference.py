@@ -11,6 +11,9 @@ import torch
 from training.data import TrainingArtifact
 
 
+pytestmark = pytest.mark.slow
+
+
 @pytest.fixture(scope="module")
 def reference_training_case():
     module = __import__("training.reference", fromlist=["prepare_reference_training_case"])

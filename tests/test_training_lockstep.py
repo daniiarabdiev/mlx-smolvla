@@ -5,6 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import numpy as np
+import pytest
 
 from training.data import TrainingArtifact
 
@@ -57,6 +58,7 @@ def test_optimizer_artifact_link_and_step_draw_consumption_are_exact() -> None:
     )
 
 
+@pytest.mark.slow
 def test_real_25_step_optimizer_lockstep_passes_every_gate() -> None:
     module = __import__("training.lockstep", fromlist=["run_optimizer_lockstep"])
 

@@ -13,6 +13,9 @@ import pytest
 from mlx_smolvla.policy import SmolVLAMLX
 
 
+pytestmark = pytest.mark.slow
+
+
 @dataclass(frozen=True)
 class _PolicyParts:
     policy: SmolVLAMLX

@@ -15,6 +15,9 @@ import numpy as np
 import pytest
 
 
+pytestmark = pytest.mark.slow
+
+
 def _actions(value: float = 0.0) -> np.ndarray:
     return np.full((56, 50, 6), value, dtype=np.float64)
 

@@ -9,6 +9,7 @@ import mlx.core as mx
 import mlx.nn as nn
 from mlx.utils import tree_flatten
 import numpy as np
+import pytest
 
 
 def test_lora_linear_is_zero_initialized_and_uses_alpha_over_rank() -> None:
@@ -216,6 +217,7 @@ def test_lora_config_rejects_invalid_rank_alpha_and_dropout() -> None:
             raise AssertionError(f"LoRAConfig accepted invalid values: {kwargs}")
 
 
+@pytest.mark.slow
 def test_training_composition_loads_real_checkpoint_in_bfloat16() -> None:
     model_module = __import__("training.model", fromlist=["SmolVLATrainingModel"])
 

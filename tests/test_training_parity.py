@@ -6,8 +6,12 @@ from pathlib import Path
 
 import mlx.core as mx
 import numpy as np
+import pytest
 
 from training.data import TrainingArtifact
+
+
+pytestmark = pytest.mark.slow
 
 
 _GOLDEN_DIR = Path(".cache/training/gradient_goldens")

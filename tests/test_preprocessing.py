@@ -6,6 +6,9 @@ import numpy as np
 import pytest
 
 
+pytestmark = pytest.mark.slow
+
+
 def _stats_active_checkpoint(tmp_path: Path, checkpoint_dir: Path) -> Path:
     active = tmp_path / "stats-active"
     active.mkdir()

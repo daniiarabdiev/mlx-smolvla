@@ -108,3 +108,11 @@ def test_readme_acknowledges_the_independent_prior_mlx_port_factually() -> None:
     assert "without torch or transformers at runtime" in readme.lower()
     assert "lerobot-protocol serving" in readme.lower()
     assert "training" in readme.lower()
+
+
+def test_makefile_exposes_fast_lane_without_changing_full_lane() -> None:
+    makefile = (ROOT / "Makefile").read_text(encoding="utf-8")
+
+    assert "test-fast:" in makefile
+    assert "pytest -m 'not slow' $(TESTS)" in makefile
+    assert "test:\n\tuv run --extra reference pytest $(TESTS)" in makefile

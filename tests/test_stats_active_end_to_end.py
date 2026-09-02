@@ -15,6 +15,9 @@ from mlx_smolvla.policy import SmolVLAMLX
 from mlx_smolvla.statistical import StatisticalResult
 
 
+pytestmark = pytest.mark.slow
+
+
 _ROOT = Path("tests/golden-stats-active")
 _CHECKPOINT = Path("reference/artifacts/stats-active-base")
 

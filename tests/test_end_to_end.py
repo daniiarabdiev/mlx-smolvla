@@ -9,6 +9,9 @@ import pytest
 from tests.test_policy_api import native_policy
 
 
+pytestmark = pytest.mark.slow
+
+
 @pytest.mark.parametrize("golden", range(8), indirect=True)
 def test_predict_action_chunk_matches_all_real_reference_traces(golden, native_policy) -> None:
     """Exercises preprocessing, vision, prefix cache reuse, expert, and action slicing together."""

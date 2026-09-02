@@ -18,6 +18,9 @@ from safetensors import safe_open
 from mlx_smolvla.types import ProcessedObservation
 
 
+pytestmark = pytest.mark.slow
+
+
 class IdentityBasePreprocessor:
     def __init__(self) -> None:
         self.config = object()

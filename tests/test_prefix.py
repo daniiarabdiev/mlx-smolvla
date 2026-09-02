@@ -11,6 +11,9 @@ import pytest
 from mlx_smolvla.types import ProcessedObservation
 
 
+pytestmark = pytest.mark.slow
+
+
 @dataclass(frozen=True)
 class _PrefixParts:
     language: object

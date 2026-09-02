@@ -13,6 +13,9 @@ from mlx_smolvla.expert import ActionExpert, timestep_embedding
 from tests.test_prefix import _prefix_inputs
 
 
+pytestmark = pytest.mark.slow
+
+
 @dataclass(frozen=True)
 class _ExpertParts:
     language: object

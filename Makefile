@@ -4,7 +4,7 @@ export MLX_SMOLVLA_CACHE := $(CURDIR)/.cache/mlx_smolvla
 
 TESTS ?= tests
 
-.PHONY: goldens test bench inference-comparison profile-bf16 quantization-experiment production-evidence cache-inventory clean-cache clean-cache-dry-run training-audit training-goldens training-parity optimizer-goldens optimizer-lockstep lora-benchmark lora-evaluation lora-finetune lora-finetune-resume lora-finetune-check training-resume-lora training-resume-full training-benchmark
+.PHONY: goldens test test-fast bench inference-comparison profile-bf16 quantization-experiment production-evidence cache-inventory clean-cache clean-cache-dry-run training-audit training-goldens training-parity optimizer-goldens optimizer-lockstep lora-benchmark lora-evaluation lora-finetune lora-finetune-resume lora-finetune-check training-resume-lora training-resume-full training-benchmark
 
 goldens:
 	uv run --extra reference python scripts/make_goldens.py --cache-dir $(HF_HOME) --output tests/golden
@@ -14,6 +14,9 @@ goldens:
 
 test:
 	uv run --extra reference pytest $(TESTS)
+
+test-fast:
+	uv run --extra reference pytest -m 'not slow' $(TESTS)
 
 bench:
 	uv run python scripts/bench.py

@@ -11,6 +11,9 @@ from safetensors.numpy import load_file
 from mlx_smolvla.rmsnorm import native_extension_available
 
 
+pytestmark = pytest.mark.slow
+
+
 requires_native_extension = pytest.mark.skipif(
     not native_extension_available(),
     reason="exact CPU parity requires the optional native reference extension",

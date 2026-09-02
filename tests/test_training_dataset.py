@@ -5,8 +5,12 @@ from __future__ import annotations
 from pathlib import Path
 
 import numpy as np
+import pytest
 
 from training.data import TrainingArtifact
+
+
+pytestmark = pytest.mark.slow
 
 
 _DATASET_ROOT = Path(".cache/hf/datasets/svla_so101_pickplace")

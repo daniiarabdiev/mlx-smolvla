@@ -9,6 +9,11 @@ import shutil
 import subprocess
 import sys
 
+import pytest
+
+
+pytestmark = pytest.mark.slow
+
 
 def _run_probe(repository_root: Path, script: str) -> subprocess.CompletedProcess[str]:
     environment = dict(os.environ)

@@ -5,6 +5,9 @@ import numpy as np
 import pytest
 
 
+pytestmark = pytest.mark.slow
+
+
 _GOLDEN_TOLERANCES = {
     "float32": (1e-3, 1e-3),
     "bfloat16": (3e-2, None),

@@ -7,6 +7,9 @@ import pytest
 from tests.test_prefix import _prefix_inputs, prefix_parts
 
 
+pytestmark = pytest.mark.slow
+
+
 def _assert_error(actual: mx.array, expected: np.ndarray, *, dtype: str) -> None:
     actual_array = np.array(actual.astype(mx.float32))
     expected_array = expected.astype(np.float32, copy=False)

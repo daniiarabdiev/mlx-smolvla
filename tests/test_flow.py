@@ -10,6 +10,9 @@ from mlx_smolvla.flow import euler_sample, euler_step, timestep_schedule
 from tests.test_expert import _assert_error, expert_parts, prefix_cache
 
 
+pytestmark = pytest.mark.slow
+
+
 def test_schedule_and_single_euler_update_match_audited_reference() -> None:
     np.testing.assert_array_equal(
         np.array(timestep_schedule(10)),

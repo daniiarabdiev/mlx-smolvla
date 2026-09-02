@@ -6,6 +6,9 @@ import mlx.core as mx
 import pytest
 
 
+pytestmark = pytest.mark.slow
+
+
 def _tensor_data_sha256(path: Path, tensor_name: str) -> str:
     with path.open("rb") as handle:
         header_size = int.from_bytes(handle.read(8), byteorder="little")
