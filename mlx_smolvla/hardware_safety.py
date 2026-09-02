@@ -405,7 +405,7 @@ class SafetySession:
         if self.stop_reason is not None:
             raise RuntimeError(f"safety session already stopped: {self.stop_reason}")
         if self.check_limits():
-            raise RuntimeError(f"safety session already stopped: {self.stop_reason}")
+            return ActionDecision(None, True, self.stop_reason)
         present = np.asarray(self.robot.read_positions(), dtype=np.float64)
         decision = self.envelope.evaluate(chunk, present)
         self.telemetry.chunks += 1

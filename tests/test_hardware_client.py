@@ -558,6 +558,30 @@ def test_duration_cap_uses_monotonic_session_time() -> None:
     assert session.stop_reason == "duration_limit"
 
 
+def test_chunk_arriving_at_duration_boundary_stops_without_error_or_write() -> None:
+    safety = _hardware_safety()
+    clock = _FakeClock()
+    robot = _FakeRobot()
+    session = safety.SafetySession(
+        robot,
+        _envelope(safety),
+        safety.SafetySessionConfig(duration_seconds=1.0),
+        clock=clock,
+    )
+
+    with session:
+        clock.now = 1.0
+        decision = session.process_chunk(
+            np.array([[0.0, 0.0, 0.0, 0.0, 0.0, 50.0]])
+        )
+
+    assert decision.hold is True
+    assert decision.reason == "duration_limit"
+    assert session.stop_reason == "duration_limit"
+    assert session.telemetry.chunks == 0
+    assert robot.writes == []
+
+
 def test_keyboard_interrupt_holds_returns_to_start_and_disables_torque() -> None:
     safety = _hardware_safety()
     robot = _FakeRobot()
