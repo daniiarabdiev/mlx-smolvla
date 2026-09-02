@@ -22,6 +22,7 @@ from mlx_smolvla.hiwonder_client import (
     open_hiwonder_follower,
     run_control_loop,
     so101_lerobot_contract,
+    so101_public_action_ranges,
 )
 
 
@@ -148,6 +149,7 @@ def main(argv: Sequence[str] | None = None) -> int:
                 envelope = SafetyEnvelope(
                     adapter.joint_names,
                     adapter.calibration_ranges(),
+                    normalized_ranges=so101_public_action_ranges(),
                 )
                 features, rename_map = so101_lerobot_contract()
                 transport = LeRobotFourRPCClient(

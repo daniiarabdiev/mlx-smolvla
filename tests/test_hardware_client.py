@@ -265,8 +265,8 @@ def test_rate_limit_uses_present_position_and_stricter_absolute_cap() -> None:
         (np.zeros((2, 6)), "wrong_shape"),
         (np.array([[np.nan, 0.0, 0.0, 0.0, 0.0, 50.0]]), "non_finite"),
         (np.array([[np.inf, 0.0, 0.0, 0.0, 0.0, 50.0]]), "non_finite"),
-        (np.array([[101.0, 0.0, 0.0, 0.0, 0.0, 50.0]]), "outside_calibration"),
-        (np.array([[0.0, 0.0, 0.0, 0.0, 0.0, -0.1]]), "outside_calibration"),
+        (np.array([[101.0, 0.0, 0.0, 0.0, 0.0, 50.0]]), "outside_normalized_range"),
+        (np.array([[0.0, 0.0, 0.0, 0.0, 0.0, -0.1]]), "outside_normalized_range"),
     ],
 )
 def test_invalid_chunk_is_rejected_with_a_hold_decision(
@@ -306,6 +306,46 @@ def test_invalid_present_position_prevents_a_target(present: np.ndarray) -> None
     assert decision.target is None
     assert decision.hold is True
     assert decision.reason == "invalid_present"
+
+
+def test_action_inside_public_domain_is_clipped_to_calibration_not_rejected() -> None:
+    safety = _hardware_safety()
+    calibrated = {
+        name: safety.JointRange(-30.0, 30.0) for name in JOINTS[:-1]
+    } | {"gripper": safety.JointRange(10.0, 90.0)}
+    public = {
+        name: safety.JointRange(-180.0, 180.0) for name in JOINTS[:-1]
+    } | {"gripper": safety.JointRange(0.0, 100.0)}
+    envelope = safety.SafetyEnvelope(JOINTS, calibrated, normalized_ranges=public)
+
+    decision = envelope.evaluate(
+        np.array([[90.0, 0.0, 0.0, 0.0, 0.0, 95.0]]),
+        np.array([0.0, 0.0, 0.0, 0.0, 0.0, 50.0]),
+    )
+
+    assert decision.hold is False
+    assert decision.clipped_joints == ("shoulder_pan", "gripper")
+    assert decision.rate_limited_joints == ("shoulder_pan", "gripper")
+    np.testing.assert_array_equal(decision.target, np.array([1, 0, 0, 0, 0, 51]))
+
+
+def test_action_outside_public_driver_domain_is_rejected() -> None:
+    safety = _hardware_safety()
+    calibrated = {
+        name: safety.JointRange(-30.0, 30.0) for name in JOINTS[:-1]
+    } | {"gripper": safety.JointRange(10.0, 90.0)}
+    public = {
+        name: safety.JointRange(-180.0, 180.0) for name in JOINTS[:-1]
+    } | {"gripper": safety.JointRange(0.0, 100.0)}
+    envelope = safety.SafetyEnvelope(JOINTS, calibrated, normalized_ranges=public)
+
+    decision = envelope.evaluate(
+        np.array([[180.001, 0.0, 0.0, 0.0, 0.0, 50.0]]),
+        np.array([0.0, 0.0, 0.0, 0.0, 0.0, 50.0]),
+    )
+
+    assert decision.hold is True
+    assert decision.reason == "outside_normalized_range"
 
 
 def test_vendor_calibration_is_converted_to_driver_public_units() -> None:
@@ -1258,6 +1298,7 @@ def test_session_telemetry_counts_chunks_clips_rate_limits_rejections_and_timeou
     assert session.telemetry.rejected_chunks == 1
     assert session.telemetry.holds == 2
     assert session.telemetry.timeouts == 1
+    assert session.telemetry.rejection_reasons == {"non_finite": 1}
 
 
 def test_no_motion_control_loop_runs_to_duration_with_latency_summary() -> None:
@@ -1542,6 +1583,18 @@ def test_so101_feature_contract_maps_two_physical_cameras() -> None:
     assert rename_map == {
         "observation.images.wrist_camera": "observation.images.camera1",
         "observation.images.top_camera": "observation.images.camera2",
+    }
+
+
+def test_so101_public_action_domain_is_explicit() -> None:
+    safety = _hardware_safety()
+    client = _hiwonder_client()
+
+    ranges = client.so101_public_action_ranges()
+
+    assert ranges == {
+        **{name: safety.JointRange(-180.0, 180.0) for name in JOINTS[:-1]},
+        "gripper": safety.JointRange(0.0, 100.0),
     }
 
 

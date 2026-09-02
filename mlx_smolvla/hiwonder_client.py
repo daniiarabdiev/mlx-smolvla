@@ -23,6 +23,7 @@ import numpy as np
 
 from mlx_smolvla.hardware_safety import (
     HardwareSafetyProfile,
+    JointRange,
     REQUIRED_SAFETY_REGISTERS,
     SafetyEnvelope,
     SafetySession,
@@ -39,6 +40,15 @@ SO101_JOINTS = (
     "wrist_roll",
     "gripper",
 )
+
+
+def so101_public_action_ranges() -> dict[str, JointRange]:
+    """Return the full public-unit domain of the configured vendor driver."""
+
+    return {
+        **{name: JointRange(-180.0, 180.0) for name in SO101_JOINTS[:-1]},
+        "gripper": JointRange(0.0, 100.0),
+    }
 
 
 def so101_lerobot_contract(
@@ -383,6 +393,7 @@ class ControlLoopResult:
     rejected_chunks: int
     holds: int
     timeouts: int
+    rejection_reasons: dict[str, int]
 
 
 def _latency_stats(values: Sequence[float]) -> tuple[float | None, float | None]:
@@ -483,6 +494,7 @@ def run_control_loop(
         rejected_chunks=telemetry.rejected_chunks,
         holds=telemetry.holds,
         timeouts=telemetry.timeouts,
+        rejection_reasons=dict(telemetry.rejection_reasons),
     )
 
 

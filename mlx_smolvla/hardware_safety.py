@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
 import json
 from pathlib import Path
@@ -243,6 +243,7 @@ class SessionTelemetry:
     rejected_chunks: int = 0
     holds: int = 0
     timeouts: int = 0
+    rejection_reasons: dict[str, int] = field(default_factory=dict)
 
 
 class SafetyEnvelope:
@@ -253,6 +254,7 @@ class SafetyEnvelope:
         joint_names: Sequence[str],
         ranges: Mapping[str, JointRange],
         *,
+        normalized_ranges: Mapping[str, JointRange] | None = None,
         calibration_margin: float = 0.10,
         max_step_fraction: float = 0.02,
         max_relative_step: float = 1.0,
@@ -262,6 +264,10 @@ class SafetyEnvelope:
             raise ValueError("joint names must be non-empty and unique")
         if set(ranges) != set(self.joint_names):
             raise ValueError("joint ranges must exactly match joint names")
+        if normalized_ranges is None:
+            normalized_ranges = ranges
+        if set(normalized_ranges) != set(self.joint_names):
+            raise ValueError("normalized ranges must exactly match joint names")
         if not 0.0 <= calibration_margin < 0.5:
             raise ValueError("calibration margin must be in [0, 0.5)")
         if not np.isfinite(max_step_fraction) or max_step_fraction <= 0.0:
@@ -269,6 +275,14 @@ class SafetyEnvelope:
         if not np.isfinite(max_relative_step) or max_relative_step <= 0.0:
             raise ValueError("max relative step must be finite and positive")
         self.ranges = {name: ranges[name] for name in self.joint_names}
+        self.normalized_ranges = {
+            name: normalized_ranges[name] for name in self.joint_names
+        }
+        for name in self.joint_names:
+            calibrated = self.ranges[name]
+            normalized = self.normalized_ranges[name]
+            if calibrated.lower < normalized.lower or calibrated.upper > normalized.upper:
+                raise ValueError("calibrated ranges must fit inside normalized ranges")
         self.calibration_margin = calibration_margin
         self.max_step_fraction = max_step_fraction
         self.max_relative_step = max_relative_step
@@ -285,10 +299,16 @@ class SafetyEnvelope:
         action = actions[0]
         if not np.isfinite(action).all():
             return ActionDecision(None, True, "non_finite")
+        normalized_lower = np.array(
+            [self.normalized_ranges[name].lower for name in self.joint_names]
+        )
+        normalized_upper = np.array(
+            [self.normalized_ranges[name].upper for name in self.joint_names]
+        )
+        if np.any(action < normalized_lower) or np.any(action > normalized_upper):
+            return ActionDecision(None, True, "outside_normalized_range")
         lower = np.array([self.ranges[name].lower for name in self.joint_names])
         upper = np.array([self.ranges[name].upper for name in self.joint_names])
-        if np.any(action < lower) or np.any(action > upper):
-            return ActionDecision(None, True, "outside_calibration")
         if (
             not np.isfinite(present).all()
             or np.any(present < lower)
@@ -394,6 +414,10 @@ class SafetySession:
         if decision.hold:
             self.telemetry.rejected_chunks += 1
             self.telemetry.holds += 1
+            reason = decision.reason or "unspecified"
+            self.telemetry.rejection_reasons[reason] = (
+                self.telemetry.rejection_reasons.get(reason, 0) + 1
+            )
         if not self.config.no_motion:
             target = present if decision.hold else decision.target
             if target is not None:
