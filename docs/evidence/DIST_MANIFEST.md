@@ -2,7 +2,7 @@
 
 This manifest records the `mlx-smolvla` 0.1.0 release-candidate artifacts
 built locally from clean, pushed source commit
-`5efb48aa5d47e30438d6a4aaafc180a2983b1235` on 2026-09-02. Nothing was
+`9c549557f2e3a355bf5c0206e6c86fa54ad191bf` on 2026-09-02. Nothing was
 uploaded. The hardware gate remains open, so no release tag was created.
 
 ## Build environment
@@ -13,32 +13,37 @@ uploaded. The hardware gate remains open, so no release tag was created.
 - Deployment target: `MACOSX_DEPLOYMENT_TARGET=14.0`.
 - Interpreters: repository-local CPython 3.11.15, 3.12.13, and 3.13.14.
 - Build/download cache: repository-local `.cache/uv`.
-- Source: clean detached worktree `.cache/release-mlx-smolvla-5efb48a` at
+- Source: clean detached worktree `.cache/release-mlx-smolvla-9c54955` at
   the commit above.
 - Output: ignored directory
-  `.cache/release-mlx-smolvla-5efb48a-artifacts`.
+  `.cache/release-mlx-smolvla-9c54955-artifacts`.
+- The four verified bytes were mirrored into ignored `dist/` for local use.
+  Its retired 0.0.1 contents were moved intact to
+  `.cache/dist-pre-canonical-refresh-20260902` rather than deleted.
 
 The sdist was built with `uv build --sdist`; each native wheel used
 `uv build --wheel --python <repository-local-interpreter>`. All four commands
 set the deployment target and repository-local uv/Python cache roots. The
-sdist contains 145 entries, including the PEP 517 backend, package-local CMake
+sdist contains 148 entries, including the PEP 517 backend, package-local CMake
 project, native sources, canonical runtime, reference tools, training tools,
-and tests; it contains no prebuilt `.so` or `.dylib`.
+hardware safety/client modules, and tests; it contains no prebuilt `.so` or
+`.dylib`.
 
 ## Artifacts
 
 | Artifact | Bytes | SHA-256 | Wheel tag / contents | Project extension `minos` |
 | --- | ---: | --- | --- | ---: |
-| `mlx_smolvla-0.1.0.tar.gz` | 413,439 | `01efceb57a5bc22679f486160a6746894849cb577f1772aa597b22ee3e71180e` | Source distribution; native extension built during installation | 14.0 in the installation smoke |
-| `mlx_smolvla-0.1.0-cp311-cp311-macosx_14_0_arm64.whl` | 364,651 | `7cdecaf15a638ab11f2770341118f563fcef09f79ffbf989e027b9854aa92ae4` | `cp311-cp311-macosx_14_0_arm64`; 71 entries | 14.0 |
-| `mlx_smolvla-0.1.0-cp312-cp312-macosx_14_0_arm64.whl` | 363,654 | `fd574f417f942ed4f4c0fd142f3cd254e7a9ed943fa940831100bc5304b53088` | `cp312-cp312-macosx_14_0_arm64`; 71 entries | 14.0 |
-| `mlx_smolvla-0.1.0-cp313-cp313-macosx_14_0_arm64.whl` | 363,690 | `b9dc2a9e77d63d86706abedc4e8fdae6dca3e78128006629e3539dc47b330583` | `cp313-cp313-macosx_14_0_arm64`; 71 entries | 14.0 |
+| `mlx_smolvla-0.1.0.tar.gz` | 437,691 | `358b33db44addd8300267183c2c21ef328e5087157b8d136d7a7684918501a2f` | Source distribution; native extension built during installation | 14.0 in the installation smoke |
+| `mlx_smolvla-0.1.0-cp311-cp311-macosx_14_0_arm64.whl` | 378,114 | `53692b7a2e3857dde7c16e369ee58d81bdc5231e9eac3de7b3d2b47d10cdf896` | `cp311-cp311-macosx_14_0_arm64`; 73 entries | 14.0 |
+| `mlx_smolvla-0.1.0-cp312-cp312-macosx_14_0_arm64.whl` | 377,119 | `1386033921a6191e17d8a87aa51fa2393dc87a47dcf8e745cea22391bd6e243b` | `cp312-cp312-macosx_14_0_arm64`; 73 entries | 14.0 |
+| `mlx_smolvla-0.1.0-cp313-cp313-macosx_14_0_arm64.whl` | 377,156 | `791e8ca13b8bbaab5bd2311e91790cfd8ebfdcce42d67cac2dd0785a4a89898f` | `cp313-cp313-macosx_14_0_arm64`; 73 entries | 14.0 |
 
 Archive inspection found only the canonical `mlx_smolvla/` package path.
 Each wheel declares distribution `mlx-smolvla`, version `0.1.0`,
 `Requires-Python: >=3.11,<3.14`, and console entry point
-`mlx-smolvla = mlx_smolvla.cli:main`. The server, training, quantization, and
-native-extension surfaces are present. No wheel contains the retired
+`mlx-smolvla = mlx_smolvla.cli:main`. The server, training, quantization,
+hardware-safety/client, and native-extension surfaces are present. Every wheel
+declares the Python-3.12+ pinned `hardware` extra. No wheel contains the retired
 `smolvla_mlx/` package path. `vtool -show-build` independently reports
 `platform MACOS` and `minos 14.0` for every packaged native extension.
 
@@ -47,7 +52,7 @@ native-extension surfaces are present. No wheel contains the retired
 ## Fresh-environment smoke matrix
 
 Each artifact was installed with dependencies into a new virtual environment.
-Every probe ran from `/private/tmp/mlx-smolvla-smoke-5efb48a`, outside both the
+Every probe ran from `/private/tmp/mlx-smolvla-smoke-9c54955`, outside both the
 main checkout and detached build worktree, and asserted that the imported
 module path was inside the virtual environment. Hub and dataset access were
 forced offline for prediction.
@@ -81,6 +86,15 @@ and the no-clobber latency-log option. Installed `vlm-8bit` and `vlm-4bit`
 predictions each emitted six finite values offline. No robot, serial port,
 camera, model host, or other external service was contacted.
 
+A sixth clean CPython 3.12 environment installed the cp312 wheel with its
+`hardware` extra. Dependency checking passed; gRPC, LeRobot 0.6.1, serial, and
+camera modules were present while PyAV remained absent. The installed
+`hardware_safety` and `hiwonder_client` modules imported from that environment,
+validated the stats-active six-axis checkpoint, and exposed the expected
+two-camera mapping. The repository example rendered all three graduated modes
+and the hardware-profile option with this installed interpreter. It did not
+open a device, camera, vendor checkout, or network connection.
+
 The installed cp312 wheel also verified the one-release cache compatibility
 shim: `SMOLVLA_MLX_CACHE` alone is used with a `FutureWarning`;
 `MLX_SMOLVLA_CACHE` wins and the warning says the legacy value was ignored
@@ -109,8 +123,8 @@ doctor reports, and loopback results are in
 ## Publication status
 
 These files are local release-candidate artifacts, not published releases.
-They remain under the ignored `.cache/` tree. After the supervised hardware
-gate clears, the final tag must be created and a fresh artifact set must be
-built from that tag, re-smoked, and recorded in a successor manifest. The
-operator must recheck the PyPI name and match every uploaded byte to that
+They remain in ignored `.cache/` and `dist/` directories. After the supervised
+hardware gate clears, the final tag must be created and a fresh artifact set
+must be built from that tag, re-smoked, and recorded in a successor manifest.
+The operator must recheck the PyPI name and match every uploaded byte to that
 tag-built manifest before publication; this untagged set must not be uploaded.
