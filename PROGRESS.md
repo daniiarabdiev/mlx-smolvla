@@ -2280,3 +2280,12 @@
   counters. The coordinator inherits the proven P2-1 fail-closed disk,
   worktree, process, path, and no-clobber checks. This protocol is committed
   before `make profile-bf16` produces any measurements.
+
+- The first post-commit attempt ran both isolated workers but published no
+  artifact: canonical `sort_keys=True` worker JSON reordered the stage mapping,
+  while the validator mistakenly required insertion order as well as exact
+  membership. A new red JSON-round-trip regression reproduced the issue. The
+  validator now enforces the same exact six-key set independent of irrelevant
+  object-key order; counts, values, summaries, dtype order, and every other
+  protocol field remain unchanged. A corrected clean commit is required before
+  rerunning timings.

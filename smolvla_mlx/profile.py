@@ -96,8 +96,8 @@ class DtypeProfile:
             raise ValueError(f"unsupported profile dtype {dtype!r}")
         if warmup_runs != 5:
             raise ValueError("profile warmup count differs from the fixed protocol")
-        if tuple(samples_ms) != _STAGES:
-            raise ValueError("profile samples must contain the exact ordered stages")
+        if len(samples_ms) != len(_STAGES) or set(samples_ms) != set(_STAGES):
+            raise ValueError("profile samples must contain the exact stages")
         normalized: dict[str, tuple[float, ...]] = {}
         summaries: dict[str, dict[str, float]] = {}
         for stage in _STAGES:

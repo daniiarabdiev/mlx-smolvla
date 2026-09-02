@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import copy
+import json
 from pathlib import Path
 
 import pytest
@@ -131,6 +132,13 @@ def test_profile_validator_recomputes_matrix_and_delta_attribution() -> None:
     changed["analysis"]["total_median_delta_ms"] += 1.0
     with pytest.raises(ValueError, match="analysis"):
         validate_profile_document(changed)
+
+
+def test_profile_validator_accepts_canonical_sorted_json_key_order() -> None:
+    from smolvla_mlx.profile import validate_profile_document
+
+    canonical_round_trip = json.loads(json.dumps(_document(), sort_keys=True))
+    assert validate_profile_document(canonical_round_trip) == canonical_round_trip
 
 
 def test_profile_script_uses_clean_idle_coordinator_and_isolated_workers() -> None:
