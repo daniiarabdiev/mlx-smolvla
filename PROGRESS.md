@@ -2380,3 +2380,37 @@
   No tolerance, upload, hardware, robot directory, or serial port was touched.
   `FAILURE_LORA_FINETUNE.md` remains byte-identical at SHA-256
   `d6654131c4acf86de13206f210f1ea1a82e3aad18871e5b64428bdf1dbeed7c6`.
+
+## 2026-09-02 — Stage Q P2-4 CI feasibility complete
+
+- Confirmed `origin` is the private GitHub repository
+  `daniiarabdiev/smolvla_mlx`. Current official GitHub documentation lists
+  standard arm64 `macos-15` at 7 GB RAM / 14 GB SSD and arm64 XLarge at 14 GB
+  RAM / the same 14 GB SSD. Hosted job duration is capped at six hours; private
+  standard and XLarge macOS rates are currently $0.062/minute and
+  $0.102/minute.
+- Local measurement makes disk infeasibility definitive: the required ignored
+  golden/run evidence plus pinned/environment caches exceeds 20 GiB before
+  native conversion scratch space, and the governing brief requires 40 GB to
+  stay free. The 7 GB standard memory tier is also outside the validated
+  48-GiB execution class.
+- Added `.github/workflows/macos-15.yml`, SHA-256
+  `227d18caf059b29310a824b7b544e5845ca6fa06b8c09393c77cabd2214720c0`.
+  It has only `workflow_dispatch`, read-only contents permission, and an
+  unconditional job-level false guard. Its skipped job describes the intended
+  Python 3.12 / uv 0.11.25 environment, repository-local caches, complete
+  reference-golden regeneration, and `make test`. It contains no secret or
+  upload path.
+- `CI.md`, SHA-256
+  `0fb2d56fdb2c8437df18c4120ecbf7755428f5a5fecba1350dbcc4b56daa8880`,
+  records exact activation requirements: dedicated self-hosted Apple Silicon,
+  48 GiB unified memory, 80 GiB free SSD, persistent verified T3/T3B/T4
+  evidence (or complete deterministic rebuild targets), matching labels, and
+  manual validation before any automatic trigger.
+- The three red-first workflow/document tests pass; YAML parses and `actionlint`
+  is clean when its intentional constant-false diagnostic is excluded. The
+  package-closing suite passes **648/648 tests in 527.15 seconds**. The machine
+  has **507 GiB** free; repository caches total 122,868,612 KiB. No runner job,
+  secret, upload, hardware, robot directory, or serial port was used. The
+  original T3 failure remains byte-identical at SHA-256
+  `d6654131c4acf86de13206f210f1ea1a82e3aad18871e5b64428bdf1dbeed7c6`.

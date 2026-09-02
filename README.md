@@ -372,6 +372,10 @@ model sources, converted weights, golden outputs, or training evidence.
   path, or retain the tested fallback when portability matters more.
 - If an offline load fails, first complete one online load into the same
   `SMOLVLA_MLX_CACHE`; both the policy and its tokenizer must be present.
+- The checked-in macOS 15 full-suite workflow is deliberately disabled because
+  GitHub's hosted Apple-silicon runners cannot hold the required regenerated
+  evidence. [CI.md](CI.md) records the verified limits and exact self-hosted
+  activation requirements.
 
 The project is licensed under the [Apache License 2.0](LICENSE). Upstream code
 and model attribution is collected in [NOTICE](NOTICE).

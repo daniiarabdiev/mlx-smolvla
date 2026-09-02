@@ -1,6 +1,6 @@
 # Full-Scope Status
 
-ACTIVE — STAGE Q P2-4 CI FEASIBILITY
+ACTIVE — STAGE H DOCUMENTS-ONLY HARDWARE READINESS
 
 T3B-1 COMPLETE — SELF-CONSISTENCY FLOOR RECORDED
 
@@ -29,6 +29,10 @@ STAGE Q P2-1 COMPLETE — PYTORCH-MPS COMPARISON RECORDED
 STAGE Q P2-2 COMPLETE — BF16 SLOWDOWN LOCALIZED; DEFAULT UNCHANGED
 
 STAGE Q P2-3 COMPLETE — VLM 8-BIT/4-BIT OPT-INS SHIPPED; DEFAULT UNCHANGED
+
+STAGE Q P2-4 COMPLETE — HONESTLY DISABLED MACOS-15 WORKFLOW COMMITTED
+
+STAGE Q COMPLETE
 
 The protected SmolVLA MLX v0.1 inference baseline is intact. At full-scope
 kickoff on 2026-08-31, `make test` passed **179/179** in **158.71 seconds** on
@@ -247,6 +251,19 @@ regression now proves a canceled waiter restores an observation consumed
 during cancellation. The corrected exact P2-3 tree passes **645/645 tests in
 544.29 seconds**.
 
+Stage Q P2-4 is complete. `origin` is a private GitHub repository, but the
+current standard arm64 `macos-15` runner has only **7 GB RAM / 14 GB SSD** and
+the paid arm64 XLarge has **14 GB RAM / 14 GB SSD**. The required ignored
+evidence and environment exceed 20 GiB before native scratch space, while this
+brief requires 40 GB to remain free. `.github/workflows/macos-15.yml` is
+therefore valid, manual-dispatch-only, and unconditionally disabled. It
+contains the full golden-regeneration/test sequence and an exact activation
+contract for a self-hosted Apple Silicon runner with at least 48 GiB unified
+memory and 80 GiB free SSD. `CI.md` records current official sources, cost/time
+caveats, persistent T3/T3B/T4 evidence requirements, and that no secrets are
+needed. Three workflow contracts and `actionlint` pass; the package-closing
+suite passes **648/648 tests in 527.15 seconds**.
+
 ## Stage state
 
 | Stage | State | Evidence / next action |
@@ -261,8 +278,8 @@ during cancellation. The corrected exact P2-3 tree passes **645/645 tests in
 | T3B-3 — Expert-only LoRA | Statistical alpha | All 3,000 updates and the strict export completed. Fixed preprocessing, held-out-improvement, and round-trip gates pass. Prospective normalized parity is `0.013038858771324158` versus derived `0.005`; the new failure record preserves this result without changing tolerances. |
 | T4 — Training UX/full fine-tune | Complete | Unified CLI, explicit reference-full topology, 100-update real smoke, finite complete export, three-checkpoint retention, and LoRA/full exact-resume gates all pass. See `TRAINING_UX.md`. |
 | T5 — Training docs/benchmark | Complete | The frozen four-cell idle Metal matrix, exact commands, overnight projections, and Torch round-trip proof are published in `TRAINING_BENCHMARK.json`, `BENCHMARK.md`, and `README.md`. |
-| Q — Quality extras | P2-1/P2-2/P2-3 complete; P2-4 in progress | Comparative, component-profile, and VLM-only quantization evidence are committed. Both quantized variants pass and ship as explicit opt-ins with no default change. Next document the honest GitHub macOS CI feasibility outcome. |
-| H — Hardware readiness | Unblocked; scheduled after Q | Documents and loopback-safe tooling only; no hardware access is authorized. |
+| Q — Quality extras | Complete | P2-1 comparison, P2-2 profile, P2-3 gated quantization, and P2-4 honestly disabled CI workflow are committed; every package closed with the full suite. |
+| H — Hardware readiness | In progress — documents only | Prepare the exact supervised runbook and serve-side observation-to-chunk latency logger. No hardware access is authorized without the in-session gate. |
 
 `TRAINING ALPHA (STATISTICAL)`, `RELEASE READY`, `T4 COMPLETE`, and `T5 COMPLETE` have been reached.
 

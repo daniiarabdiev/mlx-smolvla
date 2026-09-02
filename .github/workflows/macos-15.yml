@@ -1,0 +1,87 @@
+# DISABLED BY DESIGN (Stage Q P2-4).
+#
+# GitHub's standard arm64 macos-15 runner has 7 GB RAM and 14 GB SSD; its
+# paid arm64 XLarge runner still has only 14 GB SSD. This suite's required
+# ignored evidence plus environment/cache exceeds 20 GiB before MLX working
+# space, and BRIEF_FULL.md requires 40 GB to remain free. Enabling this job on
+# either hosted runner would be a known resource failure.
+#
+# Activation requires ALL of the following:
+#   1. change runs-on to [self-hosted, macOS, ARM64, smolvla-mlx-ci];
+#   2. provide >=48 GiB unified memory and >=80 GiB free local SSD at start;
+#   3. seed the operator-verified T3/T3B/T4 evidence under repository-local
+#      .cache/training (or first add complete deterministic rebuild targets);
+#   4. retain clean:false so that ignored local evidence survives checkout;
+#   5. remove the unconditional job-level `if` below.
+# Goldens are deliberately regenerated in-job. No secrets are required.
+
+name: "macOS 15 full suite (disabled: insufficient hosted resources)"
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  full-suite:
+    if: ${{ false }}
+    runs-on: macos-15
+    timeout-minutes: 360
+    env:
+      HF_HOME: ${{ github.workspace }}/.cache/hf
+      UV_CACHE_DIR: ${{ github.workspace }}/.cache/uv
+      SMOLVLA_MLX_CACHE: ${{ github.workspace }}/.cache/smolvla_mlx
+    steps:
+      - name: Check out source without deleting operator-verified evidence
+        uses: actions/checkout@v4
+        with:
+          clean: false
+
+      - name: Set up pinned Python lane
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Enforce the validated self-hosted capacity floor
+        shell: bash
+        run: |
+          python - <<'PY'
+          import shutil
+          import subprocess
+
+          memory = int(subprocess.check_output(["sysctl", "-n", "hw.memsize"], text=True))
+          free = shutil.disk_usage(".").free
+          required_memory = 48 * 1024**3
+          required_free = 80 * 1024**3
+          if memory < required_memory or free < required_free:
+              raise SystemExit(
+                  f"runner below CI floor: memory={memory}, free={free}, "
+                  f"required_memory={required_memory}, required_free={required_free}"
+              )
+          PY
+
+      - name: Install the locked environment
+        shell: bash
+        run: |
+          python -m pip install --disable-pip-version-check uv==0.11.25
+          uv sync --extra reference --frozen
+
+      - name: Require completed long-run evidence
+        shell: bash
+        run: |
+          test -f .cache/training/t3/run.json
+          test -f .cache/training/t3b/run.json
+          test -f .cache/training/t4-resume-lora/evidence.json
+          test -f .cache/training/t4-resume-full-v2/evidence.json
+
+      - name: Regenerate every pinned reference golden
+        shell: bash
+        run: |
+          make goldens
+          make training-goldens
+          make optimizer-goldens
+
+      - name: Run the complete suite
+        shell: bash
+        run: make test
