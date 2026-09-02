@@ -2263,3 +2263,20 @@
   tolerance, upload, hardware, robot directory, or serial port was touched;
   `FAILURE_LORA_FINETUNE.md` remains byte-identical at SHA-256
   `d6654131c4acf86de13206f210f1ea1a82e3aad18871e5b64428bdf1dbeed7c6`.
+
+## 2026-09-02 — Stage Q P2-2 bf16 profile protocol frozen before timing
+
+- Added a four-test red contract, then implemented the fixed component matrix;
+  the profile/benchmark/import-isolation focus now passes **7/7 in 0.24
+  seconds**. No model timing was run while the protocol tree was dirty.
+- The profile uses isolated fp32 and bf16 production-Metal workers on the same
+  pinned `sample_000` observation and noise, with 5 excluded warmups and 50
+  measured iterations per dtype. Every iteration synchronizes six boundaries:
+  preprocessing, vision encoder, connector, prefix, ten-step expert loop, and
+  end-to-end total.
+- The validator retains all 600 raw durations, recomputes every median/p95,
+  derives the total slowdown and per-component deltas/shares, and binds the
+  exact input, source, clean commit, environment, idle declaration, and memory
+  counters. The coordinator inherits the proven P2-1 fail-closed disk,
+  worktree, process, path, and no-clobber checks. This protocol is committed
+  before `make profile-bf16` produces any measurements.
