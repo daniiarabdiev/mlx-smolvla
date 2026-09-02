@@ -47,13 +47,41 @@ def test_from_pretrained_initializes_every_converted_checkpoint_parameter(native
 def test_public_execution_mode_contract_is_explicit(native_policy: _PolicyParts) -> None:
     policy = native_policy.policy
     assert inspect.signature(SmolVLAMLX.from_pretrained).parameters["execution_mode"].default == "production"
+    assert inspect.signature(SmolVLAMLX.from_pretrained).parameters["quantization"].default is None
     assert policy.execution_mode == "strict"
     assert policy.execution_device == mx.cpu
+    assert policy.quantization is None
+    assert policy.quantization_manifest is None
 
 
 def test_unknown_execution_mode_is_rejected_before_checkpoint_resolution(tmp_path: Path) -> None:
     with pytest.raises(ValueError, match="execution_mode"):
         SmolVLAMLX.from_pretrained(tmp_path / "missing", execution_mode="automatic")
+
+
+@pytest.mark.parametrize("preset", ("everything-4bit", "vlm-3bit", "dense-bf16"))
+def test_unknown_quantization_is_rejected_before_checkpoint_resolution(
+    tmp_path: Path,
+    preset: str,
+) -> None:
+    with pytest.raises(ValueError, match="quantization"):
+        SmolVLAMLX.from_pretrained(tmp_path / "missing", quantization=preset)
+
+
+@pytest.mark.parametrize(
+    ("kwargs", "message"),
+    (
+        ({"dtype": "float32", "quantization": "vlm-8bit"}, "bfloat16"),
+        ({"execution_mode": "strict", "quantization": "vlm-4bit"}, "production"),
+    ),
+)
+def test_quantization_rejects_unvalidated_runtime_modes_before_checkpoint_resolution(
+    tmp_path: Path,
+    kwargs: dict[str, object],
+    message: str,
+) -> None:
+    with pytest.raises(ValueError, match=message):
+        SmolVLAMLX.from_pretrained(tmp_path / "missing", **kwargs)
 
 
 @pytest.mark.parametrize(

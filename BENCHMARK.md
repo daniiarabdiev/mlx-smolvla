@@ -171,3 +171,41 @@ attribution, inputs, environment, and source hashes are committed in
 `74da9f937cb8bfeba4066d5518187490ff96a1447e4a2ad2253e2493245be1cf`.
 The successful profile binds clean source commit
 `adf40e62a7b652262fc08d7ed6449b4c60a0773d`.
+
+## VLM-only quantization
+
+Stage Q P2-3 evaluates two in-memory, weight-only MLX presets against the
+unchanged dense-bf16 production path. Both presets use affine group-size-64
+quantization for exactly 114 `Linear` modules / 216,391,680 weights in the
+connector and truncated language model. The token embedding, all 72 vision
+linears, the state projection, and all 116 expert linears remain dense bf16.
+
+The accuracy column is recomputed on the existing 50-case episode-start
+population with the same stored noise. It divides each candidate's physical
+current-action MAE by the pinned PyTorch-fp32 MAE; the fixed acceptance gate is
+`<= 1.05`. Latency uses the same `sample_000` observation and noise, five
+excluded warmups, 50 synchronized measurements, and the preprocessing-through-
+normalized-chunk boundary. Model loading and in-memory quantization are
+excluded.
+
+| Variant | MAE vs Torch fp32 | Delta vs dense bf16 | Gate | Median ms / chunk | p95 ms / chunk | Chunks/s | Peak MLX memory GiB |
+| --- | ---: | ---: | --- | ---: | ---: | ---: | ---: |
+| dense-bf16 | 1.000022 | 0.0000% | pass | 132.83 | 135.18 | 7.528 | 2.44 |
+| vlm-8bit | 0.999963 | -0.0059% | pass | 132.37 | 134.47 | 7.555 | 2.34 |
+| vlm-4bit | 1.001179 | +0.1157% | pass | 132.35 | 134.96 | 7.556 | 2.24 |
+
+Both candidates pass and therefore ship as explicit opt-ins. Neither becomes
+the default. In this bounded run their median-latency changes are below 0.4%,
+while peak MLX allocator memory falls by about 0.10 GiB for 8-bit and 0.20 GiB
+for 4-bit. These are whole-policy allocator peaks, not the serialized size of
+the quantized subset; the runtime still loads the dense bf16 checkpoint before
+quantizing the selected modules in memory.
+
+The pre-measurement check at `2026-09-02T05:57:25.628369+00:00` found no
+trainer, floor worker, test suite, or competing benchmark. All 150 raw latency
+measurements, all 150 per-case error records, exact topology manifests,
+environment, inputs, clean source commit, and decision are committed in
+[QUANTIZATION_EXPERIMENT.json](QUANTIZATION_EXPERIMENT.json), SHA-256
+`40060b0eaa63efee471ce2966f8fd578ade6ba2e8d9923435e14ef2466be393b`.
+The successful experiment binds clean source commit
+`d75ff8bb751c5ad1a276b690d8c84cbaf0bd6396`.

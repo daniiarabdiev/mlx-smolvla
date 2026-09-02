@@ -2347,3 +2347,36 @@
   environment. A preset becomes eligible only by the unchanged gate; the
   default is fixed as unchanged. No accuracy comparison or timing has run from
   this dirty protocol tree.
+
+## 2026-09-02 — Stage Q P2-3 VLM-only quantization complete
+
+- Clean, pushed protocol commit
+  `d75ff8bb751c5ad1a276b690d8c84cbaf0bd6396` ran the three isolated latency
+  workers and the two 50-case candidate evaluations after an idle check at
+  `2026-09-02T05:57:25.628369+00:00`. No trainer, floor worker, pytest, or
+  competing benchmark was present.
+- Dense bf16 measured 132.8323330017156 ms median / 135.177126902272 ms p95 /
+  2.4373253528028727 GiB peak. VLM 8-bit measured 132.36977049382403 ms /
+  134.47409404543578 ms / 2.3372125569730997 GiB; VLM 4-bit measured
+  132.34695800201735 ms / 134.9593373532116 ms / 2.236672395840287 GiB.
+- Against the pinned PyTorch-fp32 MAE, dense bf16 has ratio
+  1.0000216963394593, VLM 8-bit 0.999962500687033, and VLM 4-bit
+  1.0011790017352622. Both candidates pass the unchanged `<=1.05` gate. Their
+  MAE deltas versus dense bf16 are -0.005919436812507062% and
+  +0.11572802870571941%, respectively.
+- `QUANTIZATION_EXPERIMENT.json` has SHA-256
+  `40060b0eaa63efee471ce2966f8fd578ade6ba2e8d9923435e14ef2466be393b` and
+  revalidates from all raw timings/errors/topologies. The Python API and
+  `predict`, `bench`, and `serve` CLI surfaces now expose only explicit
+  `vlm-8bit`/`vlm-4bit` production-bf16 presets. Dense bf16 remains the
+  default. Exact topology is checked again at public load time.
+- The initial full-suite run reached **643/644 passing** and exposed a genuine
+  pre-existing cancellation race: a canceled `GetActions` waiter could dequeue
+  the next observation before observing cancellation. A deterministic red
+  regression now covers that interleaving; the server restores the observation
+  before aborting the canceled RPC. Server/Q3 focus passes **38/38**.
+- The corrected package-closing suite passes **645/645 tests in 544.29
+  seconds**. The repository has **522 GiB** free; caches total 122,865,592 KiB.
+  No tolerance, upload, hardware, robot directory, or serial port was touched.
+  `FAILURE_LORA_FINETUNE.md` remains byte-identical at SHA-256
+  `d6654131c4acf86de13206f210f1ea1a82e3aad18871e5b64428bdf1dbeed7c6`.

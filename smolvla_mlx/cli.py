@@ -43,6 +43,7 @@ def _parser() -> argparse.ArgumentParser:
     bench.add_argument("--metadata", type=Path, default=Path("tests/golden/metadata.json"))
     bench.add_argument("--dtype", choices=("float32", "bfloat16"), default="bfloat16")
     bench.add_argument("--execution-mode", choices=("production", "strict"), default="production")
+    bench.add_argument("--quantization", choices=("vlm-8bit", "vlm-4bit"))
     bench.add_argument("--runs", type=int, default=50)
     bench.add_argument("--warmups", type=int, default=5)
     bench.add_argument("--output", type=Path)
@@ -65,6 +66,7 @@ def _parser() -> argparse.ArgumentParser:
     predict.add_argument("--camera2-key", default="observation.images.up")
     predict.add_argument("--dtype", choices=("float32", "bfloat16"), default="bfloat16")
     predict.add_argument("--execution-mode", choices=("production", "strict"), default="production")
+    predict.add_argument("--quantization", choices=("vlm-8bit", "vlm-4bit"))
     predict.set_defaults(handler=_predict)
 
     serve = subcommands.add_parser(
@@ -77,6 +79,7 @@ def _parser() -> argparse.ArgumentParser:
     serve.add_argument("--tokenizer-dir", type=Path)
     serve.add_argument("--dtype", choices=("float32", "bfloat16"), default="bfloat16")
     serve.add_argument("--execution-mode", choices=("production", "strict"), default="production")
+    serve.add_argument("--quantization", choices=("vlm-8bit", "vlm-4bit"))
     serve.add_argument("--fps", type=int, default=30)
     serve.add_argument("--inference-latency", type=float, default=0.0)
     serve.add_argument("--obs-queue-timeout", type=float, default=1.0)
@@ -146,6 +149,7 @@ def _load_policy(args: argparse.Namespace, cache_dir: Path) -> SmolVLAMLX:
         dtype=args.dtype,
         tokenizer_dir=args.tokenizer_dir,
         execution_mode=args.execution_mode,
+        quantization=getattr(args, "quantization", None),
     )
 
 
@@ -161,6 +165,7 @@ def _convert(args: argparse.Namespace) -> int:
         cache=str(cache_dir),
         dtype=args.dtype,
         execution_mode=policy.execution_mode,
+        quantization=policy.quantization,
         output=str(policy.converted_weights_path),
     )
     return 0
@@ -228,6 +233,7 @@ def _bench(args: argparse.Namespace) -> int:
         cache=str(cache_dir),
         dtype=args.dtype,
         execution_mode=policy.execution_mode,
+        quantization=policy.quantization,
         output=str(args.output) if args.output else None,
         result=payload,
     )
@@ -311,6 +317,7 @@ def _predict(args: argparse.Namespace) -> int:
         cache=str(cache_dir),
         dtype=args.dtype,
         execution_mode=policy.execution_mode,
+        quantization=policy.quantization,
         output="action",
         action=action.tolist(),
     )
@@ -335,6 +342,7 @@ def _serve(args: argparse.Namespace) -> int:
             tokenizer_dir=args.tokenizer_dir,
             dtype=args.dtype,
             execution_mode=args.execution_mode,
+            quantization=args.quantization,
             fps=args.fps,
             inference_latency=args.inference_latency,
             obs_queue_timeout=args.obs_queue_timeout,

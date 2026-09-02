@@ -36,7 +36,7 @@ from lerobot.configs import FeatureType, PolicyFeature
 from lerobot.transport import services_pb2, services_pb2_grpc
 from lerobot.transport.utils import MAX_MESSAGE_SIZE
 
-from smolvla_mlx.policy import ExecutionMode, SmolVLAMLX
+from smolvla_mlx.policy import ExecutionMode, QuantizationPreset, SmolVLAMLX
 
 
 _LOG = logging.getLogger("smolvla_mlx.server")
@@ -73,6 +73,7 @@ class ServeConfig:
     tokenizer_dir: Path | None = None
     dtype: str = "bfloat16"
     execution_mode: ExecutionMode = "production"
+    quantization: QuantizationPreset | None = None
     fps: int = 30
     inference_latency: float = 0.0
     obs_queue_timeout: float = 1.0
@@ -89,6 +90,12 @@ class ServeConfig:
             raise ValueError("dtype must be 'float32' or 'bfloat16'")
         if self.execution_mode not in {"production", "strict"}:
             raise ValueError("execution_mode must be 'production' or 'strict'")
+        if self.quantization not in {None, "vlm-8bit", "vlm-4bit"}:
+            raise ValueError("quantization must be None, 'vlm-8bit', or 'vlm-4bit'")
+        if self.quantization is not None and self.dtype != "bfloat16":
+            raise ValueError("VLM quantization requires the validated bfloat16 base dtype")
+        if self.quantization is not None and self.execution_mode != "production":
+            raise ValueError("VLM quantization is validated only for production Metal execution")
         if isinstance(self.fps, bool) or not isinstance(self.fps, int) or self.fps <= 0:
             raise ValueError(f"fps must be a positive integer, got {self.fps!r}")
         if not math.isfinite(self.inference_latency) or self.inference_latency < 0:
@@ -281,6 +288,7 @@ class NativeMLXPolicyServer(services_pb2_grpc.AsyncInferenceServicer):
                     dtype=self.config.dtype,
                     tokenizer_dir=self.config.tokenizer_dir,
                     execution_mode=self.config.execution_mode,
+                    quantization=self.config.quantization,
                 )
             except (FileNotFoundError, RuntimeError, ValueError) as error:
                 self._abort(
@@ -483,17 +491,30 @@ class NativeMLXPolicyServer(services_pb2_grpc.AsyncInferenceServicer):
         while True:
             self._check_active(context)
             remaining = deadline - time.monotonic()
+            observation_queue = self.observation_queue
             if remaining <= 0:
                 try:
-                    return self.observation_queue.get_nowait()
+                    observation = observation_queue.get_nowait()
                 except Empty:
                     return None
-            try:
-                return self.observation_queue.get(
-                    timeout=min(_CANCELLATION_POLL_SECONDS, remaining)
-                )
-            except Empty:
-                continue
+            else:
+                try:
+                    observation = observation_queue.get(
+                        timeout=min(_CANCELLATION_POLL_SECONDS, remaining)
+                    )
+                except Empty:
+                    continue
+            if not context.is_active():
+                with self._state_lock:
+                    if (
+                        self.running
+                        and observation_queue is self.observation_queue
+                        and not observation_queue.full()
+                    ):
+                        observation_queue.put_nowait(observation)
+                self._abort(context, grpc.StatusCode.CANCELLED, "request cancelled")
+            self._check_active(context)
+            return observation
 
     def _predict_timed_actions(self, observation: TimedObservation) -> list[TimedAction]:
         if self.policy is None or self.actions_per_chunk is None:

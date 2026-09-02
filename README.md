@@ -69,6 +69,24 @@ smolvla-mlx bench --dtype float32 --runs 50 --warmups 5
 smolvla-mlx test
 ```
 
+Dense bf16 remains the default. Two VLM-only, weight-quantized production
+presets passed the unchanged 50-case statistical gate and are available as
+explicit Apple-Metal opt-ins:
+
+```bash
+smolvla-mlx predict --observation tests/golden/sample_000 --quantization vlm-8bit
+smolvla-mlx predict --observation tests/golden/sample_000 --quantization vlm-4bit
+smolvla-mlx serve --quantization vlm-4bit
+```
+
+The equivalent Python argument is
+`SmolVLAMLX.from_pretrained(..., quantization="vlm-8bit")`. These presets are
+validated only with the bf16 base dtype and `execution_mode="production"`.
+They quantize connector and language-model linear weights in memory while
+leaving the token embedding, vision encoder, state projection, and action
+expert dense bf16. See the accuracy/latency/memory table in
+[BENCHMARK.md](BENCHMARK.md); neither preset is enabled implicitly.
+
 `predict --observation` and `bench` use the task and sample mapping in
 `tests/golden/metadata.json`; run `make goldens` if the ignored local goldens
 are absent. Dataset-backed prediction is optional and isolated in a child

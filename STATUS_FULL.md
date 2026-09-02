@@ -1,6 +1,6 @@
 # Full-Scope Status
 
-ACTIVE — STAGE Q P2-3 VLM-ONLY QUANTIZATION EXPERIMENT
+ACTIVE — STAGE Q P2-4 CI FEASIBILITY
 
 T3B-1 COMPLETE — SELF-CONSISTENCY FLOOR RECORDED
 
@@ -27,6 +27,8 @@ T5 COMPLETE — IDLE NATIVE TRAINING BENCHMARK RECORDED
 STAGE Q P2-1 COMPLETE — PYTORCH-MPS COMPARISON RECORDED
 
 STAGE Q P2-2 COMPLETE — BF16 SLOWDOWN LOCALIZED; DEFAULT UNCHANGED
+
+STAGE Q P2-3 COMPLETE — VLM 8-BIT/4-BIT OPT-INS SHIPPED; DEFAULT UNCHANGED
 
 The protected SmolVLA MLX v0.1 inference baseline is intact. At full-scope
 kickoff on 2026-08-31, `make test` passed **179/179** in **158.71 seconds** on
@@ -229,6 +231,22 @@ durations are in `BF16_PROFILE.json`, SHA-256
 `74da9f937cb8bfeba4066d5518187490ff96a1447e4a2ad2253e2493245be1cf`.
 The exact P2-2 tree passes **627/627 tests in 533.26 seconds**.
 
+Stage Q P2-3 is complete. The fixed 50-case gate passes for both VLM-only
+presets: 8-bit has a **0.9999625007** PyTorch-fp32 MAE ratio and 4-bit has a
+**1.0011790017** ratio, each within the unchanged `<=1.05` limit. Dense bf16,
+8-bit, and 4-bit median chunk latency is **132.832/132.370/132.347 ms**;
+reported peak MLX memory is **2.437/2.337/2.237 GiB**. The two presets quantize
+exactly 114 connector/language linears and keep vision, state projection,
+token embedding, and expert dense bf16. They ship only through explicit
+`vlm-8bit`/`vlm-4bit` API and CLI flags; dense bf16 remains the default.
+`QUANTIZATION_EXPERIMENT.json` retains every raw measurement and error record
+at SHA-256
+`40060b0eaa63efee471ce2966f8fd578ade6ba2e8d9923435e14ef2466be393b`.
+The first closing run exposed a server cancellation race; a deterministic
+regression now proves a canceled waiter restores an observation consumed
+during cancellation. The corrected exact P2-3 tree passes **645/645 tests in
+544.29 seconds**.
+
 ## Stage state
 
 | Stage | State | Evidence / next action |
@@ -243,7 +261,7 @@ The exact P2-2 tree passes **627/627 tests in 533.26 seconds**.
 | T3B-3 — Expert-only LoRA | Statistical alpha | All 3,000 updates and the strict export completed. Fixed preprocessing, held-out-improvement, and round-trip gates pass. Prospective normalized parity is `0.013038858771324158` versus derived `0.005`; the new failure record preserves this result without changing tolerances. |
 | T4 — Training UX/full fine-tune | Complete | Unified CLI, explicit reference-full topology, 100-update real smoke, finite complete export, three-checkpoint retention, and LoRA/full exact-resume gates all pass. See `TRAINING_UX.md`. |
 | T5 — Training docs/benchmark | Complete | The frozen four-cell idle Metal matrix, exact commands, overnight projections, and Torch round-trip proof are published in `TRAINING_BENCHMARK.json`, `BENCHMARK.md`, and `README.md`. |
-| Q — Quality extras | P2-1/P2-2 complete; P2-3 in progress | Comparative and component-profile evidence are committed. Next run bounded VLM-only 8-bit/4-bit variants; ship only a variant that passes the unchanged statistical gate. |
+| Q — Quality extras | P2-1/P2-2/P2-3 complete; P2-4 in progress | Comparative, component-profile, and VLM-only quantization evidence are committed. Both quantized variants pass and ship as explicit opt-ins with no default change. Next document the honest GitHub macOS CI feasibility outcome. |
 | H — Hardware readiness | Unblocked; scheduled after Q | Documents and loopback-safe tooling only; no hardware access is authorized. |
 
 `TRAINING ALPHA (STATISTICAL)`, `RELEASE READY`, `T4 COMPLETE`, and `T5 COMPLETE` have been reached.
@@ -273,8 +291,9 @@ The exact P2-2 tree passes **627/627 tests in 533.26 seconds**.
 | `.cache/training/t5-benchmark.json` | Full timing evidence | SHA-256 `7112806471e55e55d98ae101bc2af8172c2cc18f01b3e0c2c0646446adba9423`; clean protocol commit, raw synchronized timings, environment, idle declaration, and source hashes |
 | `INFERENCE_COMPARISON.json` | Tracked P2-1 timing evidence | SHA-256 `115ad58c0c618b65a6275018614f3ee6cf17dd02a9d4ad9c94aaf7e5a9842e48`; two isolated engines, 100 raw synchronized timings, fixed input/noise hashes, idle/environment/source evidence |
 | `BF16_PROFILE.json` | Tracked P2-2 component evidence | SHA-256 `74da9f937cb8bfeba4066d5518187490ff96a1447e4a2ad2253e2493245be1cf`; 600 raw timings, exact component summaries/attribution, clean idle/environment/source evidence |
-| `.cache/hf` | 3,498,900 KiB | repository-local pinned source/dataset cache; unchanged by P0-3 cleanup |
-| `.cache/smolvla_mlx` | 52,764,872 KiB | post-P0-3 native cache; converted production weights retained and no cleanup candidates remain |
+| `QUANTIZATION_EXPERIMENT.json` | Tracked P2-3 experiment evidence | SHA-256 `40060b0eaa63efee471ce2966f8fd578ade6ba2e8d9923435e14ef2466be393b`; three exact topology manifests, 150 raw timings, 150 per-case error records, fixed-gate decisions, and clean idle/source evidence |
+| `.cache/hf` | 2,614,416 KiB | repository-local pinned source/dataset cache |
+| `.cache/smolvla_mlx` | 74,751,612 KiB | native conversion/evaluation cache after isolated Q experiments |
 | `dist/` | 4 artifacts | One sdist plus CPython 3.11/3.12/3.13 `macosx_14_0_arm64` wheels; exact hashes in `DIST_MANIFEST.md` |
 | `.cache/production-deterministic.json` | 2,515 bytes | SHA-256 `3268f88be5ea854ff5162373146d1b2fd23cdbcc26bacbc060f0f8fa5b850398`; production fp32 fails fixed deterministic gate, bf16 passes |
 | `.cache/statistical-strict-production-report.json` | 13,737 bytes | SHA-256 `b292736e3ec82b3eae8702c065c7c642326d226f06d35aa2214ac83fa1c23db5`; explicit strict CPU ratios both pass |

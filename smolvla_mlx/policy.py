@@ -21,6 +21,11 @@ from smolvla_mlx.expert import ActionExpert
 from smolvla_mlx.flow import euler_sample
 from smolvla_mlx.language import TruncatedLanguageModel, pad_state_to_width
 from smolvla_mlx.preprocessing import SmolVLAPreprocessor
+from smolvla_mlx.quantization import (
+    QuantizationManifest,
+    expected_topology_manifest,
+    quantize_vlm_linears,
+)
 from smolvla_mlx.vision import VisionEncoder
 
 
@@ -42,6 +47,7 @@ _TOKENIZER_FILES = (
 )
 
 ExecutionMode = Literal["production", "strict"]
+QuantizationPreset = Literal["vlm-8bit", "vlm-4bit"]
 
 
 def _normalize_execution_mode(value: object) -> ExecutionMode:
@@ -54,6 +60,23 @@ def _normalize_execution_mode(value: object) -> ExecutionMode:
 
 def _execution_device(execution_mode: ExecutionMode):
     return mx.gpu if execution_mode == "production" else mx.cpu
+
+
+def _normalize_quantization(
+    value: object,
+    *,
+    dtype_name: str,
+    execution_mode: ExecutionMode,
+) -> QuantizationPreset | None:
+    if value is None:
+        return None
+    if value not in {"vlm-8bit", "vlm-4bit"}:
+        raise ValueError("quantization must be None, 'vlm-8bit', or 'vlm-4bit'")
+    if dtype_name != "bfloat16":
+        raise ValueError("VLM quantization requires the validated bfloat16 base dtype")
+    if execution_mode != "production":
+        raise ValueError("VLM quantization is validated only for production Metal execution")
+    return value
 
 
 def _dtype_name(dtype: object) -> str:
@@ -128,6 +151,8 @@ class SmolVLAMLX:
         converted_weights_path: Path,
         loaded_parameter_names: tuple[str, ...],
         execution_mode: ExecutionMode,
+        quantization: QuantizationPreset | None = None,
+        quantization_manifest: QuantizationManifest | None = None,
     ) -> None:
         self.config = config
         self.preprocessor = preprocessor
@@ -139,6 +164,8 @@ class SmolVLAMLX:
         self._converted_weights_path = converted_weights_path
         self._loaded_parameter_names = loaded_parameter_names
         self._execution_mode = execution_mode
+        self._quantization = quantization
+        self._quantization_manifest = quantization_manifest
         self._queue: deque[np.ndarray] = deque()
         self._last_prefix_evaluations = 0
 
@@ -151,6 +178,7 @@ class SmolVLAMLX:
         *,
         tokenizer_dir: str | Path | None = None,
         execution_mode: ExecutionMode = "production",
+        quantization: QuantizationPreset | None = None,
     ) -> "SmolVLAMLX":
         """Load a checkpoint for explicit production-Metal or strict-CPU execution.
 
@@ -162,13 +190,20 @@ class SmolVLAMLX:
         """
 
         normalized_mode = _normalize_execution_mode(execution_mode)
+        dtype_name = _dtype_name(dtype)
+        normalized_quantization = _normalize_quantization(
+            quantization,
+            dtype_name=dtype_name,
+            execution_mode=normalized_mode,
+        )
         with mx.stream(_execution_device(normalized_mode)):
             return cls._from_pretrained(
                 model_id=model_id,
                 cache_dir=cache_dir,
-                dtype=dtype,
+                dtype=dtype_name,
                 tokenizer_dir=tokenizer_dir,
                 execution_mode=normalized_mode,
+                quantization=normalized_quantization,
             )
 
     @classmethod
@@ -180,6 +215,7 @@ class SmolVLAMLX:
         dtype: object,
         tokenizer_dir: str | Path | None,
         execution_mode: ExecutionMode,
+        quantization: QuantizationPreset | None,
     ) -> "SmolVLAMLX":
         resolved_cache = resolve_cache_dir(cache_dir)
         resolved_cache.mkdir(parents=True, exist_ok=True)
@@ -234,11 +270,22 @@ class SmolVLAMLX:
             converted_weights_path=output_path,
             loaded_parameter_names=tuple(sorted(loaded_names)),
             execution_mode=execution_mode,
+            quantization=None,
+            quantization_manifest=None,
         )
         if set(policy._runtime_parameter_names()) != loaded_names:
             missing = sorted(loaded_names - set(policy._runtime_parameter_names()))
             unexpected = sorted(set(policy._runtime_parameter_names()) - loaded_names)
             raise RuntimeError(f"native parameter tree disagrees with converted tensors; missing={missing}, unexpected={unexpected}")
+        if quantization is not None:
+            bits = 8 if quantization == "vlm-8bit" else 4
+            manifest = quantize_vlm_linears(policy, bits=bits)
+            if manifest.as_dict() != expected_topology_manifest(quantization):
+                raise RuntimeError(
+                    "runtime quantization topology differs from the audited Stage Q manifest"
+                )
+            policy._quantization = quantization
+            policy._quantization_manifest = manifest
         return policy
 
     @property
@@ -258,6 +305,18 @@ class SmolVLAMLX:
         """The policy-owned execution contract: production Metal or strict CPU."""
 
         return self._execution_mode
+
+    @property
+    def quantization(self) -> QuantizationPreset | None:
+        """The explicitly selected VLM-only preset, or ``None`` for dense bf16."""
+
+        return self._quantization
+
+    @property
+    def quantization_manifest(self) -> QuantizationManifest | None:
+        """The audited in-memory module topology for the selected preset."""
+
+        return self._quantization_manifest
 
     @property
     def execution_device(self):

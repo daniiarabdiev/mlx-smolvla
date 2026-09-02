@@ -17,6 +17,7 @@ reference-only `reference/`, `scripts/`, and test lanes may do so.
 | CPU reference attention math | Reimplement from PyTorch 2.11.0 and its bundled SLEEF | The strict CPU golden contract depends on PyTorch's four-wide ARM vector reduction and exponential approximation. The focused native primitive preserves that arithmetic only on MLX CPU streams; normal GPU execution retains MLX kernels. |
 | Action expert | Reimplement from the verified LeRobot behavior | Its interleaved self/cross-attention and unusual 720-wide hidden state with 960-wide attention channels are policy-specific. A clean MLX implementation is less risky than attempting to fit it into a generic VLM abstraction. |
 | Prefix assembly, masks, timestep embedding, Euler loop, action queue | Reimplement | These are compact policy semantics whose exact reference behavior is recorded in `ARCHITECTURE.md`; they do not benefit from importing a broad framework. |
+| VLM-only weight quantization | Reuse MLX `nn.quantize`; adapt the `mlx-vlm` predicate pattern | MLX supplies the affine `QuantizedLinear` primitive. The runtime applies it only to the audited connector/language `Linear` population with an exact topology check. This mirrors `mlx-vlm`'s selective predicate approach without importing that package or its processing stack. |
 
 ## Why the runtime will not import `mlx_vlm`
 
@@ -25,6 +26,13 @@ generation and processing utilities, and its processor modules import
 Transformers. Importing it would violate the hard dependency-isolation rule even
 if only its model classes were intended for use. The port will retain only the
 small MLX-only portions needed for parity as local vendored modules.
+
+Stage Q's optional quantization path follows the public
+[`mlx.nn.quantize`](https://github.com/ml-explore/mlx/blob/main/python/mlx/nn/layers/quantized.py)
+class-predicate contract and the selective loader pattern in
+[`mlx-vlm`](https://github.com/Blaizzy/mlx-vlm/blob/main/mlx_vlm/utils.py).
+Only the pattern is reused: `smolvla_mlx.quantization` calls MLX directly and
+keeps `mlx_vlm` outside the runtime dependency graph.
 
 ## Required adaptations
 

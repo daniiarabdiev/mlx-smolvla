@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import copy
+import hashlib
+import json
 from pathlib import Path
 
 import mlx.core as mx
@@ -178,6 +180,33 @@ def test_quantization_rejects_ineligible_vlm_width_before_mutation() -> None:
     assert isinstance(policy.language.proj, nn.Linear)
 
 
+@pytest.mark.slow
+@pytest.mark.parametrize(("preset", "bits"), (("vlm-8bit", 8), ("vlm-4bit", 4)))
+def test_public_policy_opt_in_applies_exact_real_checkpoint_topology(
+    checkpoint_dir: Path,
+    base_vlm_dir: Path,
+    preset: str,
+    bits: int,
+) -> None:
+    from smolvla_mlx.policy import SmolVLAMLX
+    from smolvla_mlx.quantization import expected_topology_manifest
+
+    policy = SmolVLAMLX.from_pretrained(
+        checkpoint_dir,
+        cache_dir=Path(".cache/smolvla_mlx/quantization-public-api"),
+        tokenizer_dir=base_vlm_dir,
+        dtype="bfloat16",
+        execution_mode="production",
+        quantization=preset,
+    )
+
+    assert policy.quantization == preset
+    assert policy.quantization_manifest is not None
+    assert policy.quantization_manifest.bits == bits
+    assert policy.quantization_manifest.as_dict() == expected_topology_manifest(preset)
+    assert len(policy.loaded_parameter_names) == 500
+
+
 def test_experiment_validator_recomputes_gates_timings_and_decision() -> None:
     from smolvla_mlx.quantization import validate_quantization_document
 
@@ -212,3 +241,38 @@ def test_experiment_script_has_isolated_accuracy_and_latency_workers() -> None:
     assert 'choices=("accuracy", "latency")' in source
     assert 'choices=("dense-bf16", "vlm-8bit", "vlm-4bit")' in source
     assert "subprocess.run(" in source
+
+
+def test_committed_quantization_artifact_revalidates_from_raw_evidence() -> None:
+    from smolvla_mlx.quantization import validate_quantization_document
+
+    path = Path("QUANTIZATION_EXPERIMENT.json")
+    artifact = json.loads(path.read_text(encoding="utf-8"))
+    assert validate_quantization_document(artifact) == artifact
+    assert hashlib.sha256(path.read_bytes()).hexdigest() == (
+        "40060b0eaa63efee471ce2966f8fd578ade6ba2e8d9923435e14ef2466be393b"
+    )
+    assert artifact["decision"] == {
+        "default_changed": False,
+        "eligible_opt_in_variants": ["vlm-8bit", "vlm-4bit"],
+        "rejected_variants": [],
+    }
+
+
+def test_quantization_results_and_opt_ins_are_published_without_default_change() -> None:
+    artifact = json.loads(Path("QUANTIZATION_EXPERIMENT.json").read_text(encoding="utf-8"))
+    benchmark = Path("BENCHMARK.md").read_text(encoding="utf-8")
+    readme = Path("README.md").read_text(encoding="utf-8")
+
+    assert "## VLM-only quantization" in benchmark
+    assert "40060b0eaa63efee471ce2966f8fd578ade6ba2e8d9923435e14ef2466be393b" in benchmark
+    for variant in artifact["variants"]:
+        assert variant["variant"] in benchmark
+        assert f"{variant['accuracy']['statistical_ratio']:.6f}" in benchmark
+        assert f"{variant['latency']['median_ms']:.2f}" in benchmark
+        assert f"{variant['latency']['p95_ms']:.2f}" in benchmark
+        assert f"{variant['latency']['peak_memory_gib']:.2f}" in benchmark
+
+    assert "--quantization vlm-8bit" in readme
+    assert "--quantization vlm-4bit" in readme
+    assert "Dense bf16 remains the default" in readme

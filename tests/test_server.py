@@ -198,6 +198,10 @@ def test_server_configuration_defaults_to_loopback_and_requires_remote_opt_in() 
     assert config.host == "127.0.0.1"
     assert config.port == 8080
     assert config.environment_dt == 1 / config.fps
+    assert config.quantization is None
+
+    assert ServeConfig(quantization="vlm-8bit").quantization == "vlm-8bit"
+    assert ServeConfig(quantization="vlm-4bit").quantization == "vlm-4bit"
 
     with pytest.raises(ValueError, match="allow_remote"):
         ServeConfig(host="0.0.0.0")
@@ -212,9 +216,40 @@ def test_server_configuration_defaults_to_loopback_and_requires_remote_opt_in() 
         {"obs_queue_timeout": -1},
         {"max_workers": 0},
         {"seed": -1},
+        {"quantization": "everything-4bit"},
+        {"quantization": "vlm-8bit", "dtype": "float32"},
+        {"quantization": "vlm-4bit", "execution_mode": "strict"},
     ):
         with pytest.raises(ValueError):
             ServeConfig(**invalid)
+
+
+def test_server_passes_quantization_opt_in_to_policy_loader() -> None:
+    from smolvla_mlx.server import ServeConfig, create_server
+
+    captured: dict[str, object] = {}
+    policy = _FakePolicy()
+
+    def loader(**kwargs):
+        captured.update(kwargs)
+        return policy
+
+    grpc_server, _servicer, port = create_server(
+        ServeConfig(host="127.0.0.1", port=0, quantization="vlm-4bit"),
+        policy_loader=loader,
+    )
+    grpc_server.start()
+    channel = grpc.insecure_channel(
+        f"127.0.0.1:{port}", options=grpc_channel_options(enable_retries=False)
+    )
+    stub = services_pb2_grpc.AsyncInferenceStub(channel)
+    try:
+        grpc.channel_ready_future(channel).result(timeout=5)
+        _send_setup(stub, _policy_config())
+        assert captured["quantization"] == "vlm-4bit"
+    finally:
+        channel.close()
+        grpc_server.stop(grace=0).wait()
 
 
 def test_reference_transport_round_trip_preserves_latest_observation_and_timing() -> None:
@@ -319,6 +354,33 @@ def test_get_actions_is_cancellable_and_inference_is_serialized() -> None:
         executor.shutdown(wait=True)
         channel.close()
         server.stop(grace=0).wait()
+
+
+def test_cancelled_waiter_restores_observation_consumed_during_cancellation() -> None:
+    from smolvla_mlx.server import NativeMLXPolicyServer, ServeConfig
+
+    class CancelAfterDequeueContext:
+        def __init__(self) -> None:
+            self.active_checks = 0
+
+        def is_active(self) -> bool:
+            self.active_checks += 1
+            return self.active_checks == 1
+
+        def abort(self, _code, details: str) -> None:
+            raise RuntimeError(details)
+
+    servicer = NativeMLXPolicyServer(
+        ServeConfig(host="127.0.0.1", port=0, obs_queue_timeout=0.01),
+        policy_loader=lambda **_kwargs: _FakePolicy(),
+    )
+    observation = TimedObservation(1.0, 9, _raw_observation(), must_go=True)
+    servicer.observation_queue.put_nowait(observation)
+
+    with pytest.raises(RuntimeError, match="cancelled"):
+        servicer._next_observation(CancelAfterDequeueContext())
+
+    assert servicer.observation_queue.get_nowait() is observation
 
 
 @pytest.mark.slow

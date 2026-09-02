@@ -37,11 +37,23 @@ def test_predict_requires_exactly_one_observation_source() -> None:
     assert saved.observation.name == "sample"
     assert saved.dataset is None
     assert saved.execution_mode == "production"
+    assert saved.quantization is None
 
     strict = parser.parse_args(
         ["predict", "--observation", "sample", "--execution-mode", "strict"]
     )
     assert strict.execution_mode == "strict"
+
+    quantized = parser.parse_args(
+        ["predict", "--observation", "sample", "--quantization", "vlm-4bit"]
+    )
+    assert quantized.quantization == "vlm-4bit"
+
+    benchmark = parser.parse_args(["bench", "--quantization", "vlm-8bit"])
+    assert benchmark.quantization == "vlm-8bit"
+
+    with pytest.raises(SystemExit):
+        parser.parse_args(["bench", "--quantization", "all-4bit"])
 
 
 def test_serve_parser_defaults_to_safe_local_production() -> None:
@@ -52,7 +64,11 @@ def test_serve_parser_defaults_to_safe_local_production() -> None:
     assert args.port == 8080
     assert args.dtype == "bfloat16"
     assert args.execution_mode == "production"
+    assert args.quantization is None
     assert args.allow_remote is False
+
+    quantized = _parser().parse_args(["serve", "--quantization", "vlm-8bit"])
+    assert quantized.quantization == "vlm-8bit"
 
 
 def test_saved_observation_loads_arrays_and_matching_task(tmp_path) -> None:
