@@ -176,6 +176,7 @@ def test_built_wheel_contains_and_imports_the_trained_parity_surface(
     assert "smolvla_mlx/training/trained_parity.py" in names
     assert "training/t3_contract.py" in names
     assert "training/ux.py" in names
+    assert "training/benchmark.py" in names
     assert "reference/discovery.py" in names
 
     target = tmp_path / "installed"

@@ -4,7 +4,7 @@ export SMOLVLA_MLX_CACHE := $(CURDIR)/.cache/smolvla_mlx
 
 TESTS ?= tests
 
-.PHONY: goldens test bench production-evidence cache-inventory clean-cache clean-cache-dry-run training-audit training-goldens training-parity optimizer-goldens optimizer-lockstep lora-benchmark lora-evaluation lora-finetune lora-finetune-resume lora-finetune-check training-resume-lora training-resume-full
+.PHONY: goldens test bench production-evidence cache-inventory clean-cache clean-cache-dry-run training-audit training-goldens training-parity optimizer-goldens optimizer-lockstep lora-benchmark lora-evaluation lora-finetune lora-finetune-resume lora-finetune-check training-resume-lora training-resume-full training-benchmark
 
 goldens:
 	uv run --extra reference python scripts/make_goldens.py --cache-dir $(HF_HOME) --output tests/golden
@@ -67,3 +67,6 @@ training-resume-lora:
 
 training-resume-full:
 	uv run --extra train python scripts/check_training_resume.py --mode full --dataset $(HF_HOME)/datasets/svla_so101_pickplace --cache-dir $(HF_HOME) --native-cache $(SMOLVLA_MLX_CACHE)/policy-float32 --output-root $(CURDIR)/.cache/training/t4-resume-full-v2
+
+training-benchmark:
+	uv run --extra train python scripts/benchmark_training.py --dataset $(HF_HOME)/datasets/svla_so101_pickplace --cache-dir $(HF_HOME) --native-cache $(SMOLVLA_MLX_CACHE)/policy-float32 --output $(CURDIR)/.cache/training/t5-benchmark.json

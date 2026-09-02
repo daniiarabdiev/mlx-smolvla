@@ -42,6 +42,8 @@ def test_training_modes_are_explicit_and_validate_public_controls(tmp_path: Path
     assert full.resume is False
     assert lora.rank == 4
     assert lora.alpha == 8.0
+    assert full.dtype == "bfloat16"
+    assert FullTrainingConfig(**common, dtype="float32").dtype == "float32"
 
     for field, value in (("steps", 0), ("batch_size", 0), ("learning_rate", 0.0)):
         invalid = {**common, field: value}
@@ -51,6 +53,8 @@ def test_training_modes_are_explicit_and_validate_public_controls(tmp_path: Path
             pass
         else:
             raise AssertionError(f"invalid {field} was accepted")
+    with pytest.raises(ValueError, match="dtype"):
+        FullTrainingConfig(**common, dtype="float16")
 
 
 def test_dataset_source_accepts_local_path_and_materializes_repo_id(
@@ -289,6 +293,8 @@ def test_cli_train_surface_selects_exactly_one_mode() -> None:
             "run",
             "--checkpoint-every",
             "25",
+            "--dtype",
+            "float32",
         ]
     )
     assert full.training_mode == "full"
@@ -297,6 +303,7 @@ def test_cli_train_surface_selects_exactly_one_mode() -> None:
     assert full.batch_size == 2
     assert full.learning_rate == 3e-5
     assert full.checkpoint_interval == 25
+    assert full.dtype == "float32"
 
     for invalid in (["train", "owner/dataset"], ["train", "owner/dataset", "--lora", "--full"]):
         try:

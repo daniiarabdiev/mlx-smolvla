@@ -116,6 +116,7 @@ def _parser() -> argparse.ArgumentParser:
     train.add_argument("--steps", type=int, default=100)
     train.add_argument("--batch-size", type=int, default=1)
     train.add_argument("--lr", dest="learning_rate", type=float, default=1e-4)
+    train.add_argument("--dtype", choices=("bfloat16", "float32"), default="bfloat16")
     train.add_argument("--output", type=Path, required=True)
     train.add_argument("--checkpoint-every", dest="checkpoint_interval", type=int, default=25)
     train.add_argument("--resume", action="store_true")
@@ -360,6 +361,7 @@ def _train(args: argparse.Namespace) -> int:
         "steps": args.steps,
         "batch_size": args.batch_size,
         "learning_rate": args.learning_rate,
+        "dtype": args.dtype,
         "output_dir": args.output,
         "cache_dir": args.cache_dir,
         "native_cache": args.native_cache,

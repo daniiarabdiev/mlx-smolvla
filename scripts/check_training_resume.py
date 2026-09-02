@@ -46,6 +46,7 @@ def _parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("--batch-size", type=int, default=1)
     parser.add_argument("--lr", type=float, default=1e-4)
+    parser.add_argument("--dtype", choices=("bfloat16", "float32"), default="bfloat16")
     return parser
 
 
@@ -61,6 +62,7 @@ def main(argv: list[str] | None = None) -> int:
         "steps": STEPS,
         "batch_size": args.batch_size,
         "learning_rate": args.lr,
+        "dtype": args.dtype,
         "cache_dir": args.cache_dir,
         "native_cache": args.native_cache,
         "checkpoint_interval": CHECKPOINT_INTERVAL,
@@ -123,6 +125,7 @@ def main(argv: list[str] | None = None) -> int:
             "checkpoint_interval": CHECKPOINT_INTERVAL,
             "batch_size": args.batch_size,
             "learning_rate": args.lr,
+            "dtype": args.dtype,
         },
         "environment": {
             "python": sys.version.split()[0],

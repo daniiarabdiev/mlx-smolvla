@@ -98,6 +98,7 @@ class TrainingConfig:
     steps: int = 100
     batch_size: int = 1
     learning_rate: float = 1e-4
+    dtype: str = "bfloat16"
     output_dir: Path = Path(".cache/training/t4")
     cache_dir: Path = Path(".cache/hf")
     native_cache: Path = Path(".cache/smolvla_mlx/policy-float32")
@@ -115,6 +116,8 @@ class TrainingConfig:
             raise ValueError("training batch size must be a positive integer")
         if not math.isfinite(self.learning_rate) or self.learning_rate <= 0:
             raise ValueError("training learning rate must be finite and positive")
+        if self.dtype not in {"bfloat16", "float32"}:
+            raise ValueError("training dtype must be 'bfloat16' or 'float32'")
         if type(self.checkpoint_interval) is not int or self.checkpoint_interval <= 0:
             raise ValueError("checkpoint interval must be a positive integer")
         if type(self.seed) is not int or type(self.sampler_seed) is not int:
@@ -579,7 +582,7 @@ def _prepare_training(
     mx.random.seed(config.seed)
     model = SmolVLATrainingModel.from_pretrained(
         cache_dir=config.native_cache,
-        dtype=mx.bfloat16,
+        dtype=mx.bfloat16 if config.dtype == "bfloat16" else mx.float32,
     )
     model.train()
     if isinstance(config, FullTrainingConfig):
@@ -643,6 +646,7 @@ def _config_payload(
         "steps": config.steps,
         "batch_size": config.batch_size,
         "learning_rate": config.learning_rate,
+        "dtype": config.dtype,
         "seed": config.seed,
         "sampler_seed": config.sampler_seed,
         "checkpoint_interval": config.checkpoint_interval,
@@ -654,7 +658,7 @@ def _config_payload(
         "topology": asdict(components.topology),
         "optimizer": asdict(components.optimizer.config),
         "mode_details": mode_details,
-        "base_dtype": "bfloat16",
+        "base_dtype": config.dtype,
     }
 
 
@@ -823,7 +827,7 @@ def _finalize_export(
         policy = SmolVLAMLX.from_pretrained(
             export_report.output_dir,
             cache_dir=config.native_cache.parent,
-            dtype=mx.bfloat16,
+            dtype=mx.bfloat16 if config.dtype == "bfloat16" else mx.float32,
             execution_mode="production",
         )
         action = np.asarray(policy.select_action(last_observation), dtype=np.float32)
