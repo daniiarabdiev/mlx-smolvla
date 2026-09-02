@@ -18,7 +18,7 @@ def test_cli_exposes_required_commands() -> None:
     )
 
     assert completed.returncode == 0, completed.stderr
-    for command in ("convert", "test", "bench", "predict"):
+    for command in ("convert", "test", "bench", "predict", "serve"):
         assert command in completed.stdout
 
 
@@ -42,6 +42,17 @@ def test_predict_requires_exactly_one_observation_source() -> None:
         ["predict", "--observation", "sample", "--execution-mode", "strict"]
     )
     assert strict.execution_mode == "strict"
+
+
+def test_serve_parser_defaults_to_safe_local_production() -> None:
+    from smolvla_mlx.cli import _parser
+
+    args = _parser().parse_args(["serve"])
+    assert args.host == "127.0.0.1"
+    assert args.port == 8080
+    assert args.dtype == "bfloat16"
+    assert args.execution_mode == "production"
+    assert args.allow_remote is False
 
 
 def test_saved_observation_loads_arrays_and_matching_task(tmp_path) -> None:

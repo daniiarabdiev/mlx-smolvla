@@ -2059,3 +2059,47 @@
   hardware, serial port, or robot directory was used. The original T3 failure
   remains byte-identical at SHA-256
   `d6654131c4acf86de13206f210f1ea1a82e3aad18871e5b64428bdf1dbeed7c6`.
+
+## 2026-09-02 — Stage R P1-4 software-only async serving complete
+
+- The installed LeRobot 0.6.1 async service was audited before implementation.
+  Its proto3 descriptor SHA-256 is
+  `e116fbf44dd1fc65b67ff255c04857000c28e69055211af5ef3df85ac8d81f8d`;
+  `ARCHITECTURE.md` records the exact four RPCs, fields, transfer-state values,
+  pickle payload classes, 2 MiB chunking, 4 MiB message ceiling, timed-action
+  schedule, and seven installed-source hashes.
+- `smolvla-mlx serve` now implements that schema with the reference protobuf
+  classes and client chunk transport. A one-item newest-observation queue,
+  `must_go` and duplicate/similar filtering, `Ready` episode reset, requested
+  action slicing, empty-queue timeout, and `1 / fps` timestamp/timestep schedule
+  match the pinned server. MLX inference is serialized across concurrent RPC
+  workers; queue/lock/latency waits observe cancellation, and invalid setup,
+  stream, feature, checkpoint, or inference inputs return explicit gRPC status
+  errors.
+- The optional dependency boundary is `lerobot[async]==0.6.1` under the
+  Python-3.12+ `serve` extra. The CLI imports it only inside the `serve`
+  handler. The clean import-isolation subprocess still loads none of gRPC,
+  protobuf's `google` package, Torch, LeRobot, or Transformers through the base
+  runtime. The wheel-content regression asserts `smolvla_mlx/server.py` ships.
+- Security is fail-closed: `127.0.0.1:8080` is the default, any non-loopback
+  bind requires `--allow-remote`, observations are capped at 64 MiB, and the
+  README states that LeRobot's unauthenticated/unencrypted pickle protocol is
+  trusted-peer only. The server contains no robot, serial, camera-capture, or
+  motion code. Import-time LeRobot log files are ignored as generated debris.
+- The reference `AsyncInferenceStub`, `send_bytes_in_chunks`,
+  `RemotePolicyConfig`, and `TimedObservation` drove an ephemeral localhost
+  server using the pinned real base checkpoint and recorded
+  `tests/golden/sample_000` cameras/state/task. With the opt-in worker-local
+  seed `20260831`, the served `[3, 6]` fp32 CPU-Torch chunk has SHA-256
+  `46a4b2809975a6f14925db404d55b7595d45df9ef578f1f2cd1ae760ce137981`
+  and is exactly equal to three direct `select_action` results: 18/18 elements,
+  maximum absolute difference `0.0`, no tolerance.
+- The fast and real focused server/CLI/distribution/isolation suite passes
+  **22/22 in 14.00 seconds**. The protected complete tree passes **601/601 in
+  521.24 seconds** before the final wheel-content assertion was added; that
+  assertion is exercised again in the final release full-suite run.
+- README commands were checked against the installed LeRobot client's actual
+  `--help` surface without constructing a robot. Hardware-in-the-loop remains
+  explicitly pending. No hardware, robot directory, serial port, or upload was
+  accessed. The original T3 failure remains byte-identical at SHA-256
+  `d6654131c4acf86de13206f210f1ea1a82e3aad18871e5b64428bdf1dbeed7c6`.

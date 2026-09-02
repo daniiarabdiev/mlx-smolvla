@@ -26,7 +26,7 @@ import training
 
 loaded = {name.split('.', 1)[0] for name in sys.modules}
 print(json.dumps({
-    'forbidden': sorted(loaded & {'torch', 'lerobot', 'transformers'}),
+    'forbidden': sorted(loaded & {'grpc', 'google', 'torch', 'lerobot', 'transformers'}),
     'training_api': sorted(name for name in vars(training) if not name.startswith('_')),
 }))
 """

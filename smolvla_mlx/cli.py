@@ -66,6 +66,32 @@ def _parser() -> argparse.ArgumentParser:
     predict.add_argument("--dtype", choices=("float32", "bfloat16"), default="bfloat16")
     predict.add_argument("--execution-mode", choices=("production", "strict"), default="production")
     predict.set_defaults(handler=_predict)
+
+    serve = subcommands.add_parser(
+        "serve",
+        help="serve native MLX actions to a trusted LeRobot 0.6.1 async client",
+    )
+    serve.add_argument("--host", default="127.0.0.1")
+    serve.add_argument("--port", type=int, default=8080)
+    serve.add_argument("--cache-dir", type=Path)
+    serve.add_argument("--tokenizer-dir", type=Path)
+    serve.add_argument("--dtype", choices=("float32", "bfloat16"), default="bfloat16")
+    serve.add_argument("--execution-mode", choices=("production", "strict"), default="production")
+    serve.add_argument("--fps", type=int, default=30)
+    serve.add_argument("--inference-latency", type=float, default=0.0)
+    serve.add_argument("--obs-queue-timeout", type=float, default=1.0)
+    serve.add_argument("--max-workers", type=int, default=4)
+    serve.add_argument(
+        "--seed",
+        type=int,
+        help="optional deterministic base seed; each action chunk advances it by one",
+    )
+    serve.add_argument(
+        "--allow-remote",
+        action="store_true",
+        help="allow a non-loopback insecure/pickle bind (trusted network only)",
+    )
+    serve.set_defaults(handler=_serve)
     return parser
 
 
@@ -249,6 +275,35 @@ def _predict(args: argparse.Namespace) -> int:
         execution_mode=policy.execution_mode,
         output="action",
         action=action.tolist(),
+    )
+    return 0
+
+
+def _serve(args: argparse.Namespace) -> int:
+    if sys.version_info < (3, 12):
+        raise RuntimeError("serve requires Python 3.12+ and the optional .[serve] dependencies")
+    try:
+        from smolvla_mlx.server import ServeConfig, serve_forever
+    except ImportError as error:
+        raise RuntimeError(
+            "serve dependencies are unavailable; install this package with `pip install '.[serve]'`"
+        ) from error
+
+    serve_forever(
+        ServeConfig(
+            host=args.host,
+            port=args.port,
+            cache_dir=args.cache_dir,
+            tokenizer_dir=args.tokenizer_dir,
+            dtype=args.dtype,
+            execution_mode=args.execution_mode,
+            fps=args.fps,
+            inference_latency=args.inference_latency,
+            obs_queue_timeout=args.obs_queue_timeout,
+            max_workers=args.max_workers,
+            seed=args.seed,
+            allow_remote=args.allow_remote,
+        )
     )
     return 0
 

@@ -336,8 +336,14 @@ passes 593/593 tests.
 
 - Add the exact LeRobot 0.6.1-compatible asynchronous service schema, `serve`
   dependency extra, server CLI, and reference client.
-- Cover serialization, validation, error propagation, cancellation, concurrency,
-  and a localhost loopback inference smoke test. No hardware control is included.
+- Freeze the descriptor and source hashes; preserve the reference pickle
+  payloads, 2 MiB observation chunking, newest-observation queue, timed-action
+  schedule, setup/ready lifecycle, and empty-queue response.
+- Cover setup and observation validation, bounded reassembly, explicit gRPC
+  error propagation, cancellation-aware waits, serialized concurrent MLX
+  inference, safe loopback-by-default binding, and a localhost loopback using
+  the reference client transport. The recorded served chunk must equal direct
+  `select_action` exactly. No hardware control is included.
 - Document lifecycle/security boundaries; run full suite; update status/progress;
   commit and push.
 

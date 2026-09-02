@@ -70,14 +70,18 @@ def test_reference_extra_is_guarded_by_lerobots_python_312_floor() -> None:
         Requirement(requirement)
         for requirement in distribution("smolvla-mlx").requires or ()
     ]
-    guarded = {
-        requirement.name.lower(): requirement
+    guarded = [
+        requirement
         for requirement in requirements
         if requirement.name.lower() in {"lerobot", "torch"}
-    }
+        and requirement.marker is not None
+        and requirement.marker.evaluate(
+            {"extra": "reference", "python_version": "3.12"}
+        )
+    ]
 
-    assert set(guarded) == {"lerobot", "torch"}
-    for requirement in guarded.values():
+    assert {requirement.name.lower() for requirement in guarded} == {"lerobot", "torch"}
+    for requirement in guarded:
         assert requirement.marker is not None
         assert requirement.marker.evaluate(
             {"extra": "reference", "python_version": "3.11"}
@@ -85,6 +89,27 @@ def test_reference_extra_is_guarded_by_lerobots_python_312_floor() -> None:
         assert requirement.marker.evaluate(
             {"extra": "reference", "python_version": "3.12"}
         ) is True
+
+
+def test_serve_extra_is_optional_and_guarded_by_lerobots_python_312_floor() -> None:
+    requirements = [
+        Requirement(requirement)
+        for requirement in distribution("smolvla-mlx").requires or ()
+    ]
+    serve_requirements = [
+        requirement
+        for requirement in requirements
+        if requirement.name.lower() == "lerobot"
+        and requirement.marker is not None
+        and requirement.marker.evaluate({"extra": "serve", "python_version": "3.12"})
+    ]
+
+    assert len(serve_requirements) == 1
+    requirement = serve_requirements[0]
+    assert requirement.specifier == SpecifierSet("==0.6.1")
+    assert requirement.extras == {"async"}
+    assert requirement.marker.evaluate({"extra": "serve", "python_version": "3.11"}) is False
+    assert "serve" in (distribution("smolvla-mlx").metadata.get_all("Provides-Extra") or [])
 
 
 def test_native_extension_build_is_optional_and_targets_macos_14(
@@ -147,6 +172,7 @@ def test_built_wheel_contains_and_imports_the_trained_parity_surface(
     assert len(wheels) == 1
     with zipfile.ZipFile(wheels[0]) as archive:
         names = set(archive.namelist())
+    assert "smolvla_mlx/server.py" in names
     assert "smolvla_mlx/training/trained_parity.py" in names
     assert "training/t3_contract.py" in names
     assert "reference/discovery.py" in names

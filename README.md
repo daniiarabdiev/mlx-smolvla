@@ -190,6 +190,58 @@ policy = SmolVLAMLX.from_pretrained("<USER>/<MODEL>")
 The checkpoint must include `config.json`, `model.safetensors`, both processor
 JSON files, and any normalization safetensors required by its config.
 
+## Serve for your robot
+
+The optional server speaks the exact async-inference gRPC protocol shipped by
+LeRobot 0.6.1 while running the policy with native MLX. On the Apple Silicon
+Mac, use Python 3.12 or 3.13, install the isolated extra, and start the safe
+loopback default:
+
+```bash
+python -m pip install ".[serve]"
+smolvla-mlx serve \
+  --host 127.0.0.1 \
+  --port 8080 \
+  --dtype bfloat16 \
+  --execution-mode production
+```
+
+On that same Mac, a LeRobot user runs its standard client with their existing
+calibration and camera values substituted for the placeholders:
+
+```bash
+python -m lerobot.async_inference.robot_client \
+  --policy_type=smolvla \
+  --pretrained_name_or_path=lerobot/smolvla_base \
+  --robot.type=so101_follower \
+  --robot.port=<YOUR_FOLLOWER_PORT> \
+  --robot.id=<YOUR_CALIBRATION_ID> \
+  --robot.cameras='<YOUR_LEROBOT_CAMERA_CONFIG>' \
+  --actions_per_chunk=10 \
+  --task='pick up the object' \
+  --server_address=127.0.0.1:8080 \
+  --policy_device=cpu \
+  --client_device=cpu \
+  --fps=30
+```
+
+The client's `policy_device` field is retained for wire compatibility; the
+server's `--execution-mode` owns the actual MLX device. A different-machine
+client requires a trusted private network plus an explicit server bind such as
+`--host 0.0.0.0 --allow-remote` and the Mac's private address in
+`--server_address`. LeRobot 0.6.1 uses unauthenticated, unencrypted gRPC and
+Python pickle payloads, so never expose this port to an untrusted peer or the
+public internet.
+
+`Ready` starts a fresh episode, the one-item observation queue keeps the latest
+frame, inference is serialized, and each returned CPU Torch `TimedAction`
+inherits the observation timestep and advances its timestamp by `1 / --fps`.
+Ctrl-C stops the server. Schema, validation, cancellation, concurrency, and a
+localhost real-checkpoint test are covered in `tests/test_server.py`; the
+recorded three-action chunk is exactly equal to three direct
+`select_action` calls. Hardware-in-the-loop validation is still pending and
+must be performed in a separate supervised operator session.
+
 ## Cache layout and cleanup
 
 Repository commands route caches under `.cache/`: Hugging Face snapshots and
@@ -212,9 +264,10 @@ model sources, converted weights, golden outputs, or training evidence.
 
 ## Scope, limitations, and troubleshooting
 
-- The stable installed surface is inference and offline software evaluation.
-  Robot I/O, serial transport, and hardware-in-the-loop validation are not in
-  this release surface.
+- The base installed surface is dependency-light inference and offline
+  software evaluation. The `serve` extra adds a software-only policy server;
+  robot I/O remains in LeRobot's client, and hardware-in-the-loop validation
+  is not claimed.
 - Checkpoints must match the audited SmolVLA/SmolVLM2 architecture. Camera
   names and state/action shapes come from each checkpoint's config; at least
   one configured camera must be present, and errors print the expected input
@@ -223,6 +276,8 @@ model sources, converted weights, golden outputs, or training evidence.
 - `predict --dataset` and `make goldens` need the Python 3.12+ reference extra;
   ordinary imports, conversion, and saved-observation inference do not import
   PyTorch, LeRobot, or Transformers.
+- `serve` needs Python 3.12+ and `.[serve]`. Its pickle wire format is safe only
+  with trusted peers; loopback is enforced unless `--allow-remote` is explicit.
 - The project wheels and native extension target `macosx_14_0_arm64`, but the
   pinned MLX 0.32.2 wheel's own `libmlx.dylib` declares macOS 26.2. A working
   end-to-end macOS 14 installation therefore depends on a lower-target MLX

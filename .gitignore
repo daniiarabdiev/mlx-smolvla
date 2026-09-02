@@ -8,6 +8,7 @@ __pycache__/
 *.egg-info/
 build/
 dist/
+logs/
 tests/golden/
 tests/golden-stats-active/
 tests/golden-public-finetune/

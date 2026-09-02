@@ -157,11 +157,22 @@ the unchanged **0.005** deterministic gate (fail), while bf16 records
 110.54/130.44 ms median and 2.94/2.44 GiB peak for fp32/bf16. The exact P1-1
 tree passes **593/593 tests in 530.24 seconds**; no tolerance changed.
 
+Stage R P1-4 is complete in software. `smolvla-mlx serve` speaks the pinned
+LeRobot 0.6.1 four-RPC protobuf/pickle protocol behind a Python-3.12+ optional
+extra, defaults to a trusted loopback bind, serializes MLX inference, and
+preserves newest-observation and timed-action semantics. The reference client
+transport drove a recorded real observation through localhost; its `[3, 6]`
+chunk was exactly equal to direct `select_action` output (max difference
+**0.0**, SHA-256 `46a4b280...7981`). Validation, error propagation,
+cancellation, concurrency, base import isolation, and lifecycle/security
+boundaries are tested. The pre-artifact-refresh tree passes **601/601 tests in
+521.24 seconds**; hardware validation remains pending by design.
+
 ## Stage state
 
 | Stage | State | Evidence / next action |
 | --- | --- | --- |
-| R — Release | P0 complete; P1-1/P1-2/P1-3 complete | Origin/licensing, checkpoint generality, cache safety, portable artifacts, release documentation, explicit strict/production modes, and default-production correctness/performance evidence are complete. P1-4 async serving remains; Metal fp32's fixed deterministic failure and pinned MLX's 26.2 dylib floor are documented limitations. |
+| R — Release | P0 and P1 complete; final artifact refresh pending | Origin/licensing, checkpoint generality, cache safety, packaging, documentation, production evidence, and the software-only async server are complete. Refresh the CPython artifacts from the P1-4 source, rerun their smokes and the full suite, then record `RELEASE READY`. Metal fp32's fixed deterministic failure and pinned MLX's 26.2 dylib floor remain documented limitations. |
 | T0 — Training-readiness | Complete | 155/155 gradients finite and nonzero over 99,880,992 trainable scalars; 196.799 ms forward+backward and 2,509,594,126-byte peak MLX memory. See `TRAINING_FEASIBILITY.md`. |
 | T1 — Gradient parity | Complete | Identical real batch/draws; loss and all 155 gradients pass immutable gates. See `GRADIENT_PARITY.md`. |
 | T2 — Optimizer lockstep | Complete | 25/25 losses and 155/155 final tensors pass immutable gates. See `OPTIMIZER_LOCKSTEP.md`. |
@@ -169,10 +180,10 @@ tree passes **593/593 tests in 530.24 seconds**; no tolerance changed.
 | T3B-1 — Reference floor | Complete | Nine PyTorch workers, including a fixed five-process MPS empirical envelope, evaluated 56 cases each; `F = F64 = 0.00003549918286283038`; report SHA-256 `cba4a856...f0585`; informational only, with no statistical-bound claim. |
 | T3B-2 — Prospective evaluator | Complete | Fixed gates unchanged; derived `max(0.005, 3F)` gate, chronology, complete input provenance, semantic conversion validation, and no-clobber output are frozen and pass 52 focused tests. |
 | T3B-3 — Expert-only LoRA | Statistical alpha | All 3,000 updates and the strict export completed. Fixed preprocessing, held-out-improvement, and round-trip gates pass. Prospective normalized parity is `0.013038858771324158` versus derived `0.005`; the new failure record preserves this result without changing tolerances. |
-| T4 — Training UX/full fine-tune | Unblocked | Implement full fine-tune as code plus a 100-update smoke only. |
+| T4 — Training UX/full fine-tune | Unblocked after release artifact refresh | Implement full fine-tune as code plus a 100-update smoke only. |
 | T5 — Training docs/benchmark | Unblocked after T4 | Run only after training/floor processes are absent and idle state is recorded. |
-| Q — Quality extras | Pending Stage R | Normative package definitions are now available in `BRIEF_RELEASE.md`. |
-| H — Hardware readiness | Pending Stage R P1-4 | Documents and loopback-safe tooling only; no hardware access is authorized. |
+| Q — Quality extras | Pending final Stage R artifact refresh | Normative package definitions are available in `BRIEF_RELEASE.md`. |
+| H — Hardware readiness | Unblocked after final Stage R artifact refresh | Documents and loopback-safe tooling only; no hardware access is authorized. |
 
 `TRAINING ALPHA (STATISTICAL)` has been reached. `RELEASE READY` has not yet
 been reached.

@@ -215,6 +215,62 @@ each Euler denoising step, even expert layers self-attend over actions while odd
 layers cross-attend into that fixed VLM K/V cache; suffix K/V appended by self-
 attention are cropped back to the prefix length before the next step.
 
+## LeRobot 0.6.1 async-inference wire contract
+
+P1-4 was audited from the installed, pinned package rather than from a recalled
+or redesigned protocol. The protobuf file descriptor has SHA-256
+`e116fbf44dd1fc65b67ff255c04857000c28e69055211af5ef3df85ac8d81f8d`,
+package `transport`, syntax proto3, and this complete service:
+
+| RPC | Request | Response | Streaming |
+| --- | --- | --- | --- |
+| `Ready` | `Empty` | `Empty` | unary |
+| `SendPolicyInstructions` | `PolicySetup { bytes data = 1; }` | `Empty` | unary |
+| `SendObservations` | `Observation { TransferState transfer_state = 1; bytes data = 2; }` | `Empty` | client stream |
+| `GetActions` | `Empty` | `Actions { bytes data = 1; }` | unary |
+
+`TransferState` is exactly `UNKNOWN=0`, `BEGIN=1`, `MIDDLE=2`, `END=3`.
+The reference client pickles a `RemotePolicyConfig` into `PolicySetup`, pickles
+a `TimedObservation`, splits it into 2 MiB messages with a 4 MiB per-message
+limit, and unpickles `Actions.data` as `list[TimedAction]`. A single observation
+message is marked `END`; longer payloads use `BEGIN`, zero or more `MIDDLE`, and
+`END`. Returned actions are CPU Torch tensors. Their first timestamp/timestep
+are copied from the observation and subsequent entries advance by `1 / fps`
+and one respectively. An empty observation queue returns an empty `Actions`
+payload after the configured timeout.
+
+The native server uses that schema and the reference client-side message
+classes/chunker directly. It validates the pickled dataclass and feature map,
+converts the raw robot feature dictionary with LeRobot's own helper, applies
+the old-to-new rename map, removes the reference helper's singleton batch
+dimensions, calls native `predict_action_chunk`, applies the checkpoint's
+native action unnormalizer, and serializes `TimedAction` objects. A one-item
+queue preserves reference newest-observation behavior; `must_go`, already
+predicted timestep filtering, similar-state filtering, `Ready` reset, target
+inference latency, and action-chunk slicing are preserved. One inference lock
+protects MLX state across concurrent RPC workers, while cancellation is polled
+during queue, lock, and latency waits. Invalid setup/observation payloads use
+explicit gRPC statuses rather than silently becoming an empty action chunk.
+
+The installed source identities are:
+
+| LeRobot 0.6.1 source | SHA-256 |
+| --- | --- |
+| `async_inference/policy_server.py` | `88ee490394adab0d229e9e2407bec900e89cf72302237c7f128da2c07de37fe7` |
+| `async_inference/robot_client.py` | `c557f2f866abe1cc776fe0bd0b167ec3b19978d644876a748eb5efd3afd554ce` |
+| `async_inference/helpers.py` | `1457c5bb556b4f10225a9c94ac95553bd53c7b51665f1c918e15bb2acb0ac24e` |
+| `async_inference/configs.py` | `9b3514b3c09727dc1336d9586e68bd2c276c401ed34bffb69f9e7f67f0f7f342` |
+| `transport/services_pb2.py` | `06efc0dd44bb4a1e532612d6f7994176214028802ecbfd96e9d79376da74657c` |
+| `transport/services_pb2_grpc.py` | `3b1cde1f24d00b536e113074385a1bd2f0948d0e8ce2c5cb543ca4debbb377ba` |
+| `transport/utils.py` | `3cb63b68d2628996b3999288b33deea67f56be05d6dcc5dae0ec9a4004b3cd8a` |
+
+The `serve` extra is the only dependency edge to gRPC/LeRobot/Torch, and the
+CLI imports the server lazily. Base imports therefore remain isolated. The
+transport is deliberately insecure and uses pickle because that is the pinned
+protocol: binding defaults to `127.0.0.1`; a non-loopback host requires the
+explicit `--allow-remote` acknowledgement and remains suitable only for a
+trusted private network. The server itself has no robot or serial I/O.
+
 ## BRIEF Section 3 verdicts
 
 | Hypothesis | Verdict | Evidence |
