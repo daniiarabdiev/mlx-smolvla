@@ -124,11 +124,20 @@ stable; the Hugging Face cache kept the same size and changed only six
 zero-byte lock timestamps. The post-cleanup tree passes **576/576 tests in
 522.53 seconds**, and the follow-up dry run reports no candidates.
 
+Stage R P1-2 is complete. The base distribution now supports CPython
+3.11–3.13, while the optional LeRobot reference lane is guarded to 3.12+.
+Exact native CPU primitives and a true extension-free pure-MLX fallback are
+both tested. The sdist and three `macosx_14_0_arm64` wheels each pass a fresh
+install, dependency-isolation check, native-backend import, and offline real
+saved-observation prediction. The pre-artifact source tree passes **584/584
+tests in 523.20 seconds**. `DIST_MANIFEST.md` records all hashes and the honest
+limitation that pinned MLX 0.32.2's own dylib declares `minos 26.2`.
+
 ## Stage state
 
 | Stage | State | Evidence / next action |
 | --- | --- | --- |
-| R — Release | P0-1, P0-2, and P0-3 complete | Origin mirrors canonical history; Apache-2.0 licensing is packaged; base, stats-active, and public-fine-tune paths pass their fixed gates; safe cache cleanup reclaimed 36.89 GiB and the 576-test post-cleanup suite passes. P1 portability and production-path packages remain. |
+| R — Release | P0 complete; P1-2 complete | Origin and licensing, stats-active/public checkpoints, safe cache cleanup, Python 3.11–3.13 artifacts, optional native fallback, and four fresh artifact smokes are complete. P1-3 docs plus P1-1/P1-4 production evidence remain; pinned MLX's own dylib has a documented 26.2 minimum-version caveat. |
 | T0 — Training-readiness | Complete | 155/155 gradients finite and nonzero over 99,880,992 trainable scalars; 196.799 ms forward+backward and 2,509,594,126-byte peak MLX memory. See `TRAINING_FEASIBILITY.md`. |
 | T1 — Gradient parity | Complete | Identical real batch/draws; loss and all 155 gradients pass immutable gates. See `GRADIENT_PARITY.md`. |
 | T2 — Optimizer lockstep | Complete | 25/25 losses and 155/155 final tensors pass immutable gates. See `OPTIMIZER_LOCKSTEP.md`. |
@@ -163,8 +172,9 @@ been reached.
 | `.cache/training/t3b/floor.json` | JSON | SHA-256 `28d83926a70e507671bfd694e032f81b71093d475075aad627b3c24c5b334efc`; floor input SHA-256 `3688cdad4f40724fa82765bb1c2ba89369aed056e29cecb8b1c074d6069939bb`; `F = 0.00002467632293701172`; prospective and older than the comparison marker |
 | `.cache/training/t3b/comparison.json` | JSON | SHA-256 `6aa8e3771bbbd81ecd9599ec9605a4e1efb804fa9ec66c4f82d2d6aea3eb00c6`; fixed gates pass; normalized max `0.013038858771324158` |
 | `.cache/training/t3b/parity-evaluation.json` | JSON | SHA-256 `1e337f0bb87aa66a4270c526dd918bd18807aa6aa5291a59b119780080ea9eca`; derived deterministic gate fails at threshold `0.005` |
-| `.cache/hf` | 1.8 GiB | repository-local source cache |
-| `.cache/smolvla_mlx` | 73 GiB | repository-local conversion/golden cache; T1 fp32 policy subset is 4.2 GiB |
+| `.cache/hf` | 3,498,900 KiB | repository-local pinned source/dataset cache; unchanged by P0-3 cleanup |
+| `.cache/smolvla_mlx` | 52,764,872 KiB | post-P0-3 native cache; converted production weights retained and no cleanup candidates remain |
+| `dist/` | 4 artifacts | One sdist plus CPython 3.11/3.12/3.13 `macosx_14_0_arm64` wheels; exact hashes in `DIST_MANIFEST.md` |
 
 Training evidence is intentionally ignored by Git and has not been uploaded.
 

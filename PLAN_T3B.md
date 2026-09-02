@@ -245,16 +245,12 @@ symlink, root, retained-evidence, and post-cleanup full-suite checks are green.
 
 ### Task 4.4 — P1-2: portable normalization and distribution artifacts
 
-**Status:** static audit complete; implementation waits for T3B to exit. The
-runtime imports `_rmsnorm_native` unconditionally, `setup.py` always registers
-the CMake extension, `pyproject.toml` restricts installs to Python 3.12, and no
-deployment target is declared. The current artifact is consequently tagged
-`cp312-cp312-macosx_26_0_arm64`; MLX 0.32.2 publishes macOS-14 wheels for all
-three requested Python versions, establishing 14.0 as the target. The
-implementation will add an explicitly
-detectable pure-MLX fallback, preserve exact CPU-parity coverage whenever the
-extension is present, and prove both import modes before building the requested
-interpreter matrix.
+**Status:** Complete. The base runtime supports Python 3.11–3.13; LeRobot's
+reference extra is correctly gated to 3.12+; the native CPU-reference extension
+has an extension-free pure-MLX fallback; and the sdist plus all three
+`macosx_14_0_arm64` wheels pass fresh-install, import-isolation, native-backend,
+and offline saved-observation prediction smokes. `DIST_MANIFEST.md` records the
+artifact hashes and the pinned MLX dylib's separate 26.2 binary-floor caveat.
 
 - Add an optional native MLX RMSNorm path with a numerically equivalent fallback,
   exercised in both modes.

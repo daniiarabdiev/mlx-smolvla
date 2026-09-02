@@ -1929,3 +1929,38 @@
   complete repository suite passes **576/576 in 522.53 seconds**. The original
   T3 failure record remains unchanged at SHA-256
   `d6654131c4acf86de13206f210f1ea1a82e3aad18871e5b64428bdf1dbeed7c6`.
+
+## 2026-09-02 — Stage R P1-2 packaging portability complete
+
+- The base metadata now supports `>=3.11,<3.14`. Because LeRobot 0.6.1 itself
+  declares Python 3.12+, only `lerobot[dataset,smolvla]` and Torch in the
+  optional `reference` extra carry a `python_version >= "3.12"` marker. The
+  repository lock resolves all 103 packages across the widened range.
+- `_rmsnorm_native` is optional at import and build time. Exact native CPU
+  RMSNorm/RoPE/softmax/SiLU remains the default when installed; setting
+  `SMOLVLA_MLX_BUILD_NATIVE=0` produces a binary-free wheel whose isolated
+  import reports `pure-mlx-fallback`. A stale in-tree `.so` initially exposed
+  a package-data contamination risk; conditional exclusion now proves the
+  extension-free artifact contains no `.so` or `.dylib`.
+- Saved-observation `predict` is now part of the dependency-light CLI, with a
+  required mutually exclusive dataset/saved source and sample-name-to-task
+  validation. A real invocation against `sample_000` completed successfully.
+- Focused distribution/RMSNorm/CLI verification passes **17/17**. The exact
+  pre-artifact source commit `3e30212604985dbaf2ad1360b1e4fc1023303cf6`
+  passes the complete suite: **584/584 in 523.20 seconds**.
+- `UV_PYTHON_INSTALL_DIR="$PWD/.cache/uv-pythons" uv python install 3.11
+  3.12 3.13 --no-bin` provisioned CPython 3.11.15, 3.12.13, and 3.13.14.
+  Builds used the clean detached source commit, repository-local `.cache/uv`,
+  and `MACOSX_DEPLOYMENT_TARGET=14.0`. `dist/` contains one clean sdist and
+  three wheels tagged `cp311`, `cp312`, and `cp313`, each
+  `macosx_14_0_arm64`; hashes and byte sizes are in `DIST_MANIFEST.md`.
+- Each wheel, plus an sdist build on 3.12, was installed with base dependencies
+  into a separate fresh venv. All four imports resolved from their venvs,
+  reported `native-reference`, proved Torch/LeRobot/Transformers absent, and
+  completed an offline real saved-observation `predict` yielding a finite
+  six-component action. Nothing was uploaded.
+- All project wheel extensions declare Mach-O `minos 14.0`. The pinned
+  `mlx==0.32.2` dependency's `libmlx.dylib` independently declares `minos
+  26.2` in every smoke environment, matching the link warning. This upstream
+  binary floor is recorded explicitly: project tagging is fixed, but actual
+  macOS-14 execution is not claimed.
