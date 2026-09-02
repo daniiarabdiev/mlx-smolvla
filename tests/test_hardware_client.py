@@ -217,6 +217,27 @@ def _matching_profile(safety):
     return profile, registers
 
 
+def _write_stats_active_checkpoint(path: Path) -> Path:
+    from safetensors.numpy import save_file
+
+    path.mkdir(parents=True, exist_ok=True)
+    save_file(
+        {
+            "observation.state.mean": np.zeros(6, dtype=np.float32),
+            "observation.state.std": np.ones(6, dtype=np.float32),
+        },
+        str(path / "policy_preprocessor_step_5_normalizer_processor.safetensors"),
+    )
+    save_file(
+        {
+            "action.mean": np.zeros(6, dtype=np.float32),
+            "action.std": np.ones(6, dtype=np.float32),
+        },
+        str(path / "policy_postprocessor_step_0_unnormalizer_processor.safetensors"),
+    )
+    return path
+
+
 def test_action_is_clipped_to_tightened_calibration_before_rate_limit() -> None:
     safety = _hardware_safety()
     ranges = {
@@ -1622,6 +1643,47 @@ def test_so101_public_action_domain_is_explicit() -> None:
     }
 
 
+def test_physical_checkpoint_requires_effective_six_axis_state_and_action_stats(
+    tmp_path: Path,
+) -> None:
+    client = _hiwonder_client()
+    checkpoint = _write_stats_active_checkpoint(tmp_path / "checkpoint")
+
+    client.validate_physical_checkpoint(checkpoint)
+
+    (checkpoint / "policy_postprocessor_step_0_unnormalizer_processor.safetensors").unlink()
+    with pytest.raises(ValueError, match="action statistics"):
+        client.validate_physical_checkpoint(checkpoint)
+
+
+def test_physical_checkpoint_rejects_nonpositive_or_wrong_shape_stats(
+    tmp_path: Path,
+) -> None:
+    from safetensors.numpy import save_file
+
+    client = _hiwonder_client()
+    checkpoint = _write_stats_active_checkpoint(tmp_path / "checkpoint")
+    save_file(
+        {
+            "action.mean": np.zeros(6, dtype=np.float32),
+            "action.std": np.array([1, 1, 0, 1, 1, 1], dtype=np.float32),
+        },
+        str(checkpoint / "policy_postprocessor_step_0_unnormalizer_processor.safetensors"),
+    )
+    with pytest.raises(ValueError, match="finite positive"):
+        client.validate_physical_checkpoint(checkpoint)
+
+    save_file(
+        {
+            "action.mean": np.zeros(7, dtype=np.float32),
+            "action.std": np.ones(7, dtype=np.float32),
+        },
+        str(checkpoint / "policy_postprocessor_step_0_unnormalizer_processor.safetensors"),
+    )
+    with pytest.raises(ValueError, match="six values"):
+        client.validate_physical_checkpoint(checkpoint)
+
+
 def test_standalone_modes_resolve_to_non_overridable_safety_caps(tmp_path: Path) -> None:
     standalone = _standalone_client()
     safety = _hardware_safety()
@@ -1640,6 +1702,7 @@ def test_standalone_modes_resolve_to_non_overridable_safety_caps(tmp_path: Path)
         ),
         encoding="utf-8",
     )
+    checkpoint = _write_stats_active_checkpoint(tmp_path / "checkpoint")
     base = [
         "--vendor-root", str(tmp_path),
         "--follower-port", "/dev/tty.usbmodem5C821075411",
@@ -1647,7 +1710,7 @@ def test_standalone_modes_resolve_to_non_overridable_safety_caps(tmp_path: Path)
         "--robot-serial", "5C82107541",
         "--wrist-camera", "1",
         "--fixed-camera", "2",
-        "--checkpoint", str(tmp_path),
+        "--checkpoint", str(checkpoint),
         "--task", "hold position",
         "--telemetry", str(tmp_path / "telemetry.jsonl"),
     ]
@@ -1676,6 +1739,7 @@ def test_standalone_modes_resolve_to_non_overridable_safety_caps(tmp_path: Path)
 
 def test_standalone_motion_requires_profile_and_matching_serial(tmp_path: Path) -> None:
     standalone = _standalone_client()
+    checkpoint = _write_stats_active_checkpoint(tmp_path / "checkpoint")
     arguments = standalone.build_parser().parse_args(
         [
             "--single-action",
@@ -1685,7 +1749,7 @@ def test_standalone_motion_requires_profile_and_matching_serial(tmp_path: Path) 
             "--robot-serial", "5C82107541",
             "--wrist-camera", "1",
             "--fixed-camera", "2",
-            "--checkpoint", str(tmp_path),
+            "--checkpoint", str(checkpoint),
             "--task", "hold position",
             "--telemetry", str(tmp_path / "telemetry.jsonl"),
         ]

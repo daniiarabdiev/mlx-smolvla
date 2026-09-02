@@ -51,6 +51,47 @@ def so101_public_action_ranges() -> dict[str, JointRange]:
     }
 
 
+def validate_physical_checkpoint(checkpoint: str | Path) -> None:
+    """Require effective six-axis state/action statistics before motion."""
+
+    from safetensors.numpy import load_file
+
+    root = Path(checkpoint).expanduser().resolve(strict=True)
+    requirements = (
+        (
+            root / "policy_preprocessor_step_5_normalizer_processor.safetensors",
+            "observation.state",
+            "state statistics",
+        ),
+        (
+            root / "policy_postprocessor_step_0_unnormalizer_processor.safetensors",
+            "action",
+            "action statistics",
+        ),
+    )
+    for path, prefix, label in requirements:
+        if not path.is_file():
+            raise ValueError(f"physical checkpoint is missing effective {label}")
+        try:
+            tensors = load_file(path)
+        except Exception as error:
+            raise ValueError(f"physical checkpoint has unreadable {label}: {error}") from error
+        mean = tensors.get(f"{prefix}.mean")
+        std = tensors.get(f"{prefix}.std")
+        if mean is None or std is None:
+            raise ValueError(f"physical checkpoint is missing effective {label}")
+        mean_array = np.asarray(mean, dtype=np.float64)
+        std_array = np.asarray(std, dtype=np.float64)
+        if mean_array.shape != (len(SO101_JOINTS),) or std_array.shape != (
+            len(SO101_JOINTS),
+        ):
+            raise ValueError(f"physical checkpoint {label} must each contain six values")
+        if not np.isfinite(mean_array).all():
+            raise ValueError(f"physical checkpoint {label} means must be finite")
+        if not np.isfinite(std_array).all() or np.any(std_array <= 0.0):
+            raise ValueError(f"physical checkpoint {label} std must be finite positive values")
+
+
 def so101_lerobot_contract(
     *,
     height: int = 480,

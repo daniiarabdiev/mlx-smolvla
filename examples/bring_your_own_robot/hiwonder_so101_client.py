@@ -23,6 +23,7 @@ from mlx_smolvla.hiwonder_client import (
     run_control_loop,
     so101_lerobot_contract,
     so101_public_action_ranges,
+    validate_physical_checkpoint,
 )
 
 
@@ -77,6 +78,7 @@ def resolve_run_config(arguments: argparse.Namespace) -> SafetySessionConfig:
     else:
         if arguments.hardware_safety_profile is None:
             raise ValueError("motion requires an operator-verified hardware safety profile")
+        validate_physical_checkpoint(arguments.checkpoint)
         profile = load_hardware_safety_profile(arguments.hardware_safety_profile)
         if profile.robot_serial != arguments.robot_serial:
             raise ValueError("hardware safety profile robot serial does not match --robot-serial")
