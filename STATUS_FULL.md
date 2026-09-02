@@ -8,7 +8,9 @@ T3B-2 COMPLETE — PROSPECTIVE PARITY PROCEDURE FROZEN
 
 T3B-3A PRE-LAUNCH VERIFIED — REAL UPDATE-1 GATE PASSED
 
-T3B-3 RUNNING — CANONICAL STEP-1 CHECKPOINT BOUND
+TRAINING ALPHA (STATISTICAL)
+
+T3B-3 COMPLETE — FIXED GATES PASSED; DERIVED DETERMINISTIC GATE DOCUMENTED
 
 The protected SmolVLA MLX v0.1 inference baseline is intact. At full-scope
 kickoff on 2026-08-31, `make test` passed **179/179** in **158.71 seconds** on
@@ -90,9 +92,21 @@ blocker. The focused exact-byte suite passes **142/142 in 235.70 seconds**.
 With no training or floor process active at `2026-09-01T22:44:56Z`, the full
 repository passed **536/536 tests in 490.35 seconds**. Those exact bytes were
 committed and pushed as `75b5361`. The canonical launch file is now frozen at
-SHA-256 `95f76513...bea81` / configuration `fe8a937e...748fb3`, and PID 69355
-is running detached with parent 1. Its step-1 checkpoint is atomically bound;
-the model and optimizer SHA-256 values exactly match the disposable preflight.
+SHA-256 `95f76513...bea81` / configuration `fe8a937e...748fb3`.
+
+The canonical T3B run subsequently completed all **3,000** updates without
+resume or recovery and exported **500** fp32 tensors. Expert-only LoRA uses
+112 adapters / 224 tensors / 1,708,032 scalars. Held-out MLX MAE improved from
+**4.639846293521779** to **2.2550044155546596**, and the Torch/MLX MAE ratio was
+**0.9999447391574267**; every fixed gate passed. The prospective PyTorch-only
+floor was written and hashed before comparison (`F =
+0.00002467632293701172`), making the derived threshold **0.005**. The bound
+all-56-case comparison measured normalized max absolute
+**0.013038858771324158**, so only the derived deterministic gate failed. Per
+`BRIEF_T3B.md`, the milestone is `TRAINING ALPHA (STATISTICAL)`. See
+`LORA_SCOPE_COMPARISON.md` and `FAILURE_LORA_FINETUNE_B.md`.
+The post-verdict focused suite passes **132/132 in 17.89 seconds**, and the
+complete repository passes **544/544 in 482.16 seconds**.
 
 ## Stage state
 
@@ -105,13 +119,14 @@ the model and optimizer SHA-256 values exactly match the disposable preflight.
 | T3 — LoRA fine-tune | Failure-documented | The 3,000-update run, merge, held-out improvement, and Torch round trip completed. All 56 frozen cases were parity-checked; raw physical max was `6.632053375244141` versus the unchanged `0.005` gate; see `FAILURE_LORA_FINETUNE.md`. |
 | T3B-1 — Reference floor | Complete | Nine PyTorch workers, including a fixed five-process MPS empirical envelope, evaluated 56 cases each; `F = F64 = 0.00003549918286283038`; report SHA-256 `cba4a856...f0585`; informational only, with no statistical-bound claim. |
 | T3B-2 — Prospective evaluator | Complete | Fixed gates unchanged; derived `max(0.005, 3F)` gate, chronology, complete input provenance, semantic conversion validation, and no-clobber output are frozen and pass 52 focused tests. |
-| T3B-3 — Expert-only LoRA | Running | Commit `75b5361` is pushed; canonical launch/configuration/run hashes are bound; detached PID 69355 has published and bound step 1 and continues toward 3,000 updates. Only allowed non-timing Stage R work may overlap it. |
-| T4 — Training UX/full fine-tune | Pending T3B-3 fixed gates | Full fine-tune is code plus a 100-update smoke only. |
-| T5 — Training docs/benchmark | Pending T3B-3 fixed gates | Run only after training/floor processes are absent and idle state is recorded. |
+| T3B-3 — Expert-only LoRA | Statistical alpha | All 3,000 updates and the strict export completed. Fixed preprocessing, held-out-improvement, and round-trip gates pass. Prospective normalized parity is `0.013038858771324158` versus derived `0.005`; the new failure record preserves this result without changing tolerances. |
+| T4 — Training UX/full fine-tune | Unblocked | Implement full fine-tune as code plus a 100-update smoke only. |
+| T5 — Training docs/benchmark | Unblocked after T4 | Run only after training/floor processes are absent and idle state is recorded. |
 | Q — Quality extras | Pending Stage R | Normative package definitions are now available in `BRIEF_RELEASE.md`. |
 | H — Hardware readiness | Pending Stage R P1-4 | Documents and loopback-safe tooling only; no hardware access is authorized. |
 
-Neither `RELEASE READY` nor `TRAINING ALPHA` has been reached.
+`TRAINING ALPHA (STATISTICAL)` has been reached. `RELEASE READY` has not yet
+been reached.
 
 ## Current local evidence
 
@@ -128,6 +143,10 @@ Neither `RELEASE READY` nor `TRAINING ALPHA` has been reached.
 | `.cache/training/t3` | 1.8 GiB | Completed run SHA-256 `c7c3b86361c0872e26f2088cbd33ada865cf450b6711a9b737ece933c1868c82`; adapter/final-model SHA-256 `814e6f4b2a78a46b609aa7b48a28b4509f709d3e851e588dcd9a4bd2ca1408dc`; final optimizer SHA-256 `c9440be75315e04c1812ba18da0e0daccd2990fb0f6fdb1841d40ef7b01ffb5a`; retained checkpoints 2,800/2,900/3,000; export audit manifest SHA-256 `55ad6834cbb3acb9dd565a57296a274d78e7cdc863aa81c3e6ef25da8b66ba03` |
 | `.cache/training/t3-outcome.json` | JSON | SHA-256 `8b74faf8f9cc96341090f91cfa795ed874c838026416944e4b77a550ad91bc44`; 15 source digests include the validated native conversion; improvement and round-trip pass, all-56-case parity fails |
 | `.cache/training/t3/floor.json` | JSON | SHA-256 `cba4a856f9c907d986ffc8703789673611e54bad983c2afd0a987830466f0585`; all nine worker artifacts and every input file hash; combined input SHA-256 `d31a0835867116d7bfbe63f6cd23666eecfdc0a660aba620730cd09320295299`; `F = F64 = 0.00003549918286283038`; retrospective diagnostic only |
+| `.cache/training/t3b` | Completed run | Run-state SHA-256 `2af527bea4691862e89eb6daa674e6d99309668ac45f57397786976aab3c301e`; adapter SHA-256 `cce4eed18a7311594950f6d4da33a44dd337f66fbc29162d686c5338ec044826`; retained checkpoints 2,800/2,900/3,000; export model SHA-256 `858704fa572501d9e5a048076f8da692693b90c463feda29201a72f3f0b18883` |
+| `.cache/training/t3b/floor.json` | JSON | SHA-256 `28d83926a70e507671bfd694e032f81b71093d475075aad627b3c24c5b334efc`; floor input SHA-256 `3688cdad4f40724fa82765bb1c2ba89369aed056e29cecb8b1c074d6069939bb`; `F = 0.00002467632293701172`; prospective and older than the comparison marker |
+| `.cache/training/t3b/comparison.json` | JSON | SHA-256 `6aa8e3771bbbd81ecd9599ec9605a4e1efb804fa9ec66c4f82d2d6aea3eb00c6`; fixed gates pass; normalized max `0.013038858771324158` |
+| `.cache/training/t3b/parity-evaluation.json` | JSON | SHA-256 `1e337f0bb87aa66a4270c526dd918bd18807aa6aa5291a59b119780080ea9eca`; derived deterministic gate fails at threshold `0.005` |
 | `.cache/hf` | 1.8 GiB | repository-local source cache |
 | `.cache/smolvla_mlx` | 73 GiB | repository-local conversion/golden cache; T1 fp32 policy subset is 4.2 GiB |
 

@@ -1787,3 +1787,54 @@
 - This entry was written before the start marker and before any T3B MLX
   inference or MLX-versus-PyTorch comparison. At this point neither
   `comparison-start.json`, `outcome.json`, nor `comparison.json` exists.
+
+## 2026-09-02 — T3B bound comparison and statistical-alpha verdict
+
+- After the floor record above was committed and pushed, the one-shot start
+  marker was installed at `2026-09-02T00:39:06.152740+00:00`
+  (`created_at_ns=1788309546152740000`, actual
+  `mtime_ns=1788309546153727610`) with SHA-256
+  `0e1121728fc30eb911e6f596d32ec5f7de97faa0d44e883b52367d7ac7dcd202`.
+  It binds the prospective floor, raw floor bundle, checkpoint, and intended
+  comparison output.
+- Only after that marker did the comparison producer perform the first T3B
+  MLX-versus-PyTorch evaluation. It installed `outcome.json` with SHA-256
+  `75dff4b750dd1e8c8bc4d8426fe9af297bedb33ea1bfa7523dcc49d51460b33f`
+  and `comparison.json` with SHA-256
+  `6aa8e3771bbbd81ecd9599ec9605a4e1efb804fa9ec66c4f82d2d6aea3eb00c6`.
+  The comparison creation time is `2026-09-02T00:42:52.253017+00:00`
+  (`created_at_ns=1788309772253017000`, actual
+  `mtime_ns=1788309772258209788`), strictly newer than both floor and marker.
+- Fixed outcomes all pass: image preprocessing max
+  `3.5762786865234375e-7`, state preprocessing max `0.0`, fine/base held-out
+  MAE ratio `0.486008430646319`, and Torch/MLX MAE ratio
+  `0.9999447391574267`. Fine-tuned MLX and Torch physical MAE are
+  `2.2550044155546596` and `2.2548798021106493`, respectively.
+- The timestamp- and hash-enforcing evaluator installed
+  `parity-evaluation.json` with SHA-256
+  `1e337f0bb87aa66a4270c526dd918bd18807aa6aa5291a59b119780080ea9eca`.
+  Normalized action max is `0.013038858771324158` versus the prospectively
+  derived `0.005`, so the derived deterministic gate alone fails. Raw and
+  standardized physical maxima are `0.13149452209472656` and
+  `0.013038855977356434`.
+- A diagnostic trace on the frozen worst case (ordinal 24, episode 28, frame
+  87, absolute index 6307) reproduced the final normalized maximum exactly.
+  It starts at velocity/state differences
+  `0.0035195350646972656` / `0.0003519505262374878` and ends after Euler step
+  9 at `0.035959720611572266` / `0.013038858771324158`. Compared with T3,
+  expert-only adaptation reduces final normalized divergence by **13.62x**
+  and raw physical divergence by **50.44x**.
+- `LORA_SCOPE_COMPARISON.md` records the complete T3/T3B table and both Euler
+  curves. `FAILURE_LORA_FINETUNE_B.md` applies the required three-hypothesis
+  discipline. The original `FAILURE_LORA_FINETUNE.md` remains unchanged at
+  SHA-256
+  `d6654131c4acf86de13206f210f1ea1a82e3aad18871e5b64428bdf1dbeed7c6`;
+  no tolerance or original gate was changed or reinterpreted.
+- Milestone: **TRAINING ALPHA (STATISTICAL)**. T4 and T5 are unblocked because
+  all fixed outcome gates passed; strict deterministic parity remains an
+  explicit documented limitation.
+- Post-verdict verification: the corrected focused floor/parity/producer/
+  evaluation suite passes **132/132 in 17.89 seconds**. The complete repository
+  passes **544/544 in 482.16 seconds**. An initial focused invocation named a
+  nonexistent stale test path and collected no tests; it made no repository
+  change and was immediately replaced by the correct target list.

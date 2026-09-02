@@ -140,8 +140,9 @@ wheel suite passes 97/97, and the exact package tree passes 402/402.
 **Status:** implementation, isolated-launch hardening, a real disposable
 update-1 checkpoint probe, independent review, pre-launch full-suite
 verification, commit/push, canonical configuration generation, and the
-background launch are complete. The 3,000-update run is active; Task 5 owns
-post-training floor/evaluation and gates.
+background launch are complete. The 3,000-update run subsequently completed
+without resume or recovery; Task 5 owns its completed floor/evaluation and
+gates.
 
 **Files:**
 
@@ -279,6 +280,10 @@ mode distinction, GPU fine-tune handoff, serving path, or troubleshooting.
   suite; update status/progress; commit and push.
 
 ## Task 5 — T3B-3b: evaluate training and apply gates
+
+**Status:** Complete. The fixed gates pass, only the derived deterministic
+gate fails, and the result is recorded as `TRAINING ALPHA (STATISTICAL)` in
+`LORA_SCOPE_COMPARISON.md` and `FAILURE_LORA_FINETUNE_B.md`.
 
 1. Wait for the background run to terminate successfully and verify exactly 3000
    updates, retained checkpoint integrity, log completeness, and final adapter.
