@@ -14,6 +14,8 @@ T3B-3 COMPLETE — FIXED GATES PASSED; DERIVED DETERMINISTIC GATE DOCUMENTED
 
 STAGE R P1-3 COMPLETE — RELEASE DOCUMENTATION AND GPU HANDOFF VERIFIED
 
+STAGE R P1-1 COMPLETE — DEFAULT PRODUCTION METAL EVIDENCE RECORDED
+
 The protected SmolVLA MLX v0.1 inference baseline is intact. At full-scope
 kickoff on 2026-08-31, `make test` passed **179/179** in **158.71 seconds** on
 the M5 Pro. The repository had **553 GiB** free, above the mandatory 40 GiB
@@ -144,11 +146,22 @@ audited inputs, cache safety, troubleshooting, and license attribution all
 trace to recorded evidence. The exact P1-3 tree passes **584/584 tests in
 529.75 seconds**.
 
+Stage R P1-1 is complete. The public default is now explicit
+`production`/Metal, while `execution_mode="strict"` and CLI
+`--execution-mode strict` own the CPU compatibility path. On the same eight
+goldens, production fp32 records normalized max **0.04730653762817383** versus
+the unchanged **0.005** deterministic gate (fail), while bf16 records
+**0.044106483459472656** versus **0.05** (pass). Production fp32/bf16
+50-frame MAE ratios are **1.0000127999805857** /
+**1.0000216963394593**, both below **1.05**. Idle production timing is
+110.54/130.44 ms median and 2.94/2.44 GiB peak for fp32/bf16. The exact P1-1
+tree passes **593/593 tests in 530.24 seconds**; no tolerance changed.
+
 ## Stage state
 
 | Stage | State | Evidence / next action |
 | --- | --- | --- |
-| R — Release | P0 complete; P1-2/P1-3 complete | Origin and licensing, stats-active/public checkpoints, safe cache cleanup, Python 3.11–3.13 artifacts, optional native fallback, four fresh artifact smokes, and verified release documentation are complete. P1-1/P1-4 production evidence remains; pinned MLX's own dylib has a documented 26.2 minimum-version caveat. |
+| R — Release | P0 complete; P1-1/P1-2/P1-3 complete | Origin/licensing, checkpoint generality, cache safety, portable artifacts, release documentation, explicit strict/production modes, and default-production correctness/performance evidence are complete. P1-4 async serving remains; Metal fp32's fixed deterministic failure and pinned MLX's 26.2 dylib floor are documented limitations. |
 | T0 — Training-readiness | Complete | 155/155 gradients finite and nonzero over 99,880,992 trainable scalars; 196.799 ms forward+backward and 2,509,594,126-byte peak MLX memory. See `TRAINING_FEASIBILITY.md`. |
 | T1 — Gradient parity | Complete | Identical real batch/draws; loss and all 155 gradients pass immutable gates. See `GRADIENT_PARITY.md`. |
 | T2 — Optimizer lockstep | Complete | 25/25 losses and 155/155 final tensors pass immutable gates. See `OPTIMIZER_LOCKSTEP.md`. |
@@ -186,6 +199,9 @@ been reached.
 | `.cache/hf` | 3,498,900 KiB | repository-local pinned source/dataset cache; unchanged by P0-3 cleanup |
 | `.cache/smolvla_mlx` | 52,764,872 KiB | post-P0-3 native cache; converted production weights retained and no cleanup candidates remain |
 | `dist/` | 4 artifacts | One sdist plus CPython 3.11/3.12/3.13 `macosx_14_0_arm64` wheels; exact hashes in `DIST_MANIFEST.md` |
+| `.cache/production-deterministic.json` | 2,515 bytes | SHA-256 `3268f88be5ea854ff5162373146d1b2fd23cdbcc26bacbc060f0f8fa5b850398`; production fp32 fails fixed deterministic gate, bf16 passes |
+| `.cache/statistical-strict-production-report.json` | 13,737 bytes | SHA-256 `b292736e3ec82b3eae8702c065c7c642326d226f06d35aa2214ac83fa1c23db5`; explicit strict CPU ratios both pass |
+| `.cache/statistical-production.json` | 13,752 bytes | SHA-256 `c506ddcfdde50297e97b9905a299d55f117680a93b257e0af335ae6c9ad5fe07`; explicit production Metal ratios both pass |
 
 Training evidence is intentionally ignored by Git and has not been uploaded.
 

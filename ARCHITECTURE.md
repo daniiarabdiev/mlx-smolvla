@@ -162,6 +162,24 @@ The native config parser reads those keys and shapes from each checkpoint.
 Architecture mismatches report that complete input contract rather than failing
 later in a matrix operation.
 
+## Runtime execution modes
+
+`SmolVLAMLX.from_pretrained` freezes one of two device contracts into each
+policy instance. `production` is the public default: every public inference
+call owns an MLX Metal context, even if its caller temporarily selected CPU.
+`strict` owns an MLX CPU context and enables the compatibility RMSNorm, RoPE,
+softmax, and SiLU arithmetic used by the immutable PyTorch CPU parity ladder.
+Callers select it with `execution_mode="strict"`; the CLI mirrors that choice
+with `--execution-mode strict`.
+
+The modes share one checkpoint conversion, parameter tree, pre/postprocessor,
+prefix cache, flow schedule, and action queue. They differ only in the owned
+device context and therefore the MLX kernels chosen inside the modules. The
+known Metal Vision and Connector reduction differences remain bounded negative
+evidence: production fp32 fails the strict eight-case deterministic threshold,
+production bf16 passes its fixed threshold, and both pass the 50-frame
+statistical threshold. Exact values and timing are in `BENCHMARK.md`.
+
 ### Camera-slot behavior
 
 Installed LeRobot 0.6.1 iterates the configured image features and uses every

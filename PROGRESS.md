@@ -2010,3 +2010,52 @@
   hardware, serial port, robot directory, or upload was used. The original T3
   failure remains byte-identical at SHA-256
   `d6654131c4acf86de13206f210f1ea1a82e3aad18871e5b64428bdf1dbeed7c6`.
+
+## 2026-09-02 — Stage R P1-1 production-path evidence complete
+
+- Test-first mode selection makes the public contract explicit. A policy loaded
+  with default `execution_mode="production"` owns `Device(gpu, 0)` for every
+  public inference call even inside an outer CPU context; `strict` analogously
+  owns `Device(cpu, 0)` even inside an outer GPU context. The CLI exposes the
+  same frozen choice as `--execution-mode`. Invalid modes fail before checkpoint
+  resolution, and strict parity/training loaders now opt into strict mode
+  rather than relying on ambient global state.
+- The source and focused tests were committed and pushed before authoritative
+  timing as `4824db9d289bec1c148a43509f41407c1458ef24`. This lets every evidence
+  artifact and the benchmark name a clean source commit. The focused public,
+  active-stats, CLI, benchmark, production-evidence, training-loader, and import
+  isolation suite passes **94/94 in 62.89 seconds**.
+- `.cache/production-deterministic.json` (SHA-256
+  `3268f88be5ea854ff5162373146d1b2fd23cdbcc26bacbc060f0f8fa5b850398`)
+  binds the pinned source model SHA-256, golden manifest/metadata SHA-256, MLX
+  0.32.2, clean source commit, explicit production mode, and every per-case
+  result. Across the same eight goldens, Metal fp32 maximum normalized absolute
+  error is **0.04730653762817383** versus fixed **0.005** (fail); Metal bf16 is
+  **0.044106483459472656** versus fixed **0.05** (pass). Both worst cases are
+  `sample_004`. The parser independently freezes and recomputes the maxima,
+  worst cases, and outcomes.
+- Explicit strict and production 50-frame records hash to
+  `b292736e3ec82b3eae8702c065c7c642326d226f06d35aa2214ac83fa1c23db5`
+  and `c506ddcfdde50297e97b9905a299d55f117680a93b257e0af335ae6c9ad5fe07`.
+  Strict fp32/bf16 ratios reproduce `0.9999999969253671` /
+  `1.0000097740913103`; production Metal ratios are
+  **1.0000127999805857** / **1.0000216963394593**. All four remain below the
+  immutable `1.05` statistical ceiling. Ratio validation now recomputes each
+  value from its recorded MAEs.
+- At `2026-09-02T02:59:23Z`, immediately before timing, the process-table query
+  returned only its own shell/search invocation and no pre-existing training,
+  floor, test, evidence, benchmark, or policy-server worker. The machine was
+  idle for the normative 5 warmups + 50 measured runs per dtype; no training or
+  floor computation overlapped. On the M5 Pro / 48 GiB / macOS 26.6.2 / Python
+  3.12.13 / MLX 0.32.2 production path, fp32 median/p95 is **110.54/111.41 ms**
+  with **2.94 GiB** peak, and bf16 is **130.44/131.25 ms** with **2.44 GiB**
+  peak. `BENCHMARK.md` hashes to
+  `97b6298908da98e6f5b5e134610536446a23dcdc5de71c4b95e482eaf45b6ded`.
+- `BENCHMARK.md`, `README.md`, and `ARCHITECTURE.md` now keep strict CPU and
+  default production Metal claims separate. The production fp32 deterministic
+  failure is a bounded documented limitation; no fixed threshold changed.
+  `make production-evidence` reproduces all three ignored JSON inputs.
+- Final P1-1 verification passes **593/593 tests in 530.24 seconds**. No upload,
+  hardware, serial port, or robot directory was used. The original T3 failure
+  remains byte-identical at SHA-256
+  `d6654131c4acf86de13206f210f1ea1a82e3aad18871e5b64428bdf1dbeed7c6`.

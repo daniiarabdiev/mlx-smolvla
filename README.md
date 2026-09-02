@@ -52,7 +52,10 @@ action = policy.select_action(observation)
 the checkpoint's action horizon in a FIFO. Call `policy.reset()` between
 episodes. Use `policy.predict_action_chunk(observation)` when the normalized
 `[1, 50, action_dim]` chunk is the desired interface. Passing a local
-checkpoint directory instead of a Hub ID uses the same strict loader.
+checkpoint directory instead of a Hub ID uses the same strict loader. The
+default `execution_mode="production"` owns an MLX Metal context; pass
+`execution_mode="strict"` to own the CPU compatibility context used by the
+golden parity ladder.
 
 ## CLI quickstart
 
@@ -61,6 +64,7 @@ From a repository checkout with the generated golden observation present:
 ```bash
 smolvla-mlx convert --model lerobot/smolvla_base --dtype float32
 smolvla-mlx predict --observation tests/golden/sample_000
+smolvla-mlx predict --observation tests/golden/sample_000 --execution-mode strict
 smolvla-mlx bench --dtype float32 --runs 50 --warmups 5
 smolvla-mlx test
 ```
@@ -82,13 +86,14 @@ dataset's video encoding. It does not change the base saved-observation path.
 
 One SmolVLA chunk contains 50 actions, or about 1.67 seconds of commanded
 motion at 30 fps. On the measured Apple M5 Pro with 48 GiB unified memory,
-macOS 26.5.2, and MLX 0.32.2, the warmed Metal path produced the chunk in
-111.34 ms at fp32—about **15.0× the chunk's motion duration per unit of compute**.
+macOS 26.6.2, and MLX 0.32.2, the installed default production path produced
+the chunk in 110.54 ms at fp32—about **15.1× the chunk's motion duration per
+unit of compute**.
 
 | Storage dtype | Median chunk | P95 | Peak MLX memory | Motion/compute |
 | --- | ---: | ---: | ---: | ---: |
-| fp32 | 111.34 ms | 111.80 ms | 2.94 GiB | 15.0× |
-| bf16 | 131.12 ms | 131.71 ms | 2.44 GiB | 12.7× |
+| fp32 | 110.54 ms | 111.41 ms | 2.94 GiB | 15.1× |
+| bf16 | 130.44 ms | 131.25 ms | 2.44 GiB | 12.8× |
 
 These are model-only local timings, not an end-to-end robot control-rate
 claim; camera capture, transport, and actuation are excluded. On this measured
@@ -124,14 +129,25 @@ names plus saved state/action mean and standard deviation. Exact values,
 artifact hashes, and regeneration commands are recorded in
 [PROGRESS.md](PROGRESS.md).
 
-Strict module parity and production inference are separate claims. The strict
-arithmetic ladder selects MLX CPU to reproduce the pinned PyTorch operations;
-the public API currently follows `mx.default_device()`, which is Metal in a
-fresh Apple Silicon process. Metal is the measured performance path, but its
-Vision and Connector kernels do not meet the much tighter strict per-module
-fp32 thresholds; those failures remain documented without changing the
-thresholds. A separately labeled end-to-end production-path correctness table
-is the remaining Stage R P1-1 evidence item.
+Strict module parity and production inference are separate claims. `strict`
+owns an MLX CPU context and reproduces the pinned PyTorch operations;
+`production` is the public default, owns an MLX Metal context, and is the path
+measured above.
+
+The default production path was also run against the same eight deterministic
+goldens and 50-frame statistical corpus:
+
+| Production dtype | Deterministic max | Fixed gate | Deterministic | 50-frame MAE ratio | Statistical |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| fp32 | 0.0473065376 | 0.005 | fail | 1.0000128000 | pass (`<=1.05`) |
+| bf16 | 0.0441064835 | 0.05 | pass | 1.0000216963 | pass (`<=1.05`) |
+
+Metal fp32 therefore does not inherit the strict deterministic guarantee;
+select `strict` when that contract is required. Metal bf16 passes its unchanged
+deterministic gate, and both production storage modes pass the unchanged
+statistical gate. The known Vision and Connector module discrepancies remain
+documented without changing their thresholds; full methodology and both mode
+tables are in [BENCHMARK.md](BENCHMARK.md).
 
 ## Run your own fine-tune
 

@@ -316,6 +316,15 @@ machine declaration with process-check evidence to `PROGRESS.md`.
 
 ### Task 6.1 — P1-1: production Metal execution and benchmark table
 
+**Status:** Complete. Each policy now owns an explicit execution contract:
+public-default `production` uses Metal and selectable `strict` uses CPU
+compatibility arithmetic. The clean source checkpoint is pushed, the same
+eight deterministic/50 statistical cases were evaluated under both modes, and
+the idle 5-warmup/50-run production benchmark is recorded separately. Metal
+fp32's fixed deterministic failure remains explicit; Metal bf16 deterministic
+and both statistical gates pass without a tolerance change. The exact tree
+passes 593/593 tests.
+
 - Define strict-parity and production execution modes explicitly. Optimize the
   production path for Metal/unified memory without weakening strict parity.
 - Collect the specified fp32 and bf16 latency/memory tables only on an idle
