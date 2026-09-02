@@ -17,7 +17,12 @@ def resolve_cache_dir(explicit: Path | str | None = None) -> Path:
     current = os.environ.get(CURRENT_CACHE_ENV)
     legacy = os.environ.get(LEGACY_CACHE_ENV)
     if legacy is not None:
-        disposition = "ignored because MLX_SMOLVLA_CACHE is set" if current else "used"
+        if explicit is not None:
+            disposition = "ignored because an explicit cache directory is set"
+        elif current:
+            disposition = "ignored because MLX_SMOLVLA_CACHE is set"
+        else:
+            disposition = "used"
         warnings.warn(
             f"{LEGACY_CACHE_ENV} is deprecated and was {disposition}; use "
             f"{CURRENT_CACHE_ENV} instead. Legacy support will be removed after one release.",

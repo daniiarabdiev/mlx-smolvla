@@ -2711,3 +2711,59 @@
 - Next: commit/push the clean Stage C source checkpoint, build the final-name
   sdist and CPython 3.11-3.13 wheels from that commit, repeat installed smokes,
   and replace the distribution manifest.
+
+## 2026-09-02 — canonical 0.1.0 artifacts and installed smokes complete
+
+- Committed and pushed the clean public source checkpoint as `e3ad965`, then
+  built one `mlx_smolvla-0.1.0.tar.gz` sdist and native arm64 CPython 3.11,
+  3.12, and 3.13 wheels from a detached worktree at that exact commit. Every
+  wheel is tagged `macosx_14_0_arm64`; direct Mach-O inspection reports
+  `minos 14.0` for each project extension. `twine check` passed all four.
+- Archive inspection found distribution `mlx-smolvla`, import package
+  `mlx_smolvla`, console command `mlx-smolvla`, version 0.1.0, and no retired
+  package path in any artifact. Exact filenames, byte counts, hashes, and
+  contents are frozen in `docs/evidence/DIST_MANIFEST.md`.
+- Four fresh base environments installed the sdist on CPython 3.12.13 and the
+  matching wheels on CPython 3.11.15, 3.12.13, and 3.13.14. From outside the
+  checkouts, all four resolved the package inside their environment, reported
+  `native-reference`, kept gRPC/Torch/LeRobot/Transformers unavailable, passed
+  `doctor`, and emitted a finite six-component action from a retained real
+  observation with Hub and dataset access forced offline.
+- A fifth fresh CPython 3.12 environment installed the wheel's `serve` extra,
+  matched descriptor SHA-256
+  `e116fbf44dd1fc65b67ff255c04857000c28e69055211af5ef3df85ac8d81f8d`,
+  bound an ephemeral loopback port, completed `Ready`, and stopped. Installed
+  help exposed serving, training, quantization, and safety controls; both
+  VLM-only quantization presets emitted finite offline actions.
+- The installed compatibility shim used `SMOLVLA_MLX_CACHE` with a
+  `FutureWarning`; when both variables were present, `MLX_SMOLVLA_CACHE` won
+  and the warning explicitly reported that the old value was ignored.
+- No training/floor process or product timing measurement ran. The machine was
+  otherwise idle during these functional checks. Nothing was uploaded and no
+  hardware, camera, serial port, or vendor robot tree was accessed.
+
+## 2026-09-02 — public release-candidate verification complete
+
+- An idle-process preflight found no trainer, self-consistency floor worker,
+  pytest, or other Make test process. The unfiltered `make test-fast` then
+  passed **385/385 selected tests** with 291 deliberately slow tests deselected
+  in **94.88 test seconds / 97.83 seconds wall**, below the two-minute gate.
+- After a second idle preflight, `make test` passed the complete **676/676-test
+  suite** in **582.37 test seconds / 585.34 seconds wall**. Neither run reported
+  a skip or xfail; no product timing measurement ran alongside either suite.
+- The protected first LoRA failure remains exact at SHA-256
+  `d6654131c4acf86de13206f210f1ea1a82e3aad18871e5b64428bdf1dbeed7c6`.
+  BF16 profile, inference comparison, quantization, second-attempt outcome, and
+  training benchmark files are byte-identical to clean source commit
+  `e3ad965`; all four artifact hashes re-matched the refreshed manifest.
+- `uv lock --check` resolved 111 packages. Actionlint passed after excluding
+  only the deliberate constant-false diagnostic that keeps the documented
+  hosted macOS workflow disabled. Public claim/stale-name, secret, large-file,
+  skip/xfail, root/link/privacy, and diff checks passed.
+- A final fetch resolved canonical `origin/main` at `e3ad965` before the
+  evidence commit. Both official PyPI endpoints again returned HTTP 404 at
+  `2026-09-02T13:59:54Z`; the name appeared unclaimed then but is not reserved.
+- `docs/history/STATUS_PUBLIC_RELEASE.md` records four of five public-sharing
+  blockers clear. Hardware remains blocked because the exact live-session gate
+  was not supplied. Accordingly no tag, upload, public-visibility change,
+  release creation, announcement, device access, or vendor-tree access ran.

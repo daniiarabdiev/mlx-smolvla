@@ -1,7 +1,8 @@
 # Architecture
 
 This document is generated from the pinned CPU/fp32 reference by
-`scripts/inspect_reference.py`. It resolves every hypothesis in `BRIEF.md`
+`scripts/inspect_reference.py`. It resolves every hypothesis in
+`history/BRIEF.md`
 Section 3 using checkpoint metadata, installed LeRobot source, and one real
 SO-101 observation. The installed PyPI wheel does not embed a source-git SHA;
 the immutable package/checkpoint/dataset/VLM revisions below are the reference
@@ -37,7 +38,7 @@ The installed defaults are `freeze_vision_encoder=True`,
 expert trainable; the vision flag freezes the vision tower explicitly. The
 state projection is a separately controlled trainable path in the reference.
 
-`BRIEF_T3B.md` narrows the adapter topology further and takes precedence for
+`history/BRIEF_T3B.md` narrows the adapter topology further and takes precedence for
 the MLX run: only the 16 action-expert layers' four attention projections and
 three MLP projections receive LoRA. Vision, connector, language/prefix layers,
 state projection, and the action/time input and output projections remain

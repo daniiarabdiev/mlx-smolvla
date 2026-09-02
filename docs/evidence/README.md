@@ -3,8 +3,13 @@
 The evidence tree separates measured results and negative findings from the
 five-minute README. Fixed gates are not changed by moving or indexing a file.
 Some immutable records retain the project's pre-release package name inside
-their hashed content; those strings identify the historical artifact and are
-not current installation instructions.
+their hashed content. The corresponding format-v1 `artifact_type` values and
+domain-separation seeds are compatibility identifiers, not distribution or
+CLI branding: producers and validators retain them so existing checkpoints,
+resume chains, and hash-bound evidence remain readable. They must change only
+with an explicit schema-version bump and migration, never as an in-place text
+rename. Current installation instructions use only `mlx-smolvla` and
+`mlx_smolvla`.
 
 ## Inference correctness
 
@@ -37,8 +42,9 @@ outcomes are summarized in the benchmark and cumulative historical status.
   and clean-install smoke outcomes; refreshed for every release candidate.
 - [`CI.md`](CI.md): why the full hosted macOS workflow is disabled, the local
   fast/full lanes, and exact self-hosted activation requirements.
-- `DOCTOR.txt` (created during final verification): captured installed
-  environment and compatibility verdict.
+- [`DOCTOR.txt`](DOCTOR.txt): captured from the fresh cp312 wheel plus `serve`
+  extra; records the installed environment, extras, Metal default, empty probe
+  cache, and verified compatibility verdict.
 
 ## Training
 

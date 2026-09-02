@@ -71,7 +71,8 @@ def render_architecture_report(
     return f"""# Architecture
 
 This document is generated from the pinned CPU/fp32 reference by
-`scripts/inspect_reference.py`. It resolves every hypothesis in `BRIEF.md`
+`scripts/inspect_reference.py`. It resolves every hypothesis in
+`docs/history/BRIEF.md`
 Section 3 using checkpoint metadata, installed LeRobot source, and one real
 SO-101 observation. The installed PyPI wheel does not embed a source-git SHA;
 the immutable package/checkpoint/dataset/VLM revisions below are the reference

@@ -32,6 +32,7 @@ for provenance; current public documents make no first-port claim.
 | `STATUS.md` | Early implementation status snapshot. |
 | `STATUS_RELEASE.md` | Stage R status snapshot. |
 | `STATUS_FULL.md` | Cumulative milestone ledger through compatibility/rename work. |
+| `STATUS_PUBLIC_RELEASE.md` | Closing software release-candidate status and five-blocker decision. |
 | `HANDOFF_REPORT.md` | Earlier agent-to-agent handoff requested by the operator. |
 | `PROGRESS.md` | Append-only implementation and verification ledger through public-release preparation. |
 | `HUMAN_TASKS.md` | Resolved external gates plus the exact remaining hardware/publication operator actions. |
@@ -40,5 +41,5 @@ for provenance; current public documents make no first-port claim.
 | `setup.py`, `CMakeLists.txt`, `MANIFEST.in` | Superseded root build files retained after migration to the PEP 517 backend and package-local CMake project. |
 | `superpowers/` | Design notes and execution plans used during implementation. |
 
-The final public-release status joins this directory after artifact and closing
-verification results are available.
+The public-release status records the completed software verification and the
+remaining supervised hardware blocker.

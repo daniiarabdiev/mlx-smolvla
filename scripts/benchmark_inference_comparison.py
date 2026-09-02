@@ -69,7 +69,11 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument("--native-cache", type=Path, default=Path(".cache/mlx_smolvla"))
     parser.add_argument("--sample-root", type=Path, default=Path("tests/golden/sample_000"))
     parser.add_argument("--metadata", type=Path, default=Path("tests/golden/metadata.json"))
-    parser.add_argument("--output", type=Path, default=Path("INFERENCE_COMPARISON.json"))
+    parser.add_argument(
+        "--output",
+        type=Path,
+        default=Path("docs/evidence/INFERENCE_COMPARISON.json"),
+    )
     parser.add_argument(
         "--worker-engine",
         choices=("mlx", "pytorch-mps"),

@@ -49,6 +49,10 @@ with a skip or expected-failure marker.
 5. Never upload models, datasets, distributions, releases, or telemetry as an
    implicit development step. Never commit credentials, caches, or generated
    model weights.
+6. Pre-rename format-v1 artifact identifiers are stable compatibility values,
+   not package branding. Do not rename them in place: introduce a new schema
+   version and explicit migration while preserving validation of existing
+   checkpoint, resume, and evidence chains.
 
 ## Common workflows
 

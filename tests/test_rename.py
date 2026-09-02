@@ -86,6 +86,27 @@ def test_new_cache_variable_wins_and_legacy_variable_still_warns(
     assert "ignored" in str(caught[0].message)
 
 
+def test_explicit_cache_path_wins_and_legacy_warning_reports_it_as_ignored(
+    monkeypatch,
+    tmp_path: Path,
+) -> None:
+    from mlx_smolvla.cache import resolve_cache_dir
+
+    explicit = tmp_path / "explicit"
+    monkeypatch.delenv("MLX_SMOLVLA_CACHE", raising=False)
+    monkeypatch.setenv("SMOLVLA_MLX_CACHE", str(tmp_path / "legacy"))
+
+    with warnings.catch_warnings(record=True) as caught:
+        warnings.simplefilter("always")
+        resolved = resolve_cache_dir(explicit)
+
+    assert resolved == explicit.resolve()
+    assert len(caught) == 1
+    assert "ignored because an explicit cache directory is set" in str(
+        caught[0].message
+    )
+
+
 def test_makefile_and_workflow_export_only_the_canonical_cache_variable() -> None:
     makefile = Path("Makefile").read_text(encoding="utf-8")
     workflow = Path(".github/workflows/macos-15.yml").read_text(encoding="utf-8")

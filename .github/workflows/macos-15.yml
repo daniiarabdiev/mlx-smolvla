@@ -3,7 +3,7 @@
 # GitHub's standard arm64 macos-15 runner has 7 GB RAM and 14 GB SSD; its
 # paid arm64 XLarge runner still has only 14 GB SSD. This suite's required
 # ignored evidence plus environment/cache exceeds 20 GiB before MLX working
-# space, and BRIEF_FULL.md requires 40 GB to remain free. Enabling this job on
+# space, and docs/history/BRIEF_FULL.md requires 40 GB to remain free. Enabling this job on
 # either hosted runner would be a known resource failure.
 #
 # Activation requires ALL of the following:

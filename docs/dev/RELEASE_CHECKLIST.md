@@ -25,10 +25,14 @@ repository evidence.
 - [x] Set the public version and complete `pyproject.toml` metadata, including
   README, Python range, license expression, classifiers, keywords, and canonical
   project URLs. Source: [PyPA `pyproject.toml` guide](https://packaging.python.org/en/latest/guides/writing-pyproject-toml/).
-- [ ] Build both an sdist and platform wheels from the final tagged source tree,
-  inspect their file lists, install them into clean environments, and exercise
-  the installed CLI rather than the checkout. Source: [PyPA packaging flow](https://packaging.python.org/en/latest/flow/).
-- [ ] Render-check the long description and validate every distribution with
+- [x] Build both an sdist and platform wheels from a clean, pushed
+  release-candidate source checkpoint, inspect their file lists, install them
+  into clean environments, and exercise the installed CLI rather than the
+  checkout. Source: [PyPA packaging flow](https://packaging.python.org/en/latest/flow/).
+- [ ] After the supervised hardware gate clears, tag the final source and
+  confirm the manifest-matched candidate is still the intended publication
+  set before uploading it.
+- [x] Render-check the long description and validate every distribution with
   `twine check` before publication. Source: [PyPA PyPI-friendly README guide](https://packaging.python.org/en/latest/guides/making-a-pypi-friendly-readme/).
 - [ ] Use PyPI trusted publishing with narrowly scoped GitHub permissions when
   publication is enabled; do not store a long-lived upload token in this
@@ -48,21 +52,23 @@ repository evidence.
 
 ## Project-specific release gates
 
-- [ ] `make test-fast` passes in under two minutes and `make test` passes with no
+- [x] `make test-fast` passes in under two minutes and `make test` passes with no
   skips or expected failures.
-- [ ] The strict deterministic and production statistical tolerances remain
+- [x] The strict deterministic and production statistical tolerances remain
   unchanged; every performance or correctness number in the README resolves to
   committed evidence.
 - [x] Runtime import isolation still proves that `mlx_smolvla` does not import
   Torch, Transformers, or LeRobot.
-- [ ] `mlx-smolvla doctor` succeeds from every freshly installed artifact and
+- [x] `mlx-smolvla doctor` succeeds from every freshly installed artifact and
   reports the compatibility verdict, Metal state, extras, and cache details.
-- [ ] The sdist and every Python 3.11-3.13 wheel use only the `mlx-smolvla` /
-  `mlx_smolvla` identities and pass offline prediction plus loopback serving
-  smoke tests where their extras apply.
+- [x] The sdist and every Python 3.11-3.13 wheel use canonical
+  `mlx-smolvla` / `mlx_smolvla` archive paths, distribution metadata, imports,
+  and CLI entry points, and pass offline prediction plus loopback serving
+  smoke tests where their extras apply. Stable format-v1 evidence identifiers
+  are the documented compatibility exception.
 - [x] The tracked-root allowlist, internal-link check, personal-detail scan, and
   artifact manifest all pass from the final tree.
-- [ ] Hardware claims remain explicitly unvalidated until the separately gated
+- [x] Hardware claims remain explicitly unvalidated until the separately gated
   SO-101 protocol produces committed first-contact evidence.
-- [ ] No package, model, release, or documentation artifact is uploaded as part
+- [x] No package, model, release, or documentation artifact is uploaded as part
   of automated preparation; publication remains an operator action.

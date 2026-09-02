@@ -146,7 +146,7 @@ def render_architecture_evidence(discovery: ReferenceDiscovery) -> str:
 - Action shape: `{list(discovery.action_shape)}`
 - Language task table present: `{discovery.has_language_tasks}`
 
-The remaining architecture hypotheses from `BRIEF.md` Section 3 are resolved
+The remaining architecture hypotheses from `docs/history/BRIEF.md` Section 3 are resolved
 by the source and runtime audit in Phase 1.
 """
 

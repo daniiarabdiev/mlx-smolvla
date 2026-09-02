@@ -36,7 +36,7 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument("--execution-mode", choices=("production", "strict"), default="production")
     parser.add_argument("--runs", type=int, default=50)
     parser.add_argument("--warmups", type=int, default=5)
-    parser.add_argument("--output", type=Path, default=Path("BENCHMARK.md"))
+    parser.add_argument("--output", type=Path, default=Path("docs/BENCHMARK.md"))
     parser.add_argument(
         "--production-deterministic",
         type=Path,

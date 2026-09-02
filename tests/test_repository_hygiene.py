@@ -124,3 +124,33 @@ def test_public_tree_contains_no_absolute_operator_home_path() -> None:
             offenders.append(str(relative))
 
     assert offenders == []
+
+
+def test_active_spec_references_and_generated_output_defaults_use_moved_paths() -> None:
+    expected_references = {
+        "docs/ARCHITECTURE.md": ("history/BRIEF.md", "history/BRIEF_T3B.md"),
+        ".github/workflows/macos-15.yml": ("docs/history/BRIEF_FULL.md",),
+        "reference/discovery.py": ("docs/history/BRIEF.md",),
+        "scripts/inspect_reference.py": ("docs/history/BRIEF.md",),
+    }
+    expected_defaults = {
+        "scripts/bench.py": 'default=Path("docs/BENCHMARK.md")',
+        "scripts/profile_inference_dtypes.py": (
+            'default=Path("docs/evidence/BF16_PROFILE.json")'
+        ),
+        "scripts/benchmark_inference_comparison.py": (
+            'default=Path("docs/evidence/INFERENCE_COMPARISON.json")'
+        ),
+        "scripts/experiment_quantization.py": (
+            'default=Path("docs/evidence/QUANTIZATION_EXPERIMENT.json")'
+        ),
+    }
+
+    for relative_path, references in expected_references.items():
+        source = (ROOT / relative_path).read_text(encoding="utf-8")
+        for reference in references:
+            assert reference in source, (relative_path, reference)
+
+    for relative_path, expected in expected_defaults.items():
+        source = (ROOT / relative_path).read_text(encoding="utf-8")
+        assert expected in source, relative_path

@@ -23,6 +23,35 @@
 
 ## Open — publish the Python distributions
 
+- After the supervised hardware evidence is committed and `v0.1.0` is tagged,
+  rebuild from that tag into a new directory. Do not publish the current
+  untagged `e3ad965` candidate merely because its smoke matrix passed:
+
+  ```sh
+  FINAL_RELEASE_SOURCE="$PWD/.cache/release-v0.1.0-source"
+  FINAL_RELEASE_ARTIFACTS="$PWD/.cache/release-v0.1.0-artifacts"
+  UV_CACHE_DIR="$PWD/.cache/uv"
+  UV_PYTHON_INSTALL_DIR="$PWD/.cache/uv-pythons"
+  export UV_CACHE_DIR UV_PYTHON_INSTALL_DIR
+  test ! -e "$FINAL_RELEASE_SOURCE" && test ! -e "$FINAL_RELEASE_ARTIFACTS"
+  git worktree add --detach "$FINAL_RELEASE_SOURCE" v0.1.0
+  mkdir -p "$FINAL_RELEASE_ARTIFACTS"
+  (cd "$FINAL_RELEASE_SOURCE" && \
+    MACOSX_DEPLOYMENT_TARGET=14.0 uv build --sdist \
+      --out-dir "$FINAL_RELEASE_ARTIFACTS" && \
+    MACOSX_DEPLOYMENT_TARGET=14.0 uv build --wheel --python 3.11 \
+      --out-dir "$FINAL_RELEASE_ARTIFACTS" && \
+    MACOSX_DEPLOYMENT_TARGET=14.0 uv build --wheel --python 3.12 \
+      --out-dir "$FINAL_RELEASE_ARTIFACTS" && \
+    MACOSX_DEPLOYMENT_TARGET=14.0 uv build --wheel --python 3.13 \
+      --out-dir "$FINAL_RELEASE_ARTIFACTS")
+  uvx --from twine twine check "$FINAL_RELEASE_ARTIFACTS"/*
+  ```
+
+- Repeat the archive inspection, four base fresh installs, offline predictions,
+  `doctor`, serve-extra loopback, and hash capture from
+  [`../evidence/DIST_MANIFEST.md`](../evidence/DIST_MANIFEST.md). Refresh that
+  manifest with the tag-built bytes and commit/push it before uploading.
 - Recheck that the name is still available immediately before publication:
 
   ```sh
@@ -35,7 +64,8 @@
   only the final manifest-matched artifacts:
 
   ```sh
-  UV_PUBLISH_TOKEN='<PYPI_TOKEN>' uv publish .cache/release/dist/*
+  UV_PUBLISH_TOKEN='<PYPI_TOKEN>' uv publish \
+    .cache/release-v0.1.0-artifacts/mlx_smolvla-0.1.0*
   ```
 
 - Never write the token to a file, shell history, issue, log, or commit.
@@ -45,7 +75,8 @@
 - Only after a verified `v0.1.0` tag exists and PyPI publication succeeds:
 
   ```sh
-  gh release create v0.1.0 .cache/release/dist/* \
+  gh release create v0.1.0 \
+    .cache/release-v0.1.0-artifacts/mlx_smolvla-0.1.0* \
     --repo daniiarabdiev/mlx-smolvla \
     --title 'mlx-smolvla v0.1.0' \
     --notes-file CHANGELOG.md
@@ -95,7 +126,8 @@
 ## Done — check the `mlx-smolvla` PyPI name
 
 - **Status:** done — both the official JSON endpoint and Simple Repository API
-  returned HTTP 404 at `2026-09-02T11:48Z`.
+  returned HTTP 404 at `2026-09-02T11:48Z` and again during closing
+  verification at `2026-09-02T13:59:54Z`.
 - **Result:** `mlx-smolvla` appears unclaimed on public PyPI at the time of the
   read-only check. This is not a reservation; the operator must check again
   immediately before publishing.

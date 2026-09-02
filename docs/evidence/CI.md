@@ -14,8 +14,8 @@ pipelines, or run the isolated provenance/optimizer processes those artifacts
 require. It does not skip or alter those tests: `make test` still runs the
 complete suite with the same semantics and gates.
 
-On 2026-09-02 the final unfiltered fast lane selected 385 tests and passed them
-in 96.48 seconds (99.00 seconds wall clock) on an otherwise idle Apple Silicon
+On 2026-09-02 the closing unfiltered fast lane selected 385 tests and passed them
+in 94.88 seconds (97.83 seconds wall clock) on an otherwise idle Apple Silicon
 validation host, with no skips or xfails.
 
 ## Why GitHub-hosted macOS is disabled
