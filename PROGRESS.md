@@ -2414,3 +2414,32 @@
   secret, upload, hardware, robot directory, or serial port was used. The
   original T3 failure remains byte-identical at SHA-256
   `d6654131c4acf86de13206f210f1ea1a82e3aad18871e5b64428bdf1dbeed7c6`.
+
+## 2026-09-02 — Stage H documents-only readiness complete
+
+- The required exact line `ARM SESSION CONFIRMED` was not supplied by the
+  physically present operator in this session. Per the immutable gate, no
+  robot directory, client, serial port, camera, motor, or arm was accessed;
+  hardware validation remains explicitly NOT RUN.
+- Added `HARDWARE_RUNBOOK.md`, SHA-256
+  `c164bbe1a749905dbf96f790942ffe5d46668d2c8b8d64c70477b1bb9db58e84`.
+  It freezes operator/agent roles, physical workspace and power-switch checks,
+  low verified hardware torque/speed prerequisites, a 1-degree/one-action/5-fps
+  software cap, exact loopback server and pinned LeRobot 0.6.1 client commands,
+  immediate rollback, and the complete evidence attachment checklist.
+- Added `scripts/serve_latency_smoke.py`, SHA-256
+  `73145031b4ec65800ba5b1fe9a55a16fb1bcccec840cc700d4dc9940bde7459d`,
+  and the installed `smolvla-mlx serve --latency-log` equivalent. The server
+  exclusively creates a new mode-0600 JSONL session, fsyncs each record, and
+  refuses existing output. It logs client timestamp, server receipt/chunk-ready
+  times, monotonic receive-to-ready and inference latency, timesteps/count, and
+  policy identity without logging images, state, task, or action values.
+- A fake-policy reference-protocol loopback produces the expected record; a
+  separate test proves existing-session refusal. Runbook/script, server, CLI,
+  and import-isolation focus passes **17/17**. The complete Stage H tree passes
+  **652/652 tests in 537.24 seconds**.
+- The machine has **522 GiB** free and repository caches total 122,871,648 KiB,
+  remaining above the 40 GiB floor. No tolerance, credential, upload, hardware,
+  robot directory, or serial port was touched. `FAILURE_LORA_FINETUNE.md`
+  remains byte-identical at SHA-256
+  `d6654131c4acf86de13206f210f1ea1a82e3aad18871e5b64428bdf1dbeed7c6`.

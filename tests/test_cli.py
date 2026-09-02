@@ -65,10 +65,20 @@ def test_serve_parser_defaults_to_safe_local_production() -> None:
     assert args.dtype == "bfloat16"
     assert args.execution_mode == "production"
     assert args.quantization is None
+    assert args.latency_log is None
     assert args.allow_remote is False
 
-    quantized = _parser().parse_args(["serve", "--quantization", "vlm-8bit"])
+    quantized = _parser().parse_args(
+        [
+            "serve",
+            "--quantization",
+            "vlm-8bit",
+            "--latency-log",
+            ".cache/hardware/session.jsonl",
+        ]
+    )
     assert quantized.quantization == "vlm-8bit"
+    assert quantized.latency_log.as_posix() == ".cache/hardware/session.jsonl"
 
 
 def test_saved_observation_loads_arrays_and_matching_task(tmp_path) -> None:

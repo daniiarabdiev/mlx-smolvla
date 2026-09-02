@@ -1,6 +1,6 @@
 # Full-Scope Status
 
-ACTIVE — STAGE H DOCUMENTS-ONLY HARDWARE READINESS
+ACTIVE — FINAL REPOSITORY AND ARTIFACT AUDIT
 
 T3B-1 COMPLETE — SELF-CONSISTENCY FLOOR RECORDED
 
@@ -33,6 +33,8 @@ STAGE Q P2-3 COMPLETE — VLM 8-BIT/4-BIT OPT-INS SHIPPED; DEFAULT UNCHANGED
 STAGE Q P2-4 COMPLETE — HONESTLY DISABLED MACOS-15 WORKFLOW COMMITTED
 
 STAGE Q COMPLETE
+
+STAGE H COMPLETE — DOCUMENTS/SOFTWARE ONLY; HARDWARE VALIDATION NOT RUN
 
 The protected SmolVLA MLX v0.1 inference baseline is intact. At full-scope
 kickoff on 2026-08-31, `make test` passed **179/179** in **158.71 seconds** on
@@ -264,6 +266,20 @@ caveats, persistent T3/T3B/T4 evidence requirements, and that no secrets are
 needed. Three workflow contracts and `actionlint` pass; the package-closing
 suite passes **648/648 tests in 527.15 seconds**.
 
+Stage H is complete at its documents-only gate. `HARDWARE_RUNBOOK.md` contains
+the exact in-session `ARM SESSION CONFIRMED` gate, separate server/operator
+commands, low-limit one-action first-contact protocol, physical power-switch
+stop authority, verified-torque/speed prerequisite, rollback, and evidence
+checklist. `scripts/serve_latency_smoke.py` starts only the policy server and
+routes no-clobber JSONL telemetry through `ServeConfig.latency_log`. Each
+successful chunk records wall-clock and monotonic latency boundaries,
+timesteps, action count, and policy identity; no images, state, task, or action
+values are stored. A fake-policy gRPC loopback proves the record and existing-
+session refusal. The gate phrase was not supplied in-session: **hardware
+validation remains NOT RUN**, and no robot environment, serial port, camera,
+motor, or arm was accessed. The exact Stage H tree passes **652/652 tests in
+537.24 seconds**.
+
 ## Stage state
 
 | Stage | State | Evidence / next action |
@@ -279,7 +295,7 @@ suite passes **648/648 tests in 527.15 seconds**.
 | T4 — Training UX/full fine-tune | Complete | Unified CLI, explicit reference-full topology, 100-update real smoke, finite complete export, three-checkpoint retention, and LoRA/full exact-resume gates all pass. See `TRAINING_UX.md`. |
 | T5 — Training docs/benchmark | Complete | The frozen four-cell idle Metal matrix, exact commands, overnight projections, and Torch round-trip proof are published in `TRAINING_BENCHMARK.json`, `BENCHMARK.md`, and `README.md`. |
 | Q — Quality extras | Complete | P2-1 comparison, P2-2 profile, P2-3 gated quantization, and P2-4 honestly disabled CI workflow are committed; every package closed with the full suite. |
-| H — Hardware readiness | In progress — documents only | Prepare the exact supervised runbook and serve-side observation-to-chunk latency logger. No hardware access is authorized without the in-session gate. |
+| H — Hardware readiness | Complete — documents/software only | Exact supervised runbook and no-clobber observation-to-chunk latency logger are committed and loopback-tested. Hardware validation is explicitly NOT RUN because the in-session gate was absent. |
 
 `TRAINING ALPHA (STATISTICAL)`, `RELEASE READY`, `T4 COMPLETE`, and `T5 COMPLETE` have been reached.
 
@@ -309,6 +325,8 @@ suite passes **648/648 tests in 527.15 seconds**.
 | `INFERENCE_COMPARISON.json` | Tracked P2-1 timing evidence | SHA-256 `115ad58c0c618b65a6275018614f3ee6cf17dd02a9d4ad9c94aaf7e5a9842e48`; two isolated engines, 100 raw synchronized timings, fixed input/noise hashes, idle/environment/source evidence |
 | `BF16_PROFILE.json` | Tracked P2-2 component evidence | SHA-256 `74da9f937cb8bfeba4066d5518187490ff96a1447e4a2ad2253e2493245be1cf`; 600 raw timings, exact component summaries/attribution, clean idle/environment/source evidence |
 | `QUANTIZATION_EXPERIMENT.json` | Tracked P2-3 experiment evidence | SHA-256 `40060b0eaa63efee471ce2966f8fd578ade6ba2e8d9923435e14ef2466be393b`; three exact topology manifests, 150 raw timings, 150 per-case error records, fixed-gate decisions, and clean idle/source evidence |
+| `HARDWARE_RUNBOOK.md` | Tracked documents-only H handoff | SHA-256 `c164bbe1a749905dbf96f790942ffe5d46668d2c8b8d64c70477b1bb9db58e84`; gate, exact commands, safety, rollback, and evidence checklist; hardware NOT RUN |
+| `scripts/serve_latency_smoke.py` | Tracked serve-only H entrypoint | SHA-256 `73145031b4ec65800ba5b1fe9a55a16fb1bcccec840cc700d4dc9940bde7459d`; exclusive JSONL path wired to loopback-default server |
 | `.cache/hf` | 2,614,416 KiB | repository-local pinned source/dataset cache |
 | `.cache/smolvla_mlx` | 74,751,612 KiB | native conversion/evaluation cache after isolated Q experiments |
 | `dist/` | 4 artifacts | One sdist plus CPython 3.11/3.12/3.13 `macosx_14_0_arm64` wheels; exact hashes in `DIST_MANIFEST.md` |

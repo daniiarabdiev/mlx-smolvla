@@ -271,6 +271,18 @@ protocol: binding defaults to `127.0.0.1`; a non-loopback host requires the
 explicit `--allow-remote` acknowledgement and remains suitable only for a
 trusted private network. The server itself has no robot or serial I/O.
 
+An optional `ServeConfig.latency_log` adds Stage H observation-to-chunk
+telemetry without changing the transport. The server exclusively creates a
+new mode-0600 JSONL file and refuses an existing path, so evidence from two
+sessions cannot be mixed. Receipt time is captured only after the complete
+`TimedObservation` payload has been decoded and accepted. Each successful
+chunk records the client wall-clock timestamp, server receipt/chunk-ready UTC
+times, monotonic server-receipt-to-ready latency, inference latency, timesteps,
+action count, and policy configuration. Images, state values, task text, and
+action values are never logged. Receipt metadata follows queue replacement,
+cancellation restoration, and episode reset under the existing state lock;
+the logger flushes and syncs each record before advancing its sequence.
+
 ## BRIEF Section 3 verdicts
 
 | Hypothesis | Verdict | Evidence |

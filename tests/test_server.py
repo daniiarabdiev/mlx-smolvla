@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from concurrent import futures
 import hashlib
+import json
 import pickle
 import threading
 import time
@@ -199,6 +200,7 @@ def test_server_configuration_defaults_to_loopback_and_requires_remote_opt_in() 
     assert config.port == 8080
     assert config.environment_dt == 1 / config.fps
     assert config.quantization is None
+    assert config.latency_log is None
 
     assert ServeConfig(quantization="vlm-8bit").quantization == "vlm-8bit"
     assert ServeConfig(quantization="vlm-4bit").quantization == "vlm-4bit"
@@ -219,6 +221,7 @@ def test_server_configuration_defaults_to_loopback_and_requires_remote_opt_in() 
         {"quantization": "everything-4bit"},
         {"quantization": "vlm-8bit", "dtype": "float32"},
         {"quantization": "vlm-4bit", "execution_mode": "strict"},
+        {"latency_log": ""},
     ):
         with pytest.raises(ValueError):
             ServeConfig(**invalid)
@@ -381,6 +384,79 @@ def test_cancelled_waiter_restores_observation_consumed_during_cancellation() ->
         servicer._next_observation(CancelAfterDequeueContext())
 
     assert servicer.observation_queue.get_nowait() is observation
+
+
+def test_latency_log_records_one_successful_loopback_chunk_without_payloads(
+    tmp_path: Path,
+) -> None:
+    policy = _FakePolicy(delay=0.01)
+    latency_log = tmp_path / "latency.jsonl"
+    server, _servicer, channel, stub = _start_fake_server(
+        policy,
+        latency_log=latency_log,
+    )
+    client_timestamp = time.time()
+    try:
+        stub.Ready(services_pb2.Empty(), timeout=5)
+        _send_setup(stub, _policy_config(actions_per_chunk=2))
+        _send_observation(
+            stub,
+            TimedObservation(
+                client_timestamp,
+                17,
+                _raw_observation(1.0),
+                must_go=True,
+            ),
+        )
+        response = stub.GetActions(services_pb2.Empty(), timeout=5)
+        assert response.data
+    finally:
+        channel.close()
+        server.stop(grace=0).wait()
+
+    records = [json.loads(line) for line in latency_log.read_text().splitlines()]
+    assert len(records) == 1
+    record = records[0]
+    assert record["format_version"] == 1
+    assert record["event"] == "observation_to_action_chunk"
+    assert record["sequence"] == 0
+    assert record["observation"] == {
+        "client_timestamp": client_timestamp,
+        "must_go": True,
+        "timestep": 17,
+    }
+    assert record["chunk"] == {
+        "action_count": 2,
+        "first_timestep": 17,
+        "last_timestep": 18,
+    }
+    assert record["policy"] == {
+        "dtype": "bfloat16",
+        "execution_mode": "production",
+        "pretrained_name_or_path": "recorded/fake-smolvla",
+        "quantization": None,
+        "type": "smolvla",
+    }
+    assert record["latency_ms"]["inference"] >= 5
+    assert record["latency_ms"]["server_receive_to_chunk"] >= record["latency_ms"]["inference"]
+    assert record["latency_ms"]["client_observation_to_chunk"] >= record["latency_ms"]["server_receive_to_chunk"]
+    assert set(record["server"]) == {"chunk_ready_at_utc", "received_at_utc"}
+    serialized = json.dumps(record)
+    assert "camera" not in serialized
+    assert "action\"" not in serialized
+
+
+def test_latency_log_refuses_to_mix_with_an_existing_session(tmp_path: Path) -> None:
+    from smolvla_mlx.server import ServeConfig, create_server
+
+    path = tmp_path / "existing.jsonl"
+    path.write_text("existing session\n", encoding="utf-8")
+
+    with pytest.raises(ValueError, match="already exists"):
+        create_server(
+            ServeConfig(host="127.0.0.1", port=0, latency_log=path),
+            policy_loader=lambda **_kwargs: _FakePolicy(),
+        )
 
 
 @pytest.mark.slow

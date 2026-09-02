@@ -80,6 +80,11 @@ def _parser() -> argparse.ArgumentParser:
     serve.add_argument("--dtype", choices=("float32", "bfloat16"), default="bfloat16")
     serve.add_argument("--execution-mode", choices=("production", "strict"), default="production")
     serve.add_argument("--quantization", choices=("vlm-8bit", "vlm-4bit"))
+    serve.add_argument(
+        "--latency-log",
+        type=Path,
+        help="new JSONL path for observation-to-action-chunk timing records",
+    )
     serve.add_argument("--fps", type=int, default=30)
     serve.add_argument("--inference-latency", type=float, default=0.0)
     serve.add_argument("--obs-queue-timeout", type=float, default=1.0)
@@ -343,6 +348,7 @@ def _serve(args: argparse.Namespace) -> int:
             dtype=args.dtype,
             execution_mode=args.execution_mode,
             quantization=args.quantization,
+            latency_log=args.latency_log,
             fps=args.fps,
             inference_latency=args.inference_latency,
             obs_queue_timeout=args.obs_queue_timeout,

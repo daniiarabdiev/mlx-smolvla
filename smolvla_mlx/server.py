@@ -10,9 +10,12 @@ from __future__ import annotations
 
 from concurrent import futures
 from dataclasses import dataclass
+from datetime import datetime, timezone
 import ipaddress
+import json
 import logging
 import math
+import os
 from pathlib import Path
 import pickle  # nosec B403: required by the pinned LeRobot 0.6.1 wire protocol
 from queue import Empty, Queue
@@ -46,6 +49,53 @@ _CANCELLATION_POLL_SECONDS = 0.05
 PolicyLoader = Callable[..., SmolVLAMLX]
 
 
+@dataclass(frozen=True)
+class _ObservationReceipt:
+    wall_time_ns: int
+    monotonic_ns: int
+    received_at_utc: str
+
+
+class _LatencyJSONLRecorder:
+    """Exclusive, append-only telemetry sink for one supervised server session."""
+
+    def __init__(self, path: Path) -> None:
+        self.path = path.expanduser()
+        try:
+            self.path.parent.mkdir(parents=True, exist_ok=True)
+            flags = os.O_WRONLY | os.O_CREAT | os.O_EXCL
+            if hasattr(os, "O_NOFOLLOW"):
+                flags |= os.O_NOFOLLOW
+            descriptor = os.open(self.path, flags, 0o600)
+        except FileExistsError as error:
+            raise ValueError(
+                f"latency log already exists; choose a new session path: {self.path}"
+            ) from error
+        except OSError as error:
+            raise RuntimeError(f"could not create latency log {self.path}: {error}") from error
+        self._stream = os.fdopen(descriptor, "w", encoding="utf-8")
+        self._lock = threading.Lock()
+        self._sequence = 0
+
+    def write(self, record: Mapping[str, object]) -> None:
+        with self._lock:
+            payload = {
+                "format_version": 1,
+                "event": "observation_to_action_chunk",
+                "sequence": self._sequence,
+                **record,
+            }
+            self._stream.write(json.dumps(payload, sort_keys=True, allow_nan=False) + "\n")
+            self._stream.flush()
+            os.fsync(self._stream.fileno())
+            self._sequence += 1
+
+    def close(self) -> None:
+        with self._lock:
+            if not self._stream.closed:
+                self._stream.close()
+
+
 def _is_loopback(host: str) -> bool:
     normalized = host.strip().strip("[]")
     if normalized.lower() == "localhost":
@@ -74,6 +124,7 @@ class ServeConfig:
     dtype: str = "bfloat16"
     execution_mode: ExecutionMode = "production"
     quantization: QuantizationPreset | None = None
+    latency_log: Path | None = None
     fps: int = 30
     inference_latency: float = 0.0
     obs_queue_timeout: float = 1.0
@@ -96,6 +147,14 @@ class ServeConfig:
             raise ValueError("VLM quantization requires the validated bfloat16 base dtype")
         if self.quantization is not None and self.execution_mode != "production":
             raise ValueError("VLM quantization is validated only for production Metal execution")
+        if self.latency_log is not None:
+            if isinstance(self.latency_log, bool) or not isinstance(
+                self.latency_log, (str, Path)
+            ):
+                raise ValueError("latency_log must be a non-empty path or None")
+            if isinstance(self.latency_log, str) and not self.latency_log.strip():
+                raise ValueError("latency_log must be a non-empty path or None")
+            object.__setattr__(self, "latency_log", Path(self.latency_log))
         if isinstance(self.fps, bool) or not isinstance(self.fps, int) or self.fps <= 0:
             raise ValueError(f"fps must be a positive integer, got {self.fps!r}")
         if not math.isfinite(self.inference_latency) or self.inference_latency < 0:
@@ -148,11 +207,18 @@ class NativeMLXPolicyServer(services_pb2_grpc.AsyncInferenceServicer):
         self._generation = 0
         self._prediction_index = 0
         self.observation_queue: Queue[TimedObservation] = Queue(maxsize=1)
+        self._observation_receipts: dict[int, _ObservationReceipt] = {}
         self._predicted_timesteps: set[int] = set()
         self.last_processed_obs: TimedObservation | None = None
+        self._latency_recorder = (
+            _LatencyJSONLRecorder(config.latency_log)
+            if config.latency_log is not None
+            else None
+        )
 
         self.policy: SmolVLAMLX | None = None
         self.policy_type: str | None = None
+        self.pretrained_name_or_path: str | None = None
         self.lerobot_features: dict[str, dict[str, object]] | None = None
         self.actions_per_chunk: int | None = None
         self.rename_map: dict[str, str] = {}
@@ -175,6 +241,7 @@ class NativeMLXPolicyServer(services_pb2_grpc.AsyncInferenceServicer):
         with self._state_lock:
             self._generation += 1
             self.observation_queue = Queue(maxsize=1)
+            self._observation_receipts = {}
             self._predicted_timesteps = set()
             self.last_processed_obs = None
             policy = self.policy
@@ -321,6 +388,7 @@ class NativeMLXPolicyServer(services_pb2_grpc.AsyncInferenceServicer):
             with self._state_lock:
                 self.policy = policy
                 self.policy_type = policy_specs.policy_type
+                self.pretrained_name_or_path = policy_specs.pretrained_name_or_path
                 self.lerobot_features = features
                 self.actions_per_chunk = policy_specs.actions_per_chunk
                 self.rename_map = rename_map
@@ -438,9 +506,79 @@ class NativeMLXPolicyServer(services_pb2_grpc.AsyncInferenceServicer):
             if not should_enqueue:
                 return False
             if self.observation_queue.full():
-                self.observation_queue.get_nowait()
+                dropped = self.observation_queue.get_nowait()
+                self._observation_receipts.pop(id(dropped), None)
+            received_monotonic_ns = time.perf_counter_ns()
+            received_wall_ns = time.time_ns()
+            self._observation_receipts[id(observation)] = _ObservationReceipt(
+                wall_time_ns=received_wall_ns,
+                monotonic_ns=received_monotonic_ns,
+                received_at_utc=datetime.fromtimestamp(
+                    received_wall_ns / 1_000_000_000,
+                    tz=timezone.utc,
+                ).isoformat(),
+            )
             self.observation_queue.put_nowait(observation)
             return True
+
+    def _record_chunk_latency(
+        self,
+        *,
+        observation: TimedObservation,
+        actions: list[TimedAction],
+        inference_started_ns: int,
+        chunk_ready_monotonic_ns: int,
+        chunk_ready_wall_ns: int,
+        generation: int,
+    ) -> None:
+        with self._state_lock:
+            receipt = self._observation_receipts.pop(id(observation), None)
+            policy_type = self.policy_type
+            pretrained_name_or_path = self.pretrained_name_or_path
+        if self._latency_recorder is None:
+            return
+        if receipt is None or policy_type is None or pretrained_name_or_path is None:
+            raise RuntimeError("latency telemetry lost its observation or policy identity")
+        self._latency_recorder.write(
+            {
+                "session_generation": generation,
+                "observation": {
+                    "client_timestamp": observation.timestamp,
+                    "must_go": observation.must_go,
+                    "timestep": observation.timestep,
+                },
+                "server": {
+                    "received_at_utc": receipt.received_at_utc,
+                    "chunk_ready_at_utc": datetime.fromtimestamp(
+                        chunk_ready_wall_ns / 1_000_000_000,
+                        tz=timezone.utc,
+                    ).isoformat(),
+                },
+                "latency_ms": {
+                    "client_observation_to_chunk": (
+                        chunk_ready_wall_ns / 1_000_000 - observation.timestamp * 1_000
+                    ),
+                    "server_receive_to_chunk": (
+                        chunk_ready_monotonic_ns - receipt.monotonic_ns
+                    )
+                    / 1_000_000,
+                    "inference": (chunk_ready_monotonic_ns - inference_started_ns)
+                    / 1_000_000,
+                },
+                "chunk": {
+                    "action_count": len(actions),
+                    "first_timestep": actions[0].timestep,
+                    "last_timestep": actions[-1].timestep,
+                },
+                "policy": {
+                    "type": policy_type,
+                    "pretrained_name_or_path": pretrained_name_or_path,
+                    "dtype": self.config.dtype,
+                    "execution_mode": self.config.execution_mode,
+                    "quantization": self.config.quantization,
+                },
+            }
+        )
 
     def _policy_image_features(self) -> dict[str, PolicyFeature]:
         if self.policy is None or self.lerobot_features is None:
@@ -564,10 +702,15 @@ class NativeMLXPolicyServer(services_pb2_grpc.AsyncInferenceServicer):
                 return services_pb2.Actions()
             with self._state_lock:
                 self._predicted_timesteps.add(observation.timestep)
+            inference_started_ns = time.perf_counter_ns()
             try:
                 actions = self._predict_timed_actions(observation)
             except Exception as error:
+                with self._state_lock:
+                    self._observation_receipts.pop(id(observation), None)
                 self._abort(context, grpc.StatusCode.INTERNAL, f"inference failed: {error}")
+            chunk_ready_monotonic_ns = time.perf_counter_ns()
+            chunk_ready_wall_ns = time.time_ns()
             self._check_active(context)
             with self._state_lock:
                 if generation != self._generation:
@@ -576,6 +719,21 @@ class NativeMLXPolicyServer(services_pb2_grpc.AsyncInferenceServicer):
                         grpc.StatusCode.CANCELLED,
                         "client session changed while inference was running",
                     )
+            try:
+                self._record_chunk_latency(
+                    observation=observation,
+                    actions=actions,
+                    inference_started_ns=inference_started_ns,
+                    chunk_ready_monotonic_ns=chunk_ready_monotonic_ns,
+                    chunk_ready_wall_ns=chunk_ready_wall_ns,
+                    generation=generation,
+                )
+            except (OSError, RuntimeError, ValueError) as error:
+                self._abort(
+                    context,
+                    grpc.StatusCode.INTERNAL,
+                    f"latency logging failed: {error}",
+                )
             remaining = self.config.inference_latency - (time.perf_counter() - started)
             while remaining > 0:
                 self._check_active(context)
@@ -592,6 +750,8 @@ class NativeMLXPolicyServer(services_pb2_grpc.AsyncInferenceServicer):
     def stop(self) -> None:
         self._stopped.set()
         self._clear_episode_state()
+        if self._latency_recorder is not None:
+            self._latency_recorder.close()
 
 
 def create_server(

@@ -327,6 +327,20 @@ recorded three-action chunk is exactly equal to three direct
 `select_action` calls. Hardware-in-the-loop validation is still pending and
 must be performed in a separate supervised operator session.
 
+For that supervised session, the server can write one no-clobber JSONL timing
+record per returned action chunk without storing observations or actions:
+
+```bash
+uv run --extra serve python scripts/serve_latency_smoke.py \
+  --output .cache/hardware/first-contact-latency.jsonl \
+  --host 127.0.0.1 --port 8080 --dtype bfloat16 --fps 5
+```
+
+This command starts only the software policy server; it does not connect to a
+robot. Do not run a hardware client from this document alone. The execution
+gate, low-limit one-action client command, physical safety checks, rollback,
+and evidence checklist are in [HARDWARE_RUNBOOK.md](HARDWARE_RUNBOOK.md).
+
 ## Cache layout and cleanup
 
 Repository commands route caches under `.cache/`: Hugging Face snapshots and
