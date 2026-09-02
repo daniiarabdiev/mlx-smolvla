@@ -32,6 +32,33 @@ converts the 500 tensors into MLX safetensors. By default this uses
 the location. Once the checkpoint and converted safetensors are present, the
 same call works offline.
 
+## Cache layout and cleanup
+
+Repository commands keep their working data under `.cache/`:
+
+- `.cache/hf` contains pinned Hugging Face model snapshots and datasets.
+- `.cache/smolvla_mlx` contains converted MLX weights and named parity or
+  inference caches. These are retained because conversion can be expensive.
+- `.cache/training` contains checkpoint, floor, and evaluation evidence. The
+  cleanup command never enters or removes this directory.
+- `tests/golden*` contains ignored, reproducible reference outputs used by the
+  parity suites; `make clean-cache` does not touch them.
+
+Inspect every top-level native-cache entry, its byte size, and its retention
+decision before cleaning:
+
+```bash
+make cache-inventory
+make clean-cache-dry-run
+make clean-cache
+```
+
+Cleanup is deliberately narrow: it accepts only the exact repository path
+`.cache/smolvla_mlx`, refuses symlinked or out-of-repository targets, and
+removes only top-level `debug-*` directories plus exact `benchmark-debug`.
+Model sources, converted weights, probes, training evidence, and golden files
+remain intact.
+
 ## Python API
 
 ```python

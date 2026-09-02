@@ -4,7 +4,7 @@ export SMOLVLA_MLX_CACHE := $(CURDIR)/.cache/smolvla_mlx
 
 TESTS ?= tests
 
-.PHONY: goldens test bench training-audit training-goldens training-parity optimizer-goldens optimizer-lockstep lora-benchmark lora-evaluation lora-finetune lora-finetune-resume lora-finetune-check
+.PHONY: goldens test bench cache-inventory clean-cache clean-cache-dry-run training-audit training-goldens training-parity optimizer-goldens optimizer-lockstep lora-benchmark lora-evaluation lora-finetune lora-finetune-resume lora-finetune-check
 
 goldens:
 	uv run --extra reference python scripts/make_goldens.py --cache-dir $(HF_HOME) --output tests/golden
@@ -17,6 +17,15 @@ test:
 
 bench:
 	uv run python scripts/bench.py
+
+cache-inventory:
+	uv run python -m smolvla_mlx.cache_cleanup --repository-root $(CURDIR) --cache-dir $(SMOLVLA_MLX_CACHE) --inventory
+
+clean-cache:
+	uv run python -m smolvla_mlx.cache_cleanup --repository-root $(CURDIR) --cache-dir $(SMOLVLA_MLX_CACHE)
+
+clean-cache-dry-run:
+	uv run python -m smolvla_mlx.cache_cleanup --repository-root $(CURDIR) --cache-dir $(SMOLVLA_MLX_CACHE) --dry-run
 
 training-audit:
 	uv run python scripts/training_feasibility.py --seed 0 --output $(CURDIR)/.cache/training/t0-audit.json

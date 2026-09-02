@@ -1897,3 +1897,35 @@
   first complete post-package tree passed **566/566 in 518.67 seconds**. The
   added full Hub-ID public-API test passes **9/9** with its public-target group;
   the exact final P0-2 tree passes **567/567 in 519.76 seconds**.
+
+## 2026-09-02 — Stage R P0-3 cache hygiene complete
+
+- Cleanup began only after the T3B trainer and floor workers had exited. The
+  earlier read-only baseline was 77,380,960 KiB while T3B was active; P0-2
+  conversion and public-checkpoint work brought the immediate pre-cleanup
+  `.cache/smolvla_mlx` allocation to **91,447,880 KiB** (87.21 GiB).
+- The frozen dry run selected exactly **24** top-level directories: 23 names
+  matching `debug-*` and exact `benchmark-debug`. Their logical size was
+  **39,611,270,560 bytes**. No source snapshot, converted production cache,
+  probe, training artifact, golden corpus, file, nested path, or symlink was
+  eligible.
+- `make clean-cache` reduced `.cache/smolvla_mlx` to **52,764,872 KiB** (50.32
+  GiB), reclaiming **38,683,008 KiB** (36.89 GiB) of allocated space. The
+  post-cleanup inventory accounts for **54,031,014,140 logical bytes** and
+  marks every remaining top-level native-cache entry as retained.
+- `make cache-inventory` reports each entry's type, logical byte size,
+  regenerability, retention decision, and reason. `make clean-cache-dry-run`
+  exposes the exact deletion set. The implementation refuses repository-root,
+  training, outside, traversal, symlinked-cache, allowlisted-symlink, and
+  allowlisted-file targets; it also requires Python's symlink-attack-resistant
+  recursive remover.
+- Before/after metadata fingerprints were identical for `.cache/training`,
+  `policy-float32`, and all three golden corpora. `.cache/hf` remained exactly
+  **3,498,900 KiB** with **420 files**; only six existing zero-byte dataset lock
+  mtimes changed during reference tests, establishing that no model or dataset
+  was downloaded. No deleted debug directory was regenerated, and the final
+  dry run reports zero candidates.
+- Focused cleanup verification passes **10/10**. The required post-cleanup
+  complete repository suite passes **576/576 in 522.53 seconds**. The original
+  T3 failure record remains unchanged at SHA-256
+  `d6654131c4acf86de13206f210f1ea1a82e3aad18871e5b64428bdf1dbeed7c6`.

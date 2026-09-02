@@ -116,11 +116,19 @@ MLX/reference MAE ratios are `1.0000005749451057` / `0.996050278176297`; its
 checkpoint-derived camera keys are `wrist_camera` and `top_camera`. The exact
 P0-2 tree passes **567/567 tests in 519.76 seconds**.
 
+Stage R P0-3 is complete. The frozen cleanup boundary removed only 23
+top-level `debug-*` experiment trees and exact `benchmark-debug`, reducing
+`.cache/smolvla_mlx` from **91,447,880 KiB** to **52,764,872 KiB** (36.89 GiB
+of allocated space). Retained model, training, and golden fingerprints stayed
+stable; the Hugging Face cache kept the same size and changed only six
+zero-byte lock timestamps. The post-cleanup tree passes **576/576 tests in
+522.53 seconds**, and the follow-up dry run reports no candidates.
+
 ## Stage state
 
 | Stage | State | Evidence / next action |
 | --- | --- | --- |
-| R — Release | P0-1 and P0-2 complete | Origin mirrors canonical history; Apache-2.0 `LICENSE` and `NOTICE` are packaged. Base identity behavior, constructed stats-active behavior, and a pinned public multitask fine-tune pass the unchanged fp32/bf16 deterministic and 50-frame statistical gates. P0-3 cache hygiene is next. |
+| R — Release | P0-1, P0-2, and P0-3 complete | Origin mirrors canonical history; Apache-2.0 licensing is packaged; base, stats-active, and public-fine-tune paths pass their fixed gates; safe cache cleanup reclaimed 36.89 GiB and the 576-test post-cleanup suite passes. P1 portability and production-path packages remain. |
 | T0 — Training-readiness | Complete | 155/155 gradients finite and nonzero over 99,880,992 trainable scalars; 196.799 ms forward+backward and 2,509,594,126-byte peak MLX memory. See `TRAINING_FEASIBILITY.md`. |
 | T1 — Gradient parity | Complete | Identical real batch/draws; loss and all 155 gradients pass immutable gates. See `GRADIENT_PARITY.md`. |
 | T2 — Optimizer lockstep | Complete | 25/25 losses and 155/155 final tensors pass immutable gates. See `OPTIMIZER_LOCKSTEP.md`. |

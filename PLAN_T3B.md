@@ -231,9 +231,10 @@ unchanged deterministic and 50-frame statistical gates in fp32 and bf16.
 
 ### Task 4.3 — P0-3: cache audit and safe cleanup
 
-**Status:** read-only baseline captured: `.cache/smolvla_mlx` is 77,380,960
-KiB; 23 `debug-*` trees account for 37,803,716 KiB. No deletion or cleanup-code
-execution occurs while T3B is active.
+**Status:** Complete. After T3B exited, the frozen allowlist removed only 23
+top-level `debug-*` trees and exact `benchmark-debug`, reducing the native
+cache from 91,447,880 KiB to 52,764,872 KiB. Inventory, dry-run, traversal,
+symlink, root, retained-evidence, and post-cleanup full-suite checks are green.
 
 - Add an inventory command that reports repository cache categories, sizes,
   retention status, and whether each path is regenerable.
