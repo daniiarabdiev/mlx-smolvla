@@ -1,6 +1,6 @@
 # Full-Scope Status
 
-ACTIVE — T5 TRAINING DOCUMENTATION AND BENCHMARK
+ACTIVE — STAGE Q QUALITY EXTRAS
 
 T3B-1 COMPLETE — SELF-CONSISTENCY FLOOR RECORDED
 
@@ -21,6 +21,8 @@ STAGE R P1-4 COMPLETE — LEROBOT ASYNC SERVER VERIFIED IN LOOPBACK
 RELEASE READY
 
 T4 COMPLETE — NATIVE TRAINING UX AND EXACT RESUME VERIFIED
+
+T5 COMPLETE — IDLE NATIVE TRAINING BENCHMARK RECORDED
 
 The protected SmolVLA MLX v0.1 inference baseline is intact. At full-scope
 kickoff on 2026-08-31, `make test` passed **179/179** in **158.71 seconds** on
@@ -190,6 +192,16 @@ parameter, loss, and all-metric drift with exact optimizer, draw-chain,
 sampler, and canonical step-state identity for both modes. See
 `TRAINING_UX.md`. The exact T4 tree passes **608/608 tests in 533.65 seconds**.
 
+Stage T5 is complete. A clean protocol commit froze a four-cell Metal matrix:
+expert-only LoRA and the full reference trainable set, each with bf16 or fp32
+base storage, effective batch eight, three excluded warmups, and ten measured
+updates. Median update rates are **0.873/0.914 steps/s** for LoRA bf16/fp32 and
+**0.836/0.857 steps/s** for full bf16/fp32. Peak MLX memory is **2.27/3.24
+GiB** and **3.55/4.32 GiB**, respectively. Every published value and projection
+recomputes from `TRAINING_BENCHMARK.json`; its ignored full source artifact has
+SHA-256 `7112806471e55e55d98ae101bc2af8172c2cc18f01b3e0c2c0646446adba9423`.
+The exact T5 tree passes **613/613 tests in 520.69 seconds**.
+
 ## Stage state
 
 | Stage | State | Evidence / next action |
@@ -203,11 +215,11 @@ sampler, and canonical step-state identity for both modes. See
 | T3B-2 — Prospective evaluator | Complete | Fixed gates unchanged; derived `max(0.005, 3F)` gate, chronology, complete input provenance, semantic conversion validation, and no-clobber output are frozen and pass 52 focused tests. |
 | T3B-3 — Expert-only LoRA | Statistical alpha | All 3,000 updates and the strict export completed. Fixed preprocessing, held-out-improvement, and round-trip gates pass. Prospective normalized parity is `0.013038858771324158` versus derived `0.005`; the new failure record preserves this result without changing tolerances. |
 | T4 — Training UX/full fine-tune | Complete | Unified CLI, explicit reference-full topology, 100-update real smoke, finite complete export, three-checkpoint retention, and LoRA/full exact-resume gates all pass. See `TRAINING_UX.md`. |
-| T5 — Training docs/benchmark | In progress | Verify no trainer/floor process is alive, freeze the benchmark protocol, then collect idle LoRA/full bf16/fp32 evidence. |
-| Q — Quality extras | Unblocked; pending T4/T5 | Normative package definitions are available in `BRIEF_RELEASE.md`. |
+| T5 — Training docs/benchmark | Complete | The frozen four-cell idle Metal matrix, exact commands, overnight projections, and Torch round-trip proof are published in `TRAINING_BENCHMARK.json`, `BENCHMARK.md`, and `README.md`. |
+| Q — Quality extras | In progress | Execute `BRIEF_RELEASE.md` P2-1 through P2-4 in order, with a full suite after each package. |
 | H — Hardware readiness | Unblocked; scheduled after Q | Documents and loopback-safe tooling only; no hardware access is authorized. |
 
-`TRAINING ALPHA (STATISTICAL)`, `RELEASE READY`, and `T4 COMPLETE` have been reached.
+`TRAINING ALPHA (STATISTICAL)`, `RELEASE READY`, `T4 COMPLETE`, and `T5 COMPLETE` have been reached.
 
 ## Current local evidence
 
@@ -230,6 +242,8 @@ sampler, and canonical step-state identity for both modes. See
 | `.cache/training/t3b/parity-evaluation.json` | JSON | SHA-256 `1e337f0bb87aa66a4270c526dd918bd18807aa6aa5291a59b119780080ea9eca`; derived deterministic gate fails at threshold `0.005` |
 | `.cache/training/t4-resume-lora` | Exact-resume smoke | Evidence SHA-256 `44325aa73c012d5b9dfb5499a549eeb689b90c64ebd07b137ee024cefa797b57`; 100 vs 50+resume has zero parameter/loss/metric drift and exact optimizer/draw/sampler/state identity; both exports finite |
 | `.cache/training/t4-resume-full-v2` | Exact-resume smoke | Evidence SHA-256 `2c46c621a08b59584701b1bc2171690cfc03c7a116e41d4e4fff35f217699748`; 155 fp32 master tensors, zero parameter/loss/metric drift, exact continuation state, and finite 500-tensor exports |
+| `TRAINING_BENCHMARK.json` | Tracked public record | SHA-256 `bca3ad9d0c2285fa70f4083885a6a6708e8c9d98b6c999d4cabd87b061cef07a`; four measured cells and mechanically verified derivations |
+| `.cache/training/t5-benchmark.json` | Full timing evidence | SHA-256 `7112806471e55e55d98ae101bc2af8172c2cc18f01b3e0c2c0646446adba9423`; clean protocol commit, raw synchronized timings, environment, idle declaration, and source hashes |
 | `.cache/hf` | 3,498,900 KiB | repository-local pinned source/dataset cache; unchanged by P0-3 cleanup |
 | `.cache/smolvla_mlx` | 52,764,872 KiB | post-P0-3 native cache; converted production weights retained and no cleanup candidates remain |
 | `dist/` | 4 artifacts | One sdist plus CPython 3.11/3.12/3.13 `macosx_14_0_arm64` wheels; exact hashes in `DIST_MANIFEST.md` |

@@ -2188,3 +2188,34 @@
 - No upload, hardware, robot directory, or serial port was used. The original
   T3 failure remains byte-identical at SHA-256
   `d6654131c4acf86de13206f210f1ea1a82e3aad18871e5b64428bdf1dbeed7c6`.
+
+## 2026-09-02 — Stage T5 native training documentation and benchmark complete
+
+- Froze the native training benchmark implementation and four-cell protocol in
+  clean commit `0d897449b06d114d536756f2ed6850b52fd5bda4`: expert-only LoRA/full
+  reference trainables crossed with bf16/fp32 base storage, effective batch
+  eight, 3 excluded warmups, 10 measured updates, 3,000-step scheduler horizon,
+  and learning rate `1e-4`. The pre-measurement check at
+  `2026-09-02T04:44:39.438886+00:00` found no trainer, floor worker, test suite,
+  or competing benchmark.
+- The idle Metal medians are 1.145481625/1.093664292 seconds for LoRA
+  bf16/fp32 and 1.195801812/1.167098813 seconds for full bf16/fp32. These equal
+  0.873/0.914 and 0.836/0.857 updates/s. Peak MLX memory is 2.27/3.24 GiB and
+  3.55/4.32 GiB, respectively. The 30,000-update LoRA bf16 optimizer-work
+  projection is 9.55 hours; serialization, export, evaluation, and recording
+  overheads remain explicitly excluded.
+- Added `TRAINING_BENCHMARK.json` (SHA-256
+  `bca3ad9d0c2285fa70f4083885a6a6708e8c9d98b6c999d4cabd87b061cef07a`),
+  a tracked, path-sanitized record whose values and derivations are checked
+  against the complete ignored source artifact. The latter is
+  `.cache/training/t5-benchmark.json`, SHA-256
+  `7112806471e55e55d98ae101bc2af8172c2cc18f01b3e0c2c0646446adba9423`.
+- `BENCHMARK.md` publishes the full matrix and methodology. `README.md` now
+  gives an exact local record → overnight native train/resume → morning predict
+  workflow, honest M5 Pro budgets, the full-mode alternative, and the measured
+  Torch round-trip proof. Tests mechanically trace every documented benchmark
+  number to the tracked JSON record.
+- The complete exact T5 repository suite passes **613/613 tests in 520.69
+  seconds**. No upload, hardware, robot directory, or serial port was used. The
+  original T3 failure remains byte-identical at SHA-256
+  `d6654131c4acf86de13206f210f1ea1a82e3aad18871e5b64428bdf1dbeed7c6`.

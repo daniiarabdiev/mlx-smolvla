@@ -149,7 +149,74 @@ statistical gate. The known Vision and Connector module discrepancies remain
 documented without changing their thresholds; full methodology and both mode
 tables are in [BENCHMARK.md](BENCHMARK.md).
 
-## Run your own fine-tune
+## Fine-tune on your Mac
+
+The practical loop is: record during the day, fine-tune locally overnight,
+then load the exported checkpoint in the morning. Recording still belongs to
+your operator-reviewed LeRobot hardware configuration; this repository does
+not discover ports or drive a robot. Keep the recording local with LeRobot
+0.6.1's explicit upload switch:
+
+```bash
+uv sync --extra train
+lerobot-record \
+  --config_path=record_config.yaml \
+  --dataset.repo_id=local/overnight \
+  --dataset.root=.cache/hf/datasets/overnight \
+  --dataset.push_to_hub=false
+```
+
+For the recommended memory-efficient native run, point the trainer at that
+local LeRobot dataset:
+
+```bash
+smolvla-mlx train .cache/hf/datasets/overnight \
+  --lora \
+  --dtype bfloat16 \
+  --steps 30000 \
+  --batch-size 8 \
+  --lr 1e-4 \
+  --checkpoint-every 100 \
+  --output .cache/training/overnight
+```
+
+Metrics stream to `metrics.csv`; checkpoints are atomic and only the newest
+three are retained. If the process stops, run the same command with `--resume`:
+
+```bash
+smolvla-mlx train .cache/hf/datasets/overnight \
+  --lora --dtype bfloat16 --steps 30000 --batch-size 8 --lr 1e-4 \
+  --checkpoint-every 100 --output .cache/training/overnight --resume
+```
+
+In the morning, validate the complete local export on a compatible saved
+observation before using the trusted loopback server:
+
+```bash
+smolvla-mlx predict \
+  --model .cache/training/overnight/export \
+  --observation tests/golden/sample_000 \
+  --dtype bfloat16 \
+  --execution-mode production
+```
+
+On the measured M5 Pro, effective-batch-8 LoRA bf16 runs at 0.873 updates/s,
+or 19.09 minutes per 1,000 updates; 30,000 updates project to 9.55 hours of
+optimizer work. Checkpoint/export overhead is additional. Full mode is also
+available with `--full`; its bf16 measurement is 0.836 updates/s and 3.55 GiB
+peak MLX memory versus 2.27 GiB for LoRA. The complete four-cell bf16/fp32
+matrix and methodology are in [BENCHMARK.md](BENCHMARK.md), backed by committed
+[TRAINING_BENCHMARK.json](TRAINING_BENCHMARK.json).
+
+The round-trip proof is not just a private adapter format: the T3B MLX-trained
+export loaded in the pinned Torch/LeRobot reference and produced a held-out MAE
+ratio of 0.9999447392, inside the fixed `[0.95, 1.05]` gate. T4's LoRA and full
+smokes each exported the same standard 500-tensor / 450,046,176-parameter
+LeRobot layout, reloaded it through the public MLX policy, and emitted a finite
+action. Exact-resume evidence and artifact hashes are in
+[TRAINING_UX.md](TRAINING_UX.md).
+
+## Standard GPU fine-tune alternative
 
 Fine-tune with standard LeRobot 0.6.1 on a GPU machine, then copy the saved
 checkpoint directory to the Mac. This is LeRobot/PyTorch training; it is

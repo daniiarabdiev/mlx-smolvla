@@ -1,0 +1,128 @@
+{
+  "artifact_type": "smolvla-mlx-training-benchmark-public-record",
+  "cells": [
+    {
+      "batch_size": 8,
+      "dtype": "bfloat16",
+      "mean_update_seconds": 1.1460693874047139,
+      "median_update_seconds": 1.1454816250043223,
+      "mode": "lora",
+      "p95_update_seconds": 1.1504227872064803,
+      "peak_memory_bytes": 2440959739,
+      "peak_memory_gib": 2.2733209086582065,
+      "projected_3000_minutes": 57.27408125021611,
+      "projected_30000_hours": 9.545680208369352,
+      "steps_per_second": 0.8729952346430931,
+      "trainable_scalar_count": 1708032,
+      "trainable_tensor_count": 224,
+      "wall_minutes_per_1000_steps": 19.091360416738706,
+      "wall_seconds_per_1000_steps": 1145.4816250043223
+    },
+    {
+      "batch_size": 8,
+      "dtype": "float32",
+      "mean_update_seconds": 1.094375320801919,
+      "median_update_seconds": 1.0936642915039556,
+      "mode": "lora",
+      "p95_update_seconds": 1.0984460436033259,
+      "peak_memory_bytes": 3474467731,
+      "peak_memory_gib": 3.23585023265332,
+      "projected_3000_minutes": 54.68321457519778,
+      "projected_30000_hours": 9.113869095866298,
+      "steps_per_second": 0.9143573652065088,
+      "trainable_scalar_count": 1708032,
+      "trainable_tensor_count": 224,
+      "wall_minutes_per_1000_steps": 18.227738191732595,
+      "wall_seconds_per_1000_steps": 1093.6642915039556
+    },
+    {
+      "batch_size": 8,
+      "dtype": "bfloat16",
+      "mean_update_seconds": 1.1962949582011788,
+      "median_update_seconds": 1.1958018119985354,
+      "mode": "full",
+      "p95_update_seconds": 1.2036794526065933,
+      "peak_memory_bytes": 3809394683,
+      "peak_memory_gib": 3.5477752638980746,
+      "projected_3000_minutes": 59.79009059992677,
+      "projected_30000_hours": 9.965015099987795,
+      "steps_per_second": 0.8362589770028085,
+      "trainable_scalar_count": 99880992,
+      "trainable_tensor_count": 155,
+      "wall_minutes_per_1000_steps": 19.93003019997559,
+      "wall_seconds_per_1000_steps": 1195.8018119985354
+    },
+    {
+      "batch_size": 8,
+      "dtype": "float32",
+      "mean_update_seconds": 1.167326487399987,
+      "median_update_seconds": 1.167098812504264,
+      "mode": "full",
+      "p95_update_seconds": 1.174296476899326,
+      "peak_memory_bytes": 4643582963,
+      "peak_memory_gib": 4.324673640541732,
+      "projected_3000_minutes": 58.3549406252132,
+      "projected_30000_hours": 9.725823437535534,
+      "steps_per_second": 0.856825479801734,
+      "trainable_scalar_count": 99880992,
+      "trainable_tensor_count": 155,
+      "wall_minutes_per_1000_steps": 19.451646875071066,
+      "wall_seconds_per_1000_steps": 1167.098812504264
+    }
+  ],
+  "classification": "idle-machine-training-performance",
+  "derivations": {
+    "peak_memory_gib": "peak_memory_bytes / 1073741824",
+    "projected_3000_minutes": "median_update_seconds * 3000 / 60",
+    "projected_30000_hours": "median_update_seconds * 30000 / 3600",
+    "steps_per_second": "1 / median_update_seconds",
+    "wall_minutes_per_1000_steps": "median_update_seconds * 1000 / 60",
+    "wall_seconds_per_1000_steps": "median_update_seconds * 1000"
+  },
+  "environment": {
+    "cpu": "Apple M5 Pro",
+    "lerobot": "0.6.1",
+    "machine": "arm64",
+    "macos": "26.6.2",
+    "mlx": "0.32.2",
+    "python": "3.12.13",
+    "torch": "2.11.0",
+    "unified_memory_bytes": 51539607552
+  },
+  "format_version": 1,
+  "idle": {
+    "checked_at_utc": "2026-09-02T04:44:39.438886+00:00",
+    "matching_processes": [],
+    "verified": true
+  },
+  "protocol": {
+    "batch_size": 8,
+    "dtypes": [
+      "bfloat16",
+      "float32"
+    ],
+    "learning_rate": 0.0001,
+    "measured_updates": 10,
+    "modes": [
+      "lora",
+      "full"
+    ],
+    "training_horizon": 3000,
+    "warmup_updates": 3
+  },
+  "source_artifact": {
+    "file_sha256": "7112806471e55e55d98ae101bc2af8172c2cc18f01b3e0c2c0646446adba9423",
+    "git_commit": "0d897449b06d114d536756f2ed6850b52fd5bda4",
+    "report_sha256": "024f341b9af737681ef40e8fcb484257bf2486c9c3ff0231f12769d907700828"
+  },
+  "source_sha256": {
+    "scripts/benchmark_training.py": "eb94e3837bb78b8f154609c559421dfa301656d9f255a36aee1460e442e03170",
+    "training/benchmark.py": "bfdcbce03622f212f9c7f8a6fc2f987a86bbe02afef96bfc31457e6dc6d127f5",
+    "training/dataset.py": "fa33e9de62fa4b51613d31ad7dd1807c4553412664dfe99ccba1381bce952c66",
+    "training/finetune.py": "0ff116e73b6f00d518943e90d33335ea6cbbb5e866630778e88ac864229db52c",
+    "training/lora.py": "3f325ee3886e41229f1a4de8e66cf2091aede1badeafc447eedb9bad2643e90c",
+    "training/model.py": "5267f8f26bc977dbaf3b70f424ed50b4d6499db6b302ed2d4975e82c07300165",
+    "training/optimizer.py": "4295957e210862707641454571d9a3961d26a369802b1153fa28fd42e881aaa4",
+    "training/ux.py": "1fe8fd45fcecf35f2e4d1f1304e9095392065b836047d42a0ab32239e81c1c58"
+  }
+}

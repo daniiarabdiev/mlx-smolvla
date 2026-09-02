@@ -46,3 +46,40 @@ Metal fp32 does not satisfy the strict deterministic contract; this is a recorde
 | bfloat16 | 130.44 | 131.25 | 4.41 | 47.98 | 11.00 | 67.10 | 2.44 |
 
 A 50-action chunk represents about 1.67 seconds of motion at 30 fps. The latency table is model-only and excludes capture, transport, and actuation. The original under-200-ms bf16 target remains a target, not a correctness gate.
+
+## Native training performance (Metal)
+
+The Stage T5 protocol measures one optimizer update over an effective batch of
+eight real samples. Model/dataset construction is excluded. Each cell uses
+three excluded warmups followed by ten synchronized measured updates with the
+same 3,000-step scheduler horizon and `1e-4` learning rate. The four cells ran
+sequentially on an otherwise idle machine; the pre-measurement process check at
+`2026-09-02T04:44:39.438886+00:00` found no trainer, floor worker, test suite,
+or competing benchmark.
+
+| Training mode | Base storage | Median update s | p95 update s | Steps/s | Minutes / 1k steps | Projected 3k minutes | Peak MLX GiB |
+| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| Expert-only LoRA | bf16 | 1.145 | 1.150 | 0.873 | 19.09 | 57.27 | 2.27 |
+| Expert-only LoRA | fp32 | 1.094 | 1.098 | 0.914 | 18.23 | 54.68 | 3.24 |
+| Full reference trainable set | bf16 | 1.196 | 1.204 | 0.836 | 19.93 | 59.79 | 3.55 |
+| Full reference trainable set | fp32 | 1.167 | 1.174 | 0.857 | 19.45 | 58.35 | 4.32 |
+
+Here “full” means the complete LeRobot-default trainable policy—state
+projection plus action expert—not the frozen vision/language backbone. Both
+modes use fp32 master trainables; “base storage” controls the remaining model
+weights. On this machine fp32 was 2.4–4.7% faster, while bf16 saved 0.78 GiB in
+full mode and 0.96 GiB in LoRA mode. Those are measured outcomes, not general
+claims that fp32 is always faster.
+
+The per-1k and 3k figures are median-update projections and exclude checkpoint
+serialization, final 500-tensor export, evaluation, data recording, and robot
+I/O. A 30,000-update overnight LoRA bf16 run projects to 9.55 hours of optimizer
+work before those overheads.
+
+Every value above is copied or mechanically derived from the committed
+[TRAINING_BENCHMARK.json](TRAINING_BENCHMARK.json). Its full ignored source
+artifact is `.cache/training/t5-benchmark.json`, SHA-256
+`7112806471e55e55d98ae101bc2af8172c2cc18f01b3e0c2c0646446adba9423`;
+it binds clean protocol commit `0d897449b06d114d536756f2ed6850b52fd5bda4`,
+the individual synchronized durations, environment, idle declaration, and
+eight implementation hashes.
