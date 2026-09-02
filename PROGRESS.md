@@ -1744,3 +1744,46 @@
   no training or self-consistency worker was active.
 - No T3B floor, marker, MLX inference, or Torch/MLX comparison existed when
   these implementation bytes and tests were finalized.
+
+## 2026-09-02 — T3B prospective self-consistency floor frozen
+
+- Machine-state declaration: the 3,000-step trainer had exited, the 544-test
+  verification run had exited, and process inspection showed no training,
+  self-consistency, benchmark, or pytest process before the floor began. No
+  timing measurement, benchmark, training job, or MLX comparison ran while the
+  floor workers were active.
+- Command: `uv run --extra reference python
+  scripts/compute_self_consistency_floor.py --checkpoint
+  .cache/training/t3b/export --evaluation-dir
+  .cache/training/t3-evaluation --cache-dir .cache/hf --work-dir
+  .cache/training/t3b/self-consistency --output
+  .cache/training/t3b/floor.json --purpose prospective_gate --max-threads 18`.
+  All nine raw variants completed and the report was installed atomically.
+- Floor path:
+  `/Users/dan/Desktop/workshop/robotics-mlx-contrib/.cache/training/t3b/floor.json`.
+  SHA-256:
+  `28d83926a70e507671bfd694e032f81b71093d475075aad627b3c24c5b334efc`.
+  Embedded creation: `2026-09-02T00:38:00.730626+00:00`,
+  `created_at_ns=1788309480730626000`; actual
+  `mtime_ns=1788309480735640183`.
+- Reconstructed 18-file raw bundle SHA-256:
+  `31ce3db6619294432742b38214132267cfecf735dc0ce1d98199bbd223e8a889`.
+  Combined input SHA-256:
+  `3688cdad4f40724fa82765bb1c2ba89369aed056e29cecb8b1c074d6069939bb`;
+  implementation tree:
+  `2e279c3feb3c2f72db4338a30fa16640e0f6dcd01c5efe75580b548aea5cf214`.
+- Checkpoint tree SHA-256:
+  `67da4777b1fc24ad8a7b186feaa781c4a80d745aee64e00fe9a8ea50543e5354`;
+  merged model SHA-256:
+  `858704fa572501d9e5a048076f8da692693b90c463feda29201a72f3f0b18883`.
+  Run/config bindings remain
+  `run.json=2af527bea4691862e89eb6daa674e6d99309668ac45f57397786976aab3c301e`,
+  `run_config=09895b216aff79ea3e26294aa4ef0484e5d316ee88eef7733782f95a9da62350`,
+  and `launch.json=95f765137fe0f70c034561cf96e7f845f18ab31285f2051c945264f3ccdbea81`.
+- Result: `F(C)=2.467632293701172e-05` and
+  `F64(C)=2.2446572480461224e-05`. Therefore `3F(C)` is
+  `7.402896881103516e-05`, and the prospectively fixed normalized-action gate
+  is the unchanged fallback `max(0.005, 3F)=0.005`.
+- This entry was written before the start marker and before any T3B MLX
+  inference or MLX-versus-PyTorch comparison. At this point neither
+  `comparison-start.json`, `outcome.json`, nor `comparison.json` exists.
