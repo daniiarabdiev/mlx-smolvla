@@ -1501,6 +1501,7 @@ def test_vendor_factory_rejects_wrong_checkout_before_import_or_device_access(
 
 def test_vendor_factory_uses_manual_read_only_connect_path(tmp_path: Path) -> None:
     client = _hiwonder_client()
+    camera_connect_order: list[str] = []
     source = tmp_path / "src/lerobot"
     (source / "robots/so_follower").mkdir(parents=True)
     (source / "motors/hiwonder").mkdir(parents=True)
@@ -1518,12 +1519,14 @@ def test_vendor_factory_uses_manual_read_only_connect_path(tmp_path: Path) -> No
             self.is_connected = True
 
     class Camera(_FakeCamera):
-        def __init__(self) -> None:
+        def __init__(self, name: str) -> None:
             super().__init__()
+            self.name = name
             self.is_connected = False
             self.connect_calls = 0
 
         def connect(self) -> None:
+            camera_connect_order.append(self.name)
             self.connect_calls += 1
             self.is_connected = True
 
@@ -1540,7 +1543,7 @@ def test_vendor_factory_uses_manual_read_only_connect_path(tmp_path: Path) -> No
             self.config = config
             self.bus = Bus()
             self.cameras = {
-                name: Camera() for name in config.kwargs["cameras"]
+                name: Camera(name) for name in config.kwargs["cameras"]
             }
             self.calibration = {name: object() for name in JOINTS}
             self.is_calibrated = True
@@ -1566,6 +1569,7 @@ def test_vendor_factory_uses_manual_read_only_connect_path(tmp_path: Path) -> No
     assert adapter.robot.bus.enable_calls == 0
     assert adapter.robot.bus.disable_calls == 0
     assert [camera.connect_calls for camera in adapter.robot.cameras.values()] == [1, 1]
+    assert camera_connect_order == ["top_camera", "wrist_camera"]
 
 
 def test_vendor_adapter_derives_envelope_from_loaded_calibration() -> None:
