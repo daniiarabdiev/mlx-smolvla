@@ -1,12 +1,14 @@
 # Hiwonder SO-101 preflight evidence
 
-Date: 2026-09-02
+Date: 2026-09-02; follow-up: 2026-09-03
 
 Host: Apple M5 Pro MacBook Pro (`Mac17,8`), 48 GB, macOS 26.6.2
 
 Runtime: Python 3.12.13, MLX 0.32.2, `Device(gpu, 0)`
 
-Hardware-client source: `404467190aeceea91f58cb98076148ab1aa0c0df`
+Hardware-client source: initial protocol
+`404467190aeceea91f58cb98076148ab1aa0c0df`; dual-camera follow-up
+`fbd34ed9f1bd3da095c5c7ee3bdc15d4f2bf795c`
 
 ## Scope and result
 
@@ -82,6 +84,53 @@ The checkpoint's third slot, `observation.images.camera3`, is supplied by the
 existing empty-camera padding path. Captured frames were reviewed locally and
 were not committed because one contains a bystander.
 
+## 2026-09-03 follow-up
+
+The operator reported another successful manual teleoperation test and
+adjusted the cameras, then requested a complete retry. The setup record already
+confirmed earlier 60 Hz owner-run teleoperation with all joints and the gripper
+working; the follow-up therefore treated device health separately from the
+stricter autonomous-motion gates.
+
+- The follower resolved to its existing role, all six motor IDs responded at
+  12.2-12.6 V with no status alarm, and all six torque bits read zero before
+  and after access. The leader was not opened.
+- A reproducible camera-order defect was isolated: starting the wrist stream
+  first caused the fixed stream to report 15 FPS instead of the requested 30.
+  Starting the fixed stream first allowed both cameras to accept 640x480 at
+  30 FPS. Commit `fbd34ed` implements only that connection-order change and
+  adds a regression test; camera keys and model feature ordering are unchanged.
+- Through the corrected repository client, both fresh 640x480 frames were
+  finite and nonblack. Visual review still failed the motion gate: the wrist
+  view was heavily blurred and too close to identify the task workspace, while
+  the fixed view showed the room but not the complete robot workspace. The
+  private frames remain ignored and untracked.
+- The post-teleoperation pose remained outside the inset start envelope:
+
+| Joint | Present | 10%-inset motion range | Start gate |
+| --- | ---: | ---: | --- |
+| shoulder_pan | 6.593 deg | -44.097 deg-44.097 deg | pass |
+| shoulder_lift | -103.912 deg | -83.833 deg-83.833 deg | **fail** |
+| elbow_flex | 95.780 deg | -77.187 deg-77.187 deg | **fail** |
+| wrist_flex | 49.187 deg | -80.633 deg-80.633 deg | pass |
+| wrist_roll | -1.802 deg | -144.000 deg-144.000 deg | pass |
+| gripper | 15.302 | 10-90 | pass |
+
+- Manual teleoperation restored `Acceleration=254` on all six controllers;
+  the other recorded maximum/current/torque values remained non-low defaults.
+  This reinforces rather than clears the operator-attested low-profile gate.
+- The corrected client completed another stats-active 60-second no-motion run:
+
+| Result | Observations / chunks | Camera sample FPS | Observation-to-chunk median / p95 | Clamps | Rate limits | Held invalid chunks | Timeouts |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| duration cap | 294 / 293 | 4.895 | 152.080 / 154.139 ms | 639 | 1,443 | 1 | 0 |
+
+Server receive-to-chunk latency was 149.774 ms median / 151.755 ms p95;
+inference was 149.379 / 151.239 ms. No motor or torque write occurred. The
+ignored client and server JSONL SHA-256 values are respectively
+`4804d38aca9c02d85a726bb7a2314f59c8370f1c9ad300fb5d153b6c00f13117`
+and `707fc290ace9cf4788f5e5001c9b86ec7a46a326c1b09c793063a0b0660b780d`.
+
 ## Server and model mapping
 
 - The native server listened only on `127.0.0.1:8080` and reported MLX GPU as
@@ -126,9 +175,10 @@ was identical before and after access:
 
 ## Hard blockers before motion
 
-1. Re-aim and secure both cameras so the wrist view is unobstructed and the
-   fixed view contains the complete robot workspace; repeat the concurrent
-   capture check.
+1. Re-aim and secure both cameras again: the adjusted wrist view is nonblack
+   but remains blurred/too close, and the adjusted fixed view still omits the
+   robot workspace. Repeat visual review through the corrected dual-camera
+   client.
 2. With torque disabled, manually place the lift and elbow inside their
    10%-inset ranges, preferably near the calibrated neutral pose; repeat the
    position readback.

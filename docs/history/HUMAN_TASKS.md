@@ -2,8 +2,10 @@
 
 ## Open — complete the hardware gate before announcing v0.1.0
 
-- The follower/camera preflight and two 60-second no-motion loops completed on
-  2026-09-02. First clear the physical prerequisites below, then complete the
+- The follower/camera preflight and three 60-second no-motion loops completed
+  across 2026-09-02 and 2026-09-03. The latest run includes the corrected
+  fixed-before-wrist camera startup order. First clear the physical
+  prerequisites below, then complete the
   single-action and bounded-continuous stages. Only after
   `hardware/FIRST_CONTACT.md` contains passing results for all three graduated
   modes may the release candidate claim hardware motion support, receive the
@@ -16,7 +18,9 @@
   the fixed camera at the complete arm workspace. Remove bystanders from both
   views. Then repeat the concurrent five-second camera check from
   [`../../hardware/PREFLIGHT.md`](../../hardware/PREFLIGHT.md); a nonblack but
-  obstructed frame does not pass.
+  obstructed frame does not pass. The 2026-09-03 adjustment made both streams
+  nonblack, but visual review still found the wrist view blurred/too close and
+  the fixed view outside the robot workspace.
 - With torque disabled, manually place `shoulder_lift` and `elbow_flex` near
   their calibrated neutral positions. At minimum, readback must be inside
   −83.833°–83.833° for lift and −77.187°–77.187° for elbow. Do not recalibrate

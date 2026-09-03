@@ -3,10 +3,11 @@
 **Status: no-motion protocol complete; physical motion blocked.**
 
 The operator supplied `ARM SESSION CONFIRMED` in the live task on 2026-09-02.
-The follower-only serial path, both cameras, native MLX server, and two
-60-second no-motion loops were exercised. No torque-enable or goal-position
-write occurred, and all six torque bits read zero after the runs. The leader
-device was detected but never opened.
+The follower-only serial path, both cameras, native MLX server, and three
+60-second no-motion loops were exercised across the original and 2026-09-03
+follow-up sessions. No torque-enable or goal-position write occurred, and all
+six torque bits read zero after the runs. The leader device was detected but
+never opened.
 
 This is real-hardware protocol evidence, but it is not evidence that the
 project drives a physical SO-101: neither the single-action nor bounded-
@@ -34,6 +35,7 @@ action per chunk, a 500 ms action watchdog, and a fixed 60-second client cap.
 | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
 | raw `lerobot/smolvla_base` | duration cap | 295 / 295 | 4.914 | 149.313 / 151.139 ms | 14 | 84 | 281 | 0 |
 | same weights + audited SO-101 stats | duration cap | 295 / 294 | 4.915 | 149.746 / 152.502 ms | 785 | 1,318 | 12 | 0 |
+| stats-active after dual-camera startup fix | duration cap | 294 / 293 | 4.895 | 152.080 / 154.139 ms | 639 | 1,443 | 1 | 0 |
 
 The raw base checkpoint's high rejection count is explained by its ineffective
 saved physical statistics: its stored keys do not bind to
@@ -53,10 +55,18 @@ inference; p95 values were 150.086 ms and 149.713 ms. Client and server logs
 are private, no-clobber JSONL under ignored `.cache/hardware/`; hashes are in
 [`PREFLIGHT.md`](PREFLIGHT.md).
 
+The 2026-09-03 follow-up isolated an order-dependent macOS UVC negotiation
+failure. Connecting the fixed camera before the wrist camera preserved both
+model inputs and allowed the real repository client to open both streams at
+640x480/30 FPS. The follow-up server receive-to-chunk median/p95 was
+149.774/151.755 ms and inference median/p95 was 149.379/151.239 ms. The
+regression-tested fix is source commit `fbd34ed`.
+
 ## Anomalies and blockers
 
-- Both camera streams are live, but the wrist image is obstructed/too close and
-  the fixed camera does not show the robot workspace.
+- Both camera streams now open together and return nonblack frames. The wrist
+  view remains blurred/too close and the fixed view still does not show the
+  complete robot workspace.
 - `shoulder_lift` and `elbow_flex` are near calibrated endpoints and outside
   the required 10%-inset start envelope.
 - Controller torque/current/velocity/acceleration readbacks have not been

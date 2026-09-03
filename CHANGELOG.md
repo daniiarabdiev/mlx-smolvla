@@ -20,6 +20,12 @@ Initial public release candidate.
 - Standard 500-tensor LeRobot checkpoint export, PyTorch/LeRobot round-trip
   loading, exact-resume smokes, and committed training/correctness evidence.
 
+### Fixed
+
+- Stabilized simultaneous Hiwonder dual-camera startup on macOS by connecting
+  the fixed view before the wrist view, preserving the existing feature names,
+  indices, and 640x480/30 FPS contract.
+
 ### Known limitations
 
 - Connected Hiwonder SO-101 state/camera capture and two 60-second no-motion
