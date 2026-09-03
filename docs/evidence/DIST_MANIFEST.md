@@ -48,7 +48,11 @@ declares the Python-3.12+ pinned `hardware` extra. No wheel contains the retired
 `platform MACOS` and `minos 14.0` for every packaged native extension.
 Archive inspection also confirms that packaged hardware clients connect the
 fixed camera before the wrist camera; public camera keys and checkpoint mapping
-remain unchanged.
+remain unchanged. A later device-identity correction established that this
+ordering was not required: both startup orders passed with the two intended
+UVC cameras, while the earlier apparent order failure involved the built-in
+Mac camera under the wrong role. These bytes remain a local, untagged
+candidate and are not hardware-motion release artifacts.
 
 `twine check` passed the sdist and all three wheels without warnings.
 

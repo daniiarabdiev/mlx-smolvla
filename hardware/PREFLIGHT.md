@@ -8,7 +8,8 @@ Runtime: Python 3.12.13, MLX 0.32.2, `Device(gpu, 0)`
 
 Hardware-client source: initial protocol
 `404467190aeceea91f58cb98076148ab1aa0c0df`; dual-camera follow-up
-`fbd34ed9f1bd3da095c5c7ee3bdc15d4f2bf795c`
+`fbd34ed9f1bd3da095c5c7ee3bdc15d4f2bf795c`; camera-identity recheck
+`61b3cf2edd40af25c46aac0f8e30c7c2ebd2c0fa`
 
 ## Scope and result
 
@@ -17,11 +18,12 @@ the follower-only read path, both cameras, and the graduated protocol. Serial
 identifiers and private checkout paths remain only in ignored local telemetry;
 they are redacted from this public report.
 
-Read-only serial/calibration preflight and three 60-second no-motion loops
+Read-only serial/calibration preflight and four 60-second no-motion loops
 completed across the original and follow-up sessions. No torque-enable or
-goal-position write was issued. Motion remains blocked because the camera
-views are not operationally framed, the start pose is outside the tightened
-envelope, and no operator-verified low hardware-limit profile exists.
+goal-position write was issued. The corrected camera-identity recheck closed
+the camera blocker. Motion remains blocked because the start pose is outside
+the tightened envelope, no operator-verified low hardware-limit profile
+exists, and the physical motion checklist has not been attested.
 
 ## Serial and calibration
 
@@ -71,20 +73,28 @@ operator must establish low values using a known-good Hiwonder procedure and
 provide a JSON profile containing the exact expected readback. The client
 checks all nine registers and torque-off before it can enable torque.
 
-## Cameras
+## Original camera capture (role labels superseded)
+
+The measurements below are retained as the original audit record. The second
+row was incorrectly labeled as the fixed camera; later visual review confirmed
+that index 2 was the built-in Mac camera. See the camera-identity correction
+below for the current verified roles.
 
 Both cameras were captured concurrently for five seconds at 640×480.
 
 | Index / role | Frames | Elapsed | Sustained FPS | Nonblack | Visual verdict |
 | --- | ---: | ---: | ---: | ---: | --- |
-| 1 / wrist → `camera1` | 43 | 5.0145 s | 8.575 | 43/43 | live, but obstructed/too close to identify the workspace |
-| 2 / fixed → `camera2` | 150 | 5.0054 s | 29.968 | 150/150 | live, but aimed at the room rather than the robot workspace |
+| 1 / wrist candidate | 43 | 5.0145 s | 8.575 | 43/43 | close desk view |
+| 2 / built-in Mac, incorrectly labeled fixed | 150 | 5.0054 s | 29.968 | 150/150 | room-facing built-in view; excluded |
 
 The checkpoint's third slot, `observation.images.camera3`, is supplied by the
 existing empty-camera padding path. Captured frames were reviewed locally and
 were not committed because one contains a bystander.
 
 ## 2026-09-03 follow-up
+
+This subsection preserves the first follow-up diagnosis for auditability. Its
+camera-order conclusion was disproved by the later identity recheck below.
 
 The operator reported another successful manual teleoperation test and
 adjusted the cameras, then requested a complete retry. The setup record already
@@ -131,6 +141,45 @@ ignored client and server JSONL SHA-256 values are respectively
 `4804d38aca9c02d85a726bb7a2314f59c8370f1c9ad300fb5d153b6c00f13117`
 and `707fc290ace9cf4788f5e5001c9b86ec7a46a326c1b09c793063a0b0660b780d`.
 
+## 2026-09-03 camera-identity correction
+
+The operator recognized that the purported fixed-camera frame was the
+MacBook's built-in camera. Fresh labeled captures from every live OpenCV index
+confirmed the error. In the current enumeration, index 0 is the fixed view of
+the task surface, index 1 is the wrist view pointed down at the desk, and index
+2 is the built-in Mac camera and must be excluded. These numeric indices are
+session-local and must be visually revalidated after device changes.
+
+- The working `robot teleops` command validates the leader/follower motor path
+  but does not instantiate any camera. Its separate `robot teleop-cams` command
+  instantiates only the configured wrist camera.
+- With the two verified UVC views, both wrist-first and fixed-first startup
+  passed three of three trials at 640x480/30. The earlier 15 FPS failure came
+  from opening the built-in camera under the wrong role, so it is not evidence
+  of a UVC startup-order defect.
+- A concurrent five-second capture produced 101/101 nonblack fixed frames in
+  5.014055 seconds (20.143 sustained FPS) and 56/56 nonblack wrist frames in
+  5.081585 seconds (11.020 sustained FPS). Both devices negotiated
+  640x480/30; the control loop samples at 5 FPS.
+- The fixed frame contains the robot task surface. The wrist frame is an
+  unobstructed close desk view and is soft because the parked camera is near
+  its minimum focus distance; it is not physically covered. Together with the
+  operator's framing confirmation, this closes the camera preflight blocker.
+- The unchanged repository client then completed a fourth stats-active
+  60-second no-motion run with the corrected roles: 293 observations, 292
+  chunks, 4.876 sampled FPS, 148.907/150.512 ms client
+  observation-to-chunk median/p95, 15 held out-of-domain chunks, and zero
+  timeouts. Server receive-to-chunk median/p95 was 146.642/148.338 ms and
+  inference was 146.239/147.978 ms. No motion latency was recorded because no
+  actuator or torque write occurred; an independent post-run read found all
+  six torque bits zero.
+- The ignored corrected client and server JSONL hash respectively to
+  `dd25a59cf95e631d9313192e6c5e26878039c432ca207f8dc1a43dafad095e67`
+  and `6a80220e9f92386ee334b403ae0664e55039c4935f734db5fedeba20a7908c9b`.
+  The fixed and wrist evidence frames hash respectively to
+  `dcb192c435d045fc5d3652a855668825bce621f9bc276d835af20704cebdfac1`
+  and `d49e349b5a26e314e1e62d79090c3c6a71b570b0331878d4f25404437b784dd3`.
+
 ## Server and model mapping
 
 - The native server listened only on `127.0.0.1:8080` and reported MLX GPU as
@@ -166,6 +215,8 @@ payload.
 | `stage-a-no-motion-v3-server.jsonl` | `e8daa487f27243b20c2171e609d5039e70b74560a03b791eef409c13bb7515a0` |
 | `stage-a-stats-no-motion-client.jsonl` | `15e6aa28dd9e7a617aef8605e73a71a43cf3ff9f6dd326de127870bf6d6c14e3` |
 | `stage-a-stats-no-motion-server.jsonl` | `6ccbbded994ef9196ebb6d5eae957f980e11a2cbd699fcdfd3d1eb35b988f2be` |
+| `camera-remap-no-motion-v1-client.jsonl` | `dd25a59cf95e631d9313192e6c5e26878039c432ca207f8dc1a43dafad095e67` |
+| `camera-remap-no-motion-v1-server.jsonl` | `6a80220e9f92386ee334b403ae0664e55039c4935f734db5fedeba20a7908c9b` |
 
 The vendor checkout remained at commit
 `a24998f7ba3c77ea445b48c92ad15c14a50e492a`. Its pre-existing dirty files were
@@ -175,15 +226,11 @@ was identical before and after access:
 
 ## Hard blockers before motion
 
-1. Re-aim and secure both cameras again: the adjusted wrist view is nonblack
-   but remains blurred/too close, and the adjusted fixed view still omits the
-   robot workspace. Repeat visual review through the corrected dual-camera
-   client.
-2. With torque disabled, manually place the lift and elbow inside their
+1. With torque disabled, manually place the lift and elbow inside their
    10%-inset ranges, preferably near the calibrated neutral pose; repeat the
    position readback.
-3. Establish and attest low controller torque/current/velocity/acceleration
+2. Establish and attest low controller torque/current/velocity/acceleration
    limits using an operator-known procedure; capture their exact readback in a
    safety-profile JSON file.
-4. Clear the motion envelope, secure the base, and keep a hand on the physical
+3. Clear the motion envelope, secure the base, and keep a hand on the physical
    power switch for the entire single-action attempt.

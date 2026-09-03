@@ -2943,3 +2943,41 @@
   neutral-pose, low-profile, checklist, and exact-statement gates. No motion,
   training, floor computation, tolerance change, upload, tag, release, or
   visibility change occurred.
+
+## 2026-09-03 — camera-identity correction and fourth no-motion run
+
+- The operator recognized that the frame labeled as the fixed camera was the
+  MacBook's built-in camera. Fresh labeled captures confirmed the current
+  OpenCV mapping as fixed index 0, wrist index 1, and built-in Mac index 2.
+  Numeric indices are session-local and must be visually checked after device
+  changes.
+- The owner workflow explains why manual teleoperation remained healthy:
+  `robot teleops` opens the leader and follower but no camera, while
+  `robot teleop-cams` opens only the configured wrist camera. The working motor
+  path therefore did not validate the earlier two-camera mapping.
+- With only the two intended UVC views, wrist-first and fixed-first startup
+  each passed three of three 640x480/30 trials. This disproves the earlier
+  startup-order diagnosis; the observed 15 FPS failure involved the built-in
+  camera under the wrong role.
+- The fixed view now contains the task surface. The wrist view is an
+  unobstructed close view pointed at the desk and remains soft at the parked
+  camera's minimum focus distance. The operator confirmed the physical
+  framing, closing the camera blocker.
+- A five-second concurrent check captured 101/101 nonblack fixed frames at
+  20.143 sustained FPS and 56/56 nonblack wrist frames at 11.020 sustained
+  FPS. Both negotiated 640x480/30, above the client's 5 FPS sampling rate.
+- The unchanged client completed a fourth 60-second stats-active no-motion
+  loop with the corrected role mapping: 293 observations, 292 chunks, 4.876
+  sampled FPS, 148.907/150.512 ms client observation-to-chunk median/p95, 15
+  held out-of-domain chunks, and zero timeouts. Server receive-to-chunk was
+  146.642/148.338 ms and inference was 146.239/147.978 ms. No actuator or
+  torque write occurred, and an independent post-run read found all six torque
+  bits zero.
+- Corrected client/server telemetry hashes are
+  `dd25a59cf95e631d9313192e6c5e26878039c432ca207f8dc1a43dafad095e67`
+  and `6a80220e9f92386ee334b403ae0664e55039c4935f734db5fedeba20a7908c9b`.
+  Private frames and telemetry remain ignored and untracked.
+- Motion remains blocked only on the manual neutral pose, exact
+  operator-verified low controller-limit profile, workspace/base/power
+  checklist, and the exact in-session motion-prerequisite statement. No
+  motion, upload, tag, release, or visibility change occurred.

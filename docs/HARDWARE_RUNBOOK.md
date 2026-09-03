@@ -58,6 +58,22 @@ Check every box before opening the client:
 - [ ] Agree on one low-risk task and one commanded action as the complete first
       episode. No unattended or repeated episode is permitted.
 
+On macOS, OpenCV's numeric camera indices can change when a camera is attached,
+removed, or re-enumerated. Before every hardware session, run the camera finder
+from the same client environment, inspect the saved image from every candidate,
+and assign `WRIST_CAMERA_INDEX` and `FIXED_CAMERA_INDEX` by viewpoint. Never
+copy indices from an earlier run or infer them from list order. Reject the
+built-in Mac camera and Continuity Camera even when either returns a valid,
+nonblack frame:
+
+```bash
+.cache/hardware/client-venv/bin/lerobot-find-cameras opencv
+```
+
+This camera-only check does not open either robot. The wrist image is expected
+to be a close view of the task surface and may be near the camera's minimum
+focus distance when the arm is parked; that is not by itself an obstruction.
+
 The client command below applies a maximum one-public-unit change per step
 (one degree for body joints, one 0–100 unit for the gripper), requests one
 action per chunk, runs at 5 fps, and verifies torque-disabled shutdown. That

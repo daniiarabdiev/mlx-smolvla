@@ -406,8 +406,8 @@ def open_hiwonder_follower(
             raise RuntimeError(
                 "existing follower calibration does not match hardware; do not recalibrate in first contact"
             )
-        # On macOS, these UVC cameras negotiate the requested dual-stream FPS
-        # reliably only when the fixed view starts before the wrist view.
+        # Camera indices are session-local and must be assigned to these roles
+        # by the visual preflight; keep connection order explicit and stable.
         for camera_name in ("top_camera", "wrist_camera"):
             robot.cameras[camera_name].connect()
         adapter.read_observation()

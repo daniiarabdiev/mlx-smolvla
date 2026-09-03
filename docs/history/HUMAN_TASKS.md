@@ -2,25 +2,18 @@
 
 ## Open — complete the hardware gate before announcing v0.1.0
 
-- The follower/camera preflight and three 60-second no-motion loops completed
-  across 2026-09-02 and 2026-09-03. The latest run includes the corrected
-  fixed-before-wrist camera startup order. First clear the physical
-  prerequisites below, then complete the
+- The follower/camera preflight and four 60-second no-motion loops completed
+  across 2026-09-02 and 2026-09-03. The latest run used the corrected
+  session-local camera mapping: fixed index 0 and wrist index
+  1; index 2 was the built-in Mac camera, not the fixed UVC view. First clear
+  the remaining physical prerequisites below, then complete the
   single-action and bounded-continuous stages. Only after
   `hardware/FIRST_CONTACT.md` contains passing results for all three graduated
   modes may the release candidate claim hardware motion support, receive the
   `v0.1.0` tag, or be announced.
 
-## Open — clear the physical prerequisites for one action
+## Open — clear the remaining physical prerequisites for one action
 
-- Power the follower off before touching or repositioning the cameras or arm.
-  Re-aim and secure the wrist camera so its full workspace is visible, and aim
-  the fixed camera at the complete arm workspace. Remove bystanders from both
-  views. Then repeat the concurrent five-second camera check from
-  [`../../hardware/PREFLIGHT.md`](../../hardware/PREFLIGHT.md); a nonblack but
-  obstructed frame does not pass. The 2026-09-03 adjustment made both streams
-  nonblack, but visual review still found the wrist view blurred/too close and
-  the fixed view outside the robot workspace.
 - With torque disabled, manually place `shoulder_lift` and `elbow_flex` near
   their calibrated neutral positions. At minimum, readback must be inside
   −83.833°–83.833° for lift and −77.187°–77.187° for elbow. Do not recalibrate
@@ -51,6 +44,20 @@
 - Then follow only the `--single-action` command in the runbook. Do not run
   `--continuous` until the one-action direction, displacement, speed, gripper,
   cameras, telemetry, return-to-start, and torque-off results are reviewed.
+
+## Done — correct and verify camera role mapping
+
+- **Status:** done on 2026-09-03. The frame previously called the fixed camera
+  was the built-in Mac camera. Fresh labeled captures established the current
+  OpenCV roles as fixed index 0 and wrist index 1; index 2 is excluded.
+- Both intended UVC cameras negotiated 640x480/30 and returned nonblack frames
+  concurrently. The fixed view contains the task surface. The wrist view is
+  pointed at the desk and is soft at its parked close-focus distance, not
+  obstructed. The operator confirmed the framing.
+- The corrected mapping completed a 60-second native MLX no-motion loop with
+  293 observations, 292 chunks, 4.876 sampled FPS, zero timeouts, and all six
+  torque bits zero afterward. Camera indices must still be visually rechecked
+  after device changes as documented in `docs/HARDWARE_RUNBOOK.md`.
 
 ## Open — make the GitHub repository public
 

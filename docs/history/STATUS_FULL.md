@@ -522,3 +522,32 @@ unreached.
   operator-verified low-limit profile, the physical checklist, and the exact
   motion-prerequisite statement in `HUMAN_TASKS.md`. No single action,
   continuous motion, upload, tag, release, or visibility change occurred.
+
+## 2026-09-03 camera-identity correction
+
+This section supersedes only the camera identity, startup-order diagnosis,
+camera blocker, and no-motion counts in the section above. Historical text is
+retained to show how the error was found and corrected.
+
+- Index 2 was the built-in Mac camera, not the fixed UVC view. Fresh visual
+  mapping established the current session's roles as fixed index 0 and wrist
+  index 1. The runbook now requires visual role validation after every device
+  re-enumeration and explicitly rejects built-in and Continuity cameras.
+- With the intended UVC pair, both startup orders passed three of three trials
+  at 640x480/30. The prior 15 FPS/order conclusion is invalid; the existing
+  client worked unchanged when given the corrected indices.
+- The fixed frame contains the task surface. The wrist camera is pointed at
+  the desk and is unobstructed; its parked close view is soft because of focus
+  distance. The operator confirmed the framing, so the camera preflight
+  blocker is closed.
+- The corrected client completed a fourth stats-active 60-second no-motion
+  run: 293 observations, 292 chunks, 4.876 sampled FPS,
+  148.907/150.512 ms client observation-to-chunk median/p95, 15 held invalid
+  chunks, zero timeouts, and zero hardware writes. Server receive-to-chunk was
+  146.642/148.338 ms and inference was 146.239/147.978 ms. All six torque bits
+  read zero independently after shutdown.
+- `NO-MOTION PROTOCOL COMPLETE` remains reached. `PUBLIC RELEASE READY`
+  remains unreached because motion still requires manual neutral placement,
+  an exact operator-verified low-limit profile, the physical checklist, the
+  exact live prerequisite statement, a reviewed single action, and then a
+  bounded continuous run. No upload, tag, release, or visibility change ran.
