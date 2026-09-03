@@ -2,7 +2,7 @@
 
 This manifest records the `mlx-smolvla` 0.1.0 release-candidate artifacts
 built locally from clean, pushed source commit
-`79a97e734afd49981ad09eb08d4877d82c707eea` on 2026-09-03. Nothing was
+`85b97fe3ad2c8ef9d4bcffdc9c0a1a51af87939e` on 2026-09-03. Nothing was
 uploaded. The hardware gate remains open, so no release tag was created.
 
 ## Build environment
@@ -13,13 +13,13 @@ uploaded. The hardware gate remains open, so no release tag was created.
 - Deployment target: `MACOSX_DEPLOYMENT_TARGET=14.0`.
 - Interpreters: repository-local CPython 3.11.15, 3.12.13, and 3.13.14.
 - Build/download cache: repository-local `.cache/uv`.
-- Source: clean detached worktree `.cache/release-mlx-smolvla-79a97e7` at
+- Source: clean detached worktree `.cache/release-mlx-smolvla-85b97fe` at
   the commit above.
 - Output: ignored directory
-  `.cache/release-mlx-smolvla-79a97e7-artifacts`.
+  `.cache/release-mlx-smolvla-85b97fe-artifacts`.
 - The four verified bytes were mirrored into ignored `dist/` for local use.
   The preceding 0.1.0 candidate bytes were moved intact to
-  `.cache/dist-pre-camera-startup-20260903` rather than deleted.
+  `.cache/dist-pre-camera-identity-20260903` rather than deleted.
 
 The sdist was built with `uv build --sdist`; each native wheel used
 `uv build --wheel --python <repository-local-interpreter>`. All four commands
@@ -33,10 +33,10 @@ hardware safety/client modules, and tests; it contains no prebuilt `.so` or
 
 | Artifact | Bytes | SHA-256 | Wheel tag / contents | Project extension `minos` |
 | --- | ---: | --- | --- | ---: |
-| `mlx_smolvla-0.1.0.tar.gz` | 437,863 | `fbe42b6faaac5ae6359bda47dad7eaea1e83a2973ea0e0209802b9509e83a36e` | Source distribution; native extension built during installation | 14.0 in the installation smoke |
-| `mlx_smolvla-0.1.0-cp311-cp311-macosx_14_0_arm64.whl` | 378,202 | `1acc6f85520ebe138c5bfeb52f8b047b624f051120e906928113886705ed0051` | `cp311-cp311-macosx_14_0_arm64`; 73 entries | 14.0 |
-| `mlx_smolvla-0.1.0-cp312-cp312-macosx_14_0_arm64.whl` | 377,207 | `6cb6182bd5d95152404e599a915ef957fa2edf9d60518a817282fc7ee59cb506` | `cp312-cp312-macosx_14_0_arm64`; 73 entries | 14.0 |
-| `mlx_smolvla-0.1.0-cp313-cp313-macosx_14_0_arm64.whl` | 377,247 | `c83ef1f28522f8608d2a175b09069632bcb338dc0a7d74b7c3df6784af792332` | `cp313-cp313-macosx_14_0_arm64`; 73 entries | 14.0 |
+| `mlx_smolvla-0.1.0.tar.gz` | 437,956 | `437028ef81ad2165d21ba0cf2f2f93fce762d0257e5a748918b723fa80a86e4f` | Source distribution; native extension built during installation | 14.0 in the installation smoke |
+| `mlx_smolvla-0.1.0-cp311-cp311-macosx_14_0_arm64.whl` | 378,202 | `2dfb65007af46d66d5e39b699514a7031e4d9532fe30551e07dcefa79c6a3287` | `cp311-cp311-macosx_14_0_arm64`; 73 entries | 14.0 |
+| `mlx_smolvla-0.1.0-cp312-cp312-macosx_14_0_arm64.whl` | 377,206 | `1d9c93448c045fa2a02dc57b69a2bf3006998b856ced80c711bcd1608c40161e` | `cp312-cp312-macosx_14_0_arm64`; 73 entries | 14.0 |
+| `mlx_smolvla-0.1.0-cp313-cp313-macosx_14_0_arm64.whl` | 377,242 | `c8691e33c0fb4b58b89463b50b532d07b4f6621a15744b69c2b59d587b2093f8` | `cp313-cp313-macosx_14_0_arm64`; 73 entries | 14.0 |
 
 Archive inspection found only the canonical `mlx_smolvla/` package path.
 Each wheel declares distribution `mlx-smolvla`, version `0.1.0`,
@@ -46,20 +46,21 @@ hardware-safety/client, and native-extension surfaces are present. Every wheel
 declares the Python-3.12+ pinned `hardware` extra. No wheel contains the retired
 `smolvla_mlx/` package path. `vtool -show-build` independently reports
 `platform MACOS` and `minos 14.0` for every packaged native extension.
-Archive inspection also confirms that packaged hardware clients connect the
-fixed camera before the wrist camera; public camera keys and checkpoint mapping
-remain unchanged. A later device-identity correction established that this
-ordering was not required: both startup orders passed with the two intended
-UVC cameras, while the earlier apparent order failure involved the built-in
-Mac camera under the wrong role. These bytes remain a local, untagged
-candidate and are not hardware-motion release artifacts.
+Archive inspection also confirms that packaged hardware clients retain an
+explicit fixed-before-wrist connection order while documenting that numeric
+camera indices are session-local and must be assigned by visual preflight.
+Public camera keys and checkpoint mapping remain unchanged. Both startup
+orders passed with the two intended UVC cameras; the earlier apparent order
+failure involved the built-in Mac camera under the wrong role. These bytes
+remain a local, untagged candidate and are not hardware-motion release
+artifacts.
 
 `twine check` passed the sdist and all three wheels without warnings.
 
 ## Fresh-environment smoke matrix
 
 Each artifact was installed with dependencies into a new virtual environment.
-Every probe ran from `/private/tmp/mlx-smolvla-smoke-79a97e7`, outside both the
+Every probe ran from `/private/tmp/mlx-smolvla-smoke-85b97fe`, outside both the
 main checkout and detached build worktree, and asserted that the imported
 module path was inside the virtual environment. Hub and dataset access were
 forced offline for prediction.

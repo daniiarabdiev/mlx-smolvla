@@ -554,3 +554,27 @@ retained to show how the error was found and corrected.
   an exact operator-verified low-limit profile, the physical checklist, the
   exact live prerequisite statement, a reviewed single action, and then a
   bounded continuous run. No upload, tag, release, or visibility change ran.
+
+## 2026-09-03 camera-corrected distribution checkpoint
+
+- Clean pushed source `85b97fe3ad2c8ef9d4bcffdc9c0a1a51af87939e`
+  produced a fresh 0.1.0 sdist and CPython 3.11/3.12/3.13 Apple Silicon wheel
+  set. Twine, archive topology, canonical names, 148/73 entry counts, and
+  project-extension `minos 14.0` checks pass.
+- Four base fresh installs, an isolated serve-extra install, and an isolated
+  hardware-extra install pass. The smokes cover module origin, doctor,
+  dependency-light import, finite offline inference, descriptor identity,
+  loopback `Ready`, 8-bit/4-bit inference, the legacy cache shim, physical
+  checkpoint validation, camera mapping, and graduated hardware CLI surfaces.
+  Hardware packaging checks opened no devices.
+- Ignored `dist/` now contains exactly those four verified bytes; the previous
+  candidate is preserved intact at
+  `.cache/dist-pre-camera-identity-20260903`. Exact hashes are bound in
+  `docs/evidence/DIST_MANIFEST.md`.
+- The closing hardware/readiness/public-release/distribution/import/rename/
+  repository-hygiene slice passes 127/127 tests.
+- `NO-MOTION PROTOCOL COMPLETE` and `FINAL VERIFICATION COMPLETE` remain
+  reached. `PUBLIC RELEASE READY` remains unreached pending the neutral pose,
+  exact low-limit profile, physical checklist and exact statement, one-action
+  review, and bounded-continuous result. Nothing was uploaded, tagged,
+  released, or made public.

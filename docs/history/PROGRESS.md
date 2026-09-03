@@ -2984,3 +2984,33 @@
   operator-verified low controller-limit profile, workspace/base/power
   checklist, and the exact in-session motion-prerequisite statement. No
   motion, upload, tag, release, or visibility change occurred.
+
+## 2026-09-03 — camera-corrected package refresh
+
+- Rebuilt the 0.1.0 sdist and CPython 3.11-3.13 Apple Silicon wheels from a
+  clean detached worktree at pushed source commit
+  `85b97fe3ad2c8ef9d4bcffdc9c0a1a51af87939e`. All four artifacts pass Twine,
+  canonical archive inspection, 148/73 entry counts, canonical-package checks,
+  and `minos 14.0` inspection.
+- Four isolated base installs pass package-origin checks, `native-reference`,
+  doctor, dependency-light import, and six-value finite offline prediction. A
+  separate serve install passes dependency integrity, descriptor identity,
+  ephemeral loopback `Ready`, CLI surfaces, and both quantized predictions.
+  A separate hardware install passes dependency integrity, installed-module
+  isolation, six-axis checkpoint validation, two-camera mapping, and all three
+  graduated-mode help surfaces without opening a device.
+- The installed CPython 3.12 wheel passes all three one-release cache-shim
+  cases: legacy-only with `FutureWarning`, current-over-legacy, and
+  explicit-over-legacy. An initial harness assertion was corrected only for
+  macOS `/tmp` to `/private/tmp` path resolution; package behavior was sound.
+- Promoted the verified bytes into ignored `dist/` after moving the previous
+  bytes intact to `.cache/dist-pre-camera-identity-20260903`. Each promoted
+  artifact compares byte-for-byte with the clean-build source; exact sizes and
+  hashes are recorded in `docs/evidence/DIST_MANIFEST.md`.
+- The closing hardware/readiness/public-release/distribution/import/rename/
+  repository-hygiene slice passes 127/127 tests.
+- No device, camera, serial port, robot, training job, timing benchmark,
+  upload, tag, release, or visibility change was used for the package refresh.
+  The remaining gate is unchanged: neutral pose, operator-verified low limits,
+  physical checklist, exact motion statement, reviewed single action, then
+  bounded continuous motion.
