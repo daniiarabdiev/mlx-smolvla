@@ -769,6 +769,52 @@ class HiwonderSO101IO:
         if not verdict.ok:
             raise RuntimeError("hardware safety readback mismatch: " + "; ".join(verdict.mismatches))
 
+        def read_raw_positions(register: str) -> dict[str, int]:
+            values = self.robot.bus.sync_read(
+                register,
+                normalize=False,
+                num_retry=5,
+            )
+            if set(values) != set(self.joint_names):
+                raise RuntimeError(f"{register} readback does not cover every joint")
+            if any(
+                isinstance(values[name], bool)
+                or not isinstance(values[name], (int, np.integer))
+                for name in self.joint_names
+            ):
+                raise RuntimeError(f"{register} readback must contain raw integer positions")
+            return {name: int(values[name]) for name in self.joint_names}
+
+        # A servo may retain a goal from an earlier session while torque is off.
+        # Prime the goal to the present raw encoder value and verify it before
+        # torque enable so arming cannot jump toward that stale target.
+        present_raw = read_raw_positions("Present_Position")
+        self.robot.bus.sync_write(
+            "Goal_Position",
+            present_raw,
+            normalize=False,
+            num_retry=5,
+        )
+        goal_raw = read_raw_positions("Goal_Position")
+        present_after_raw = read_raw_positions("Present_Position")
+        preload_mismatches = tuple(
+            name
+            for name in self.joint_names
+            if goal_raw[name] != present_after_raw[name]
+        )
+        if preload_mismatches:
+            raise RuntimeError(
+                "goal preload readback mismatch: " + ", ".join(preload_mismatches)
+            )
+
+        torque_before_enable = self.robot.bus.sync_read(
+            "Torque_Enable",
+            normalize=False,
+            num_retry=5,
+        )
+        if any(torque_before_enable.get(name) != 0 for name in self.joint_names):
+            raise RuntimeError("follower torque changed before verified enable")
+
         self.robot.bus.enable_torque()
         enabled = self.robot.bus.sync_read("Torque_Enable", normalize=False)
         if any(enabled.get(name) != 1 for name in self.joint_names):

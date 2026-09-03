@@ -83,22 +83,42 @@ class _FakeBus:
                 name: value
                 for name, value in zip(JOINTS, [0, 0, 0, 0, 0, 50], strict=True)
             },
+            "Goal_Position": {
+                name: value
+                for name, value in zip(JOINTS, [90, -90, 90, -90, 90, 0], strict=True)
+            },
             "Torque_Enable": {name: 0 for name in JOINTS},
         }
         self.sync_writes: list[tuple[str, dict[str, float]]] = []
+        self.sync_write_options: list[tuple[str, bool, int]] = []
+        self.events: list[str] = []
         self.disconnect_calls: list[bool] = []
         self.enable_calls = 0
         self.disable_calls = 0
         self.fail_disable = False
+        self.ignore_goal_writes = False
 
-    def sync_read(self, register: str, *, normalize: bool = True):
+    def sync_read(self, register: str, *, normalize: bool = True, num_retry: int = 0):
+        self.events.append(f"read:{register}:{normalize}:{num_retry}")
         return dict(self.registers[register])
 
-    def sync_write(self, register: str, values: dict[str, float]) -> None:
+    def sync_write(
+        self,
+        register: str,
+        values: dict[str, float],
+        *,
+        normalize: bool = True,
+        num_retry: int = 0,
+    ) -> None:
         self.sync_writes.append((register, dict(values)))
+        self.sync_write_options.append((register, normalize, num_retry))
+        self.events.append(f"write:{register}:{normalize}:{num_retry}")
+        if not (register == "Goal_Position" and self.ignore_goal_writes):
+            self.registers[register] = dict(values)
 
     def enable_torque(self) -> None:
         self.enable_calls += 1
+        self.events.append("enable_torque")
         self.registers["Torque_Enable"] = {name: 1 for name in JOINTS}
 
     def disable_torque(self, *, num_retry: int = 0) -> None:
@@ -460,6 +480,36 @@ def test_motion_session_writes_only_the_enveloped_target_at_move_floor() -> None
 
     np.testing.assert_array_equal(first_write[0], decision.target)
     assert first_write[1] == 200
+
+
+def test_cleanup_returns_to_start_through_rate_limited_readback_steps() -> None:
+    safety = _hardware_safety()
+    robot = _FakeRobot()
+    config = safety.SafetySessionConfig(
+        no_motion=False,
+        return_move_time_ms=1000,
+        chunk_limit=5,
+    )
+    session = safety.SafetySession(robot, _envelope(safety), config)
+
+    with session:
+        robot.positions[0] = 4.0
+
+    return_writes = robot.writes[1:]
+    assert [target[0] for target, _move_time_ms in return_writes] == [3.0, 2.0, 1.0, 0.0]
+    assert all(move_time_ms == 1000 for _target, move_time_ms in return_writes)
+    assert all(
+        np.max(np.abs(target - previous)) <= 1.0
+        for (target, _move_time_ms), previous in zip(
+            return_writes,
+            [
+                np.array([4.0, 0.0, 0.0, 0.0, 0.0, 50.0]),
+                *(target for target, _move_time_ms in return_writes[:-1]),
+            ],
+            strict=True,
+        )
+    )
+    np.testing.assert_array_equal(robot.positions, np.array([0, 0, 0, 0, 0, 50]))
 
 
 def test_rejected_motion_chunk_holds_the_read_back_position() -> None:
@@ -936,6 +986,58 @@ def test_vendor_adapter_enables_torque_only_after_exact_limit_readback() -> None
     assert adapter.armed is True
 
 
+def test_vendor_adapter_preloads_present_raw_goal_before_enabling_torque() -> None:
+    safety = _hardware_safety()
+    client = _hiwonder_client()
+    profile, registers = _matching_profile(safety)
+    present = {
+        name: value
+        for name, value in zip(JOINTS, [2011, 1877, 2203, 1912, 2044, 2310], strict=True)
+    }
+    robot = _FakeVendorRobot()
+    robot.bus.registers.update(registers)
+    robot.bus.registers["Present_Position"] = present
+    adapter = client.HiwonderSO101IO(
+        robot,
+        joint_names=JOINTS,
+        safety_profile=profile,
+        robot_serial="TEST-FOLLOWER-001",
+    )
+
+    adapter.prepare_motion(move_time_ms=200)
+
+    assert robot.bus.sync_writes == [("Goal_Position", present)]
+    assert robot.bus.sync_write_options == [("Goal_Position", False, 5)]
+    assert robot.bus.registers["Goal_Position"] == present
+    assert robot.bus.events.index("write:Goal_Position:False:5") < robot.bus.events.index(
+        "enable_torque"
+    )
+    assert robot.bus.enable_calls == 1
+    assert adapter.armed is True
+
+
+def test_vendor_adapter_aborts_unarmed_if_goal_preload_readback_mismatches() -> None:
+    safety = _hardware_safety()
+    client = _hiwonder_client()
+    profile, registers = _matching_profile(safety)
+    robot = _FakeVendorRobot()
+    robot.bus.registers.update(registers)
+    robot.bus.ignore_goal_writes = True
+    adapter = client.HiwonderSO101IO(
+        robot,
+        joint_names=JOINTS,
+        safety_profile=profile,
+        robot_serial="TEST-FOLLOWER-001",
+    )
+
+    with pytest.raises(RuntimeError, match="goal preload readback mismatch"):
+        adapter.prepare_motion(move_time_ms=200)
+
+    assert robot.bus.enable_calls == 0
+    assert robot.bus.registers["Torque_Enable"] == {name: 0 for name in JOINTS}
+    assert adapter.armed is False
+
+
 def test_vendor_adapter_rejects_position_write_until_armed() -> None:
     client = _hiwonder_client()
     robot = _FakeVendorRobot()
@@ -966,6 +1068,17 @@ def test_position_write_uses_public_units_and_dwell_not_goal_time_register() -> 
     adapter.write_positions(np.array([1, 2, 3, 4, 5, 60]), move_time_ms=200)
 
     assert robot.bus.sync_writes == [
+        (
+            "Goal_Position",
+            {
+                "shoulder_pan": 0,
+                "shoulder_lift": 0,
+                "elbow_flex": 0,
+                "wrist_flex": 0,
+                "wrist_roll": 0,
+                "gripper": 50,
+            },
+        ),
         (
             "Goal_Position",
             {
@@ -1036,7 +1149,19 @@ def test_armed_vendor_adapter_rejects_malformed_write(
     with pytest.raises(ValueError):
         adapter.write_positions(target, move_time_ms=move_time_ms)
 
-    assert robot.bus.sync_writes == []
+    assert robot.bus.sync_writes == [
+        (
+            "Goal_Position",
+            {
+                "shoulder_pan": 0,
+                "shoulder_lift": 0,
+                "elbow_flex": 0,
+                "wrist_flex": 0,
+                "wrist_roll": 0,
+                "gripper": 50,
+            },
+        )
+    ]
 
 
 def test_vendor_adapter_disables_torque_with_readback_verification() -> None:

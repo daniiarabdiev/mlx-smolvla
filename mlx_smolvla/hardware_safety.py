@@ -474,13 +474,27 @@ class SafetySession:
                         move_time_ms=self.config.move_time_ms,
                     )
                 )
-            if self.start_position is not None:
-                attempt(
-                    lambda: self.robot.write_positions(
-                        self.start_position,
+
+            def return_to_start_gradually() -> None:
+                if self.start_position is None:
+                    return
+                for _step in range(self.config.chunk_limit):
+                    present = np.asarray(self.robot.read_positions(), dtype=np.float64)
+                    decision = self.envelope.evaluate(
+                        self.start_position.reshape(1, -1),
+                        present,
+                    )
+                    if decision.hold or decision.target is None or decision.clipped_joints:
+                        raise RuntimeError("return-to-start target failed the safety envelope")
+                    self.robot.write_positions(
+                        decision.target,
                         move_time_ms=self.config.return_move_time_ms,
                     )
-                )
+                    if not decision.rate_limited_joints:
+                        return
+                raise RuntimeError("return-to-start exceeded the bounded step limit")
+
+            attempt(return_to_start_gradually)
             attempt(self.robot.disable_torque)
         attempt(self.robot.close)
         if cleanup_errors:
