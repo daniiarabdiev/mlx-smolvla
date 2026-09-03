@@ -2977,6 +2977,9 @@
   `dd25a59cf95e631d9313192e6c5e26878039c432ca207f8dc1a43dafad095e67`
   and `6a80220e9f92386ee334b403ae0664e55039c4935f734db5fedeba20a7908c9b`.
   Private frames and telemetry remain ignored and untracked.
+- From separate idle preflights, the fast lane passed 479/479 selected tests
+  with 291 slow tests deselected in 99.28 seconds, and the complete lane passed
+  770/770 in 639.60 seconds. Neither reported a skip or xfail.
 - Motion remains blocked only on the manual neutral pose, exact
   operator-verified low controller-limit profile, workspace/base/power
   checklist, and the exact in-session motion-prerequisite statement. No

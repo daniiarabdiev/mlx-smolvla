@@ -179,6 +179,9 @@ session-local and must be visually revalidated after device changes.
   The fixed and wrist evidence frames hash respectively to
   `dcb192c435d045fc5d3652a855668825bce621f9bc276d835af20704cebdfac1`
   and `d49e349b5a26e314e1e62d79090c3c6a71b570b0331878d4f25404437b784dd3`.
+- From independent idle preflights, `make test-fast` passed 479/479 selected
+  tests with 291 slow tests deselected in 99.28 seconds, and `make test` passed
+  all 770/770 tests in 639.60 seconds. Neither run reported a skip or xfail.
 
 ## Server and model mapping
 

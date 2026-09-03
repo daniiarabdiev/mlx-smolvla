@@ -546,6 +546,9 @@ retained to show how the error was found and corrected.
   chunks, zero timeouts, and zero hardware writes. Server receive-to-chunk was
   146.642/148.338 ms and inference was 146.239/147.978 ms. All six torque bits
   read zero independently after shutdown.
+- Independent idle preflights preceded a 479/479 fast-lane pass in 99.28
+  seconds (291 slow tests deselected) and a 770/770 complete-lane pass in
+  639.60 seconds. Neither run reported a skip or xfail.
 - `NO-MOTION PROTOCOL COMPLETE` remains reached. `PUBLIC RELEASE READY`
   remains unreached because motion still requires manual neutral placement,
   an exact operator-verified low-limit profile, the physical checklist, the
