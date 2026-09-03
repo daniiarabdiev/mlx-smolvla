@@ -2,7 +2,7 @@
 
 This manifest records the `mlx-smolvla` 0.1.0 release-candidate artifacts
 built locally from clean, pushed source commit
-`9c549557f2e3a355bf5c0206e6c86fa54ad191bf` on 2026-09-02. Nothing was
+`79a97e734afd49981ad09eb08d4877d82c707eea` on 2026-09-03. Nothing was
 uploaded. The hardware gate remains open, so no release tag was created.
 
 ## Build environment
@@ -13,13 +13,13 @@ uploaded. The hardware gate remains open, so no release tag was created.
 - Deployment target: `MACOSX_DEPLOYMENT_TARGET=14.0`.
 - Interpreters: repository-local CPython 3.11.15, 3.12.13, and 3.13.14.
 - Build/download cache: repository-local `.cache/uv`.
-- Source: clean detached worktree `.cache/release-mlx-smolvla-9c54955` at
+- Source: clean detached worktree `.cache/release-mlx-smolvla-79a97e7` at
   the commit above.
 - Output: ignored directory
-  `.cache/release-mlx-smolvla-9c54955-artifacts`.
+  `.cache/release-mlx-smolvla-79a97e7-artifacts`.
 - The four verified bytes were mirrored into ignored `dist/` for local use.
-  Its retired 0.0.1 contents were moved intact to
-  `.cache/dist-pre-canonical-refresh-20260902` rather than deleted.
+  The preceding 0.1.0 candidate bytes were moved intact to
+  `.cache/dist-pre-camera-startup-20260903` rather than deleted.
 
 The sdist was built with `uv build --sdist`; each native wheel used
 `uv build --wheel --python <repository-local-interpreter>`. All four commands
@@ -33,10 +33,10 @@ hardware safety/client modules, and tests; it contains no prebuilt `.so` or
 
 | Artifact | Bytes | SHA-256 | Wheel tag / contents | Project extension `minos` |
 | --- | ---: | --- | --- | ---: |
-| `mlx_smolvla-0.1.0.tar.gz` | 437,691 | `358b33db44addd8300267183c2c21ef328e5087157b8d136d7a7684918501a2f` | Source distribution; native extension built during installation | 14.0 in the installation smoke |
-| `mlx_smolvla-0.1.0-cp311-cp311-macosx_14_0_arm64.whl` | 378,114 | `53692b7a2e3857dde7c16e369ee58d81bdc5231e9eac3de7b3d2b47d10cdf896` | `cp311-cp311-macosx_14_0_arm64`; 73 entries | 14.0 |
-| `mlx_smolvla-0.1.0-cp312-cp312-macosx_14_0_arm64.whl` | 377,119 | `1386033921a6191e17d8a87aa51fa2393dc87a47dcf8e745cea22391bd6e243b` | `cp312-cp312-macosx_14_0_arm64`; 73 entries | 14.0 |
-| `mlx_smolvla-0.1.0-cp313-cp313-macosx_14_0_arm64.whl` | 377,156 | `791e8ca13b8bbaab5bd2311e91790cfd8ebfdcce42d67cac2dd0785a4a89898f` | `cp313-cp313-macosx_14_0_arm64`; 73 entries | 14.0 |
+| `mlx_smolvla-0.1.0.tar.gz` | 437,863 | `fbe42b6faaac5ae6359bda47dad7eaea1e83a2973ea0e0209802b9509e83a36e` | Source distribution; native extension built during installation | 14.0 in the installation smoke |
+| `mlx_smolvla-0.1.0-cp311-cp311-macosx_14_0_arm64.whl` | 378,202 | `1acc6f85520ebe138c5bfeb52f8b047b624f051120e906928113886705ed0051` | `cp311-cp311-macosx_14_0_arm64`; 73 entries | 14.0 |
+| `mlx_smolvla-0.1.0-cp312-cp312-macosx_14_0_arm64.whl` | 377,207 | `6cb6182bd5d95152404e599a915ef957fa2edf9d60518a817282fc7ee59cb506` | `cp312-cp312-macosx_14_0_arm64`; 73 entries | 14.0 |
+| `mlx_smolvla-0.1.0-cp313-cp313-macosx_14_0_arm64.whl` | 377,247 | `c83ef1f28522f8608d2a175b09069632bcb338dc0a7d74b7c3df6784af792332` | `cp313-cp313-macosx_14_0_arm64`; 73 entries | 14.0 |
 
 Archive inspection found only the canonical `mlx_smolvla/` package path.
 Each wheel declares distribution `mlx-smolvla`, version `0.1.0`,
@@ -46,13 +46,16 @@ hardware-safety/client, and native-extension surfaces are present. Every wheel
 declares the Python-3.12+ pinned `hardware` extra. No wheel contains the retired
 `smolvla_mlx/` package path. `vtool -show-build` independently reports
 `platform MACOS` and `minos 14.0` for every packaged native extension.
+Archive inspection also confirms that packaged hardware clients connect the
+fixed camera before the wrist camera; public camera keys and checkpoint mapping
+remain unchanged.
 
 `twine check` passed the sdist and all three wheels without warnings.
 
 ## Fresh-environment smoke matrix
 
 Each artifact was installed with dependencies into a new virtual environment.
-Every probe ran from `/private/tmp/mlx-smolvla-smoke-9c54955`, outside both the
+Every probe ran from `/private/tmp/mlx-smolvla-smoke-79a97e7`, outside both the
 main checkout and detached build worktree, and asserted that the imported
 module path was inside the virtual environment. Hub and dataset access were
 forced offline for prediction.

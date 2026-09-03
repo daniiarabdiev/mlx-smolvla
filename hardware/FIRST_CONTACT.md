@@ -28,7 +28,7 @@ continuous stage ran. The precise physical blockers are in
 
 ## No-motion results
 
-Both runs used dense bfloat16 production inference at a requested 5 Hz, one
+All three runs used dense bfloat16 production inference at a requested 5 Hz, one
 action per chunk, a 500 ms action watchdog, and a fixed 60-second client cap.
 
 | Checkpoint surface | Result | Observations / processed chunks | Camera sample FPS | Observation→chunk median / p95 | Clamps | Rate limits | Held invalid chunks | Timeouts |

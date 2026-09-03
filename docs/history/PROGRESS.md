@@ -2895,3 +2895,51 @@
   change, motion write, or additional hardware access occurred. The remaining
   work requires physical camera/arm/profile/checklist changes and a new exact
   in-session motion-prerequisite statement.
+
+## 2026-09-03 — dual-camera correction, third no-motion run, and rebuild
+
+- Re-established the connected setup after the operator's successful teleop
+  test without opening the leader or issuing a write. All six follower IDs
+  responded without alarms at 12.2-12.6 V, and all torque bits remained zero.
+- Reproduced the two-camera failure through the actual client and isolated it
+  to stream startup order. The fixed camera negotiated 15 FPS when the wrist
+  stream was already active, but both accepted 640x480/30 when fixed started
+  first. Added the order assertion red-first, changed only the two connect
+  calls, passed 90/90 hardware-client tests, and pushed source commit
+  `fbd34ed9f1bd3da095c5c7ee3bdc15d4f2bf795c`.
+- The corrected client opened both streams and returned nonblack frames. Visual
+  review still found the wrist view blurred/too close and the fixed view aimed
+  away from the complete robot workspace. The fresh frames remain ignored and
+  untracked.
+- Teleoperation left lift at -103.912 degrees and elbow at 95.780 degrees,
+  outside the immutable 10%-inset start gate, and restored controller
+  `Acceleration=254`. No operator-approved low register profile exists.
+- Completed a third stats-active 60-second no-motion run: 294 observations, 293
+  chunks, 4.895 sampled FPS, 152.080/154.139 ms client median/p95, one held
+  invalid chunk, zero timeouts, and zero hardware writes. Server
+  receive-to-chunk was 149.774/151.755 ms and inference was 149.379/151.239 ms.
+  Pushed the redacted evidence update as
+  `79a97e734afd49981ad09eb08d4877d82c707eea`.
+- Rebuilt the 0.1.0 sdist and CPython 3.11-3.13 Apple Silicon wheels from a
+  clean detached worktree at that exact commit. All four pass Twine, canonical
+  archive inspection, packaged camera-order inspection, and `minos 14.0`.
+  Four new base environments pass isolated native imports, doctor, and finite
+  offline prediction; separate serve and hardware installs pass dependency
+  integrity, descriptor/Ready, both quantized predictions, cache-shim,
+  checkpoint, camera-map, and example-help checks without device access.
+- Promoted the four verified bytes into ignored `dist/` and preserved their
+  predecessors at `.cache/dist-pre-camera-startup-20260903`. The refreshed
+  hashes are bound in `docs/evidence/DIST_MANIFEST.md`.
+- With independent idle preflights, the fast lane passed **479/479** selected
+  tests in **97.22 test seconds / 100.85 seconds wall**, and the complete suite
+  passed **770/770** in **639.36 test seconds / 642.38 seconds wall**. Neither
+  reported a skip or xfail.
+- The final focused release/hygiene/readiness/client slice passed 107/107;
+  lock, dependency, artifact-byte, diff, privacy, credential, large-file, and
+  protected-failure checks pass. Actionlint is clean after excluding only the
+  intentional constant-false hosted-CI guard.
+- `NO-MOTION PROTOCOL COMPLETE` and `FINAL VERIFICATION COMPLETE` remain
+  reached. `PUBLIC RELEASE READY` remains blocked by the physical framing,
+  neutral-pose, low-profile, checklist, and exact-statement gates. No motion,
+  training, floor computation, tolerance change, upload, tag, release, or
+  visibility change occurred.

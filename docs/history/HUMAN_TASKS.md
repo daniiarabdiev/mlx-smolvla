@@ -182,9 +182,9 @@
 ## Done — confirm the supervised hardware session
 
 - **Status:** done — the operator supplied the exact gate in the live task on
-  2026-09-02. Follower serial/calibration reads, both cameras, and two bounded
-  no-motion MLX loops then ran. The leader was not opened and no motor or torque
-  write occurred.
+  2026-09-02. Follower serial/calibration reads, both cameras, and three bounded
+  no-motion MLX loops then ran across 2026-09-02 and 2026-09-03. The leader was
+  not opened and no motor or torque write occurred.
 - **Gate supplied:**
 
   ```text

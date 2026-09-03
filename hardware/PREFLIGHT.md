@@ -17,11 +17,11 @@ the follower-only read path, both cameras, and the graduated protocol. Serial
 identifiers and private checkout paths remain only in ignored local telemetry;
 they are redacted from this public report.
 
-Read-only serial/calibration preflight and two 60-second no-motion loops
-completed. No torque-enable or goal-position write was issued. Motion remains
-blocked because the camera views are not operationally framed, the start pose
-is outside the tightened envelope, and no operator-verified low hardware-limit
-profile exists.
+Read-only serial/calibration preflight and three 60-second no-motion loops
+completed across the original and follow-up sessions. No torque-enable or
+goal-position write was issued. Motion remains blocked because the camera
+views are not operationally framed, the start pose is outside the tightened
+envelope, and no operator-verified low hardware-limit profile exists.
 
 ## Serial and calibration
 

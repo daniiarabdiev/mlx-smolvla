@@ -466,3 +466,59 @@ This section supersedes the earlier hardware and origin snapshots above.
   the camera, neutral-pose, low-limit-profile, and physical checklist blockers
   still prohibit a single action, bounded continuous motion, tagging,
   publication, visibility changes, release creation, and hardware claims.
+
+## 2026-09-03 camera-order correction and supervised recheck
+
+This section supersedes the camera, pose, no-motion-count, artifact, and test
+snapshots above. `NO-MOTION PROTOCOL COMPLETE` and `FINAL VERIFICATION
+COMPLETE` remain reached; `PUBLIC RELEASE READY` remains intentionally
+unreached.
+
+- The operator reported successful manual teleoperation and a camera
+  adjustment. Read-only revalidation resolved the existing follower role,
+  observed all six motor IDs healthy at 12.2-12.6 V with no alarms, and found
+  every torque bit zero before and after access. The leader was detected but
+  never opened.
+- The repository client reproduced a macOS UVC startup-order defect: opening
+  the wrist stream first reduced the fixed stream to 15 FPS and made LeRobot's
+  requested-format check fail. A red regression captured the order, source
+  commit `fbd34ed9f1bd3da095c5c7ee3bdc15d4f2bf795c` changed only startup to
+  fixed-then-wrist, and all 90 hardware-client tests passed. Public camera keys,
+  shapes, and checkpoint mapping are unchanged.
+- The corrected real client opened both cameras together at 640x480/30 and
+  returned finite nonblack frames. Local visual review still failed the motion
+  gate: the wrist image was heavily blurred/too close, and the fixed image did
+  not contain the complete robot workspace. Private room frames remain
+  ignored and untracked.
+- Post-teleoperation readback was 6.593, -103.912, 95.780, 49.187, -1.802,
+  and 15.302 in public joint units. Lift and elbow remain outside their
+  10%-inset start ranges. `Acceleration=254` on all controllers and the other
+  recorded maximum/current/torque values are not an operator-attested low
+  profile.
+- A third bounded 60-second stats-active no-motion loop completed with zero
+  torque or actuator writes: 294 observations, 293 chunks, 4.895 sampled camera
+  FPS, 152.080/154.139 ms client observation-to-chunk median/p95, one held
+  invalid chunk, and zero timeouts. Server receive-to-chunk median/p95 was
+  149.774/151.755 ms; inference was 149.379/151.239 ms. The private client and
+  server logs hash to `4804d38aca9c02d85a726bb7a2314f59c8370f1c9ad300fb5d153b6c00f13117`
+  and `707fc290ace9cf4788f5e5001c9b86ec7a46a326c1b09c793063a0b0660b780d`.
+- Clean pushed source `79a97e734afd49981ad09eb08d4877d82c707eea`
+  produced a refreshed sdist and CPython 3.11/3.12/3.13 native wheels. Twine,
+  canonical archive inspection, 148/73 entry counts, packaged camera-order
+  inspection, and macOS `minos 14.0` checks all pass. Four base fresh installs,
+  a serve-extra install, and a hardware-extra install pass the full offline
+  smoke matrix; exact bytes are in `docs/evidence/DIST_MANIFEST.md`.
+- From an idle preflight, `make test-fast` passed 479/479 selected tests with
+  291 slow tests deselected in 97.22 test seconds / 100.85 seconds wall. A
+  second idle preflight preceded `make test`, which passed all 770/770 tests in
+  639.36 test seconds / 642.38 seconds wall. Neither run reported a skip or
+  xfail.
+- The final release/hygiene/readiness/client slice passed 107/107. The
+  122-package lock, active 100-package dependency set, source-versus-`dist`
+  byte comparisons, diff check, public-path/credential/large-file scans, and
+  protected LoRA-failure hash all pass. `actionlint` is clean with only the
+  intentional constant-false hosted-CI guard excluded.
+- Motion remains blocked on camera framing, manual neutral placement, an exact
+  operator-verified low-limit profile, the physical checklist, and the exact
+  motion-prerequisite statement in `HUMAN_TASKS.md`. No single action,
+  continuous motion, upload, tag, release, or visibility change occurred.
