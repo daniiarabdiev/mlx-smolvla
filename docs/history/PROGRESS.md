@@ -3014,3 +3014,21 @@
   The remaining gate is unchanged: neutral pose, operator-verified low limits,
   physical checklist, exact motion statement, reviewed single action, then
   bounded continuous motion.
+
+## 2026-09-03 — post-teleoperation gate diagnosis
+
+- Reopened only the follower in the authorized read-only mode after the
+  operator's latest successful teleoperation. Both corrected cameras returned
+  finite nonblack 480x640 frames and all six torque bits stayed zero. The
+  leader was not opened and no hardware write occurred.
+- The fresh pose still fails the inset gate: lift was -93.275 degrees versus
+  the allowed -83.833 to 83.833, and elbow was 96.484 degrees versus -77.187
+  to 77.187. All controllers read `Acceleration=254` and
+  `Maximum_Acceleration=254`; no operator-verified low profile was found.
+- Source inspection resolved the apparent contradiction. `robot teleops`
+  invokes vendor `connect()`/configuration, writes the 254 acceleration
+  defaults, enables torque, and streams leader targets at 60 Hz without a
+  configured relative-target bound. The MLX path intentionally refuses its
+  first torque-enable until the inset pose, exact nine-register profile, and
+  physical gate are satisfied. The remaining block is therefore a deliberate
+  autonomous-motion safety gate, not a camera or motor defect.

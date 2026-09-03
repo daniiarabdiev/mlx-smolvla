@@ -578,3 +578,17 @@ retained to show how the error was found and corrected.
   exact low-limit profile, physical checklist and exact statement, one-action
   review, and bounded-continuous result. Nothing was uploaded, tagged,
   released, or made public.
+
+## 2026-09-03 latest physical-gate recheck
+
+- A follower-only read after the operator's latest teleoperation again passed
+  both corrected camera roles and all-zero torque, with no leader access or
+  hardware write.
+- Motion admission still fails independently of camera health: lift/elbow read
+  -93.275/96.484 degrees outside their -83.833 to 83.833 / -77.187 to 77.187
+  inset ranges, and all controllers read acceleration and maximum acceleration
+  254. No exact operator-verified low-register profile exists.
+- `robot teleops` works because it takes the vendor configuration, torque, and
+  60 Hz leader-write path; it does not enforce the MLX client's inset-pose or
+  exact-profile gates. No safety condition will be weakened to equate those
+  two workflows. `PUBLIC RELEASE READY` remains unreached.

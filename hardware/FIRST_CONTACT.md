@@ -73,12 +73,21 @@ session-local and require visual validation after device changes.
   close desk view that is soft at the parked camera's focus distance. The
   operator confirmed the framing, so the camera blocker is closed.
 - `shoulder_lift` and `elbow_flex` are near calibrated endpoints and outside
-  the required 10%-inset start envelope.
+  the required 10%-inset start envelope. The post-teleoperation read at
+  `2026-09-03T14:09:05Z` still failed both joints at -93.275 and 96.484.
 - Controller torque/current/velocity/acceleration readbacks have not been
   established as low by an operator-known procedure; no accepted safety
-  profile exists.
+  profile exists. The same read found `Acceleration=254` and
+  `Maximum_Acceleration=254` on all six controllers.
 - No workspace-clear/base-secure/hand-on-power checklist was recorded for a
   motion attempt.
+
+This explains why `robot teleops` can work while MLX motion remains blocked:
+the owner command deliberately enters the vendor configuration/torque/write
+path and streams leader targets, whereas the MLX path has additional
+start-envelope and exact-profile gates before its first torque-enable. The
+read-only recheck confirmed both cameras and all-zero torque, so this is not a
+camera enumeration or dead-motor failure.
 
 The server-environment anomaly was closed after these runs: a fresh `.[serve]`
 environment contained no PyAV and its loopback-only startup/shutdown emitted

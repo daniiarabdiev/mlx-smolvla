@@ -183,6 +183,34 @@ session-local and must be visually revalidated after device changes.
   tests with 291 slow tests deselected in 99.28 seconds, and `make test` passed
   all 770/770 tests in 639.60 seconds. Neither run reported a skip or xfail.
 
+## 2026-09-03 post-teleoperation motion-gate recheck
+
+At `2026-09-03T14:09:05Z`, after the operator reported another successful
+manual teleoperation, the follower-only path was opened read-only with the
+corrected fixed-0/wrist-1 roles. The leader was not opened and no register,
+torque, or position write was issued.
+
+- Both intended cameras returned finite, nonblack 480x640x3 frames.
+- All six `Torque_Enable` values were zero before and after the read.
+- The current position was 6.505, -93.275, 96.484, 61.407, -1.714, and 14.644
+  in public joint order. `shoulder_lift` remains outside -83.833 to 83.833,
+  and `elbow_flex` remains outside -77.187 to 77.187, so the immutable inset
+  start-pose gate still fails.
+- `Acceleration` and `Maximum_Acceleration` both read 254 on every controller.
+  The remaining torque/current/velocity register groups matched the earlier
+  non-low/default observations; no operator-attested profile exists.
+
+The working teleoperation command and the guarded MLX client intentionally
+have different admission criteria. `robot teleops` calls the vendor
+`SOFollower.connect()`, whose configuration path writes acceleration and
+maximum acceleration 254, then sends leader targets at 60 Hz; its command does
+not set `max_relative_target`. The MLX client deliberately skips vendor
+configuration writes, refuses to enable torque without an exact
+operator-verified nine-register profile, requires the start pose inside the
+10%-inset calibration envelope, caps each step, and self-terminates. Teleop
+success therefore proves that the motors and leader/follower path work, but it
+does not clear the separate autonomous-motion gate.
+
 ## Server and model mapping
 
 - The native server listened only on `127.0.0.1:8080` and reported MLX GPU as
