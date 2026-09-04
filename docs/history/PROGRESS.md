@@ -3082,3 +3082,21 @@
   at `.cache/dist-pre-stale-goal-20260904`.
 - No training, timing benchmark, hardware, camera, serial port, vendor tree,
   upload, tag, release, or visibility change occurred during this refresh.
+
+## 2026-09-04 — closing software verification
+
+- Independent process-table checks found the machine idle before each suite:
+  no trainer, self-consistency floor worker, server, hardware client, or
+  competing pytest was running.
+- `make test-fast` passed 482/482 selected tests with 291 slow tests deselected
+  in 100.91 seconds. `make test` passed the complete 773/773 suite in 702.18
+  seconds. Neither run reported a skip or xfail.
+- `uv lock --check` resolves 122 packages. Actionlint is clean after ignoring
+  only the intentional constant-false hosted-CI guard. The protected original
+  LoRA failure hash and all four manifest-bound distribution hashes remain
+  exact.
+- The operator reported that the hardware is powered off and they are away
+  from it. No subsequent hardware, camera, serial, or vendor-tree access was
+  attempted. Physical motion awaits a new supervised session with the
+  low-limit profile, checklist, and exact motion statement.
+- No upload, tag, release, visibility change, or announcement occurred.

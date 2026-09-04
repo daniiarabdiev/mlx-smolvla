@@ -14,11 +14,15 @@
 
 ## Open — clear the remaining physical prerequisites for one action
 
-- **Current pose status:** passed after the operator manually moved and
-  mechanically supported the torque-free arm. The latest lift/elbow read was
+- **Current availability:** on 2026-09-04 the operator reported that the
+  hardware is powered off and they are away from it. Do not treat any earlier
+  pose or camera index as current; begin the next attempt as a new supervised
+  session.
+- **Last pose status:** passed after the operator manually moved and
+  mechanically supported the torque-free arm. Lift/elbow read
   −20.396°/62.989°, inside the required −83.833°–83.833° /
-  −77.187°–77.187° ranges. Leave it supported; the client must re-read and
-  pass the pose immediately before arming.
+  −77.187°–77.187° ranges. This is evidence from that session, not a persistent
+  clearance: re-support, re-read, and pass the pose immediately before arming.
 - Using the operator's known-good Hiwonder/ServoStudio procedure, establish low
   torque, current, velocity, and acceleration limits. Do not copy the observed
   defaults in `PREFLIGHT.md`. Save the exact readback for every joint and every

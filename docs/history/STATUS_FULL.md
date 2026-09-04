@@ -2,9 +2,9 @@
 
 FULL-SCOPE SOFTWARE COMPLETE — FINAL AUDIT PASSED
 
-FINAL VERIFICATION COMPLETE — 652/652 TESTS PASS
+FINAL VERIFICATION COMPLETE — 773/773 TESTS PASS
 
-HARDWARE VALIDATION NOT RUN — SUPERVISED OPERATOR SESSION REQUIRED
+HARDWARE NO-MOTION VALIDATION COMPLETE — PHYSICAL MOTION NOT RUN
 
 T3B-1 COMPLETE — SELF-CONSISTENCY FLOOR RECORDED
 
@@ -38,7 +38,7 @@ STAGE Q P2-4 COMPLETE — HONESTLY DISABLED MACOS-15 WORKFLOW COMMITTED
 
 STAGE Q COMPLETE
 
-STAGE H COMPLETE — DOCUMENTS/SOFTWARE ONLY; HARDWARE VALIDATION NOT RUN
+STAGE H COMPLETE — DOCUMENTS/SOFTWARE PLUS NO-MOTION HARDWARE; MOTION NOT RUN
 
 The protected SmolVLA MLX v0.1 inference baseline is intact. At full-scope
 kickoff on 2026-08-31, `make test` passed **179/179** in **158.71 seconds** on
@@ -633,3 +633,22 @@ retained to show how the error was found and corrected.
   profile, physical checklist, exact motion statement, one-action review, and
   bounded-continuous result. Nothing was uploaded, tagged, released, or made
   public.
+
+## 2026-09-04 closing software verification
+
+- Separate idle-process preflights found no trainer, floor worker, server,
+  hardware client, or competing pytest. `make test-fast` passed all 482
+  selected tests with 291 slow tests deselected in 100.91 seconds, and
+  `make test` passed the complete 773/773 suite in 702.18 seconds. Neither run
+  reported a skip or xfail.
+- The lock resolves 122 packages. Actionlint is clean after excluding only the
+  deliberate constant-false hosted-CI guard. The protected first LoRA failure
+  still hashes to
+  `d6654131c4acf86de13206f210f1ea1a82e3aad18871e5b64428bdf1dbeed7c6`,
+  and every promoted distribution byte matches its manifest entry.
+- The operator reported that the hardware is powered off and they are away
+  from it. No camera, serial, vendor-tree, or robot access was attempted after
+  that report. Physical motion remains deferred to a new supervised session.
+- `FINAL VERIFICATION COMPLETE` remains reached. `PUBLIC RELEASE READY`
+  remains unreached; no upload, tag, release, visibility change, or public
+  announcement occurred.
