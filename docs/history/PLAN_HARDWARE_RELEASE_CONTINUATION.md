@@ -22,8 +22,11 @@ low speed, acceleration, and torque settings have now been staged and exactly
 read back with torque off. At 16:52 UTC the elbow was outside the inset start
 envelope. The 17:31 UTC read resolves that numeric pose failure: every joint
 passes, with no two-second drift and the exact low profile still matched.
-The wrist camera now faces upward after repositioning and needs its mount
-adjusted. Final camera/support/clearance checks remain open. No motion has run.
+The wrist camera was subsequently aimed at the table, and final
+camera/support/clearance/profile/pose checks passed. A fresh no-motion run, one
+valid single action, and a two-chunk continuous stage passed with torque-off
+shutdown. A separate 20-chunk attempt failed exact return under the 10% torque
+profile and remains a documented sustained-operation limitation.
 
 ## 1. Software baseline and checkpoint
 
@@ -54,7 +57,7 @@ adjusted. Final camera/support/clearance checks remain open. No motion has run.
   exclude unrelated cameras, correct their framing, and check concurrent
   capture. The short probe measured 20.10/6.34 FPS without timeouts; it does not
   demonstrate actual 30 FPS or replace the no-motion policy loop.
-- [ ] Re-read the mechanically supported pose against the unchanged 10%-inset
+- [x] Re-read the mechanically supported pose against the unchanged 10%-inset
   envelope immediately before proceeding to arming.
 - [x] Under the operator's explicit delegation, establish and exactly read back
   a manufacturer-documented temporary commissioning profile: SRAM acceleration
@@ -62,7 +65,7 @@ adjusted. Final camera/support/clearance checks remain open. No motion has run.
   settings, startup force 32, mode 0, present/goal positions, and torque-off
   were checked. This establishes reduced settings, not gravity-hold ability
   or physical safety; those require the supported supervised trial.
-- [ ] Confirm workspace clearance, secure base, physical power cut, and hand
+- [x] Confirm workspace clearance, secure base, physical power cut, and hand
   on power. Follow [HUMAN_TASKS.md](HUMAN_TASKS.md); keep private profile,
   serials, images, and telemetry under ignored local storage.
 
@@ -76,29 +79,34 @@ adjusted. Final camera/support/clearance checks remain open. No motion has run.
   after raw-goal preload, require integer position mode 0, and reject excessive
   or changed startup force. Failure-first fault injection demonstrates these
   checks; the focused hardware/readiness suite passes 104 tests. The final
-  fast lane passes 497 tests in 99.57 wall seconds, and the full suite passes
-  all 798 tests in 726.60 wall seconds, without skips or expected failures.
-- [ ] Once every physical prerequisite actually holds, verify the fresh
+  final fast lane now passes 502 selected tests in 109.48 wall seconds, and the
+  full suite passes all 803 tests in 755.65 wall seconds, without skips or
+  expected failures.
+- [x] Once every physical prerequisite actually holds, verify the fresh
   supported pose and operator readiness. The current-session delegation
   supersedes the old prescribed motion phrase; it does not supply those facts.
-- [ ] The authorized delegate runs one `--single-action` through the guarded
+- [x] The authorized delegate runs one `--single-action` through the guarded
   client. Review direction, displacement, speed, gripper behavior, camera
   freshness, telemetry, gradual return, and torque-off. Preserve the existing
-  stale-goal preload/readback, clamps, caps, and watchdogs.
-- [ ] Only after the one-action result is accepted, the authorized delegate runs
+  stale-goal preload/readback, clamps, caps, and watchdogs. The passing run
+  waited through one rejected hold and stopped after its first valid action.
+- [x] Only after the one-action result is accepted, the authorized delegate runs
   `--continuous` with the existing 90-second/20-chunk cap, whichever comes
-  first, and the same shutdown checks. Unexpected motion or uncertainty means
-  the runbook's physical stop and review, never an automatic retry.
+  first, and the same shutdown checks. The accepted stage used a two-chunk
+  ceiling and returned exactly. A separate run at the 20-chunk ceiling failed
+  exact return but disabled torque; keep that sustained result marked failed.
 
 ## 4. Final source, tag, and artifacts — after hardware passes
 
-- [ ] Record measured results in `hardware/FIRST_CONTACT.md` and
+- [x] Record measured results in `hardware/FIRST_CONTACT.md` and
   `hardware/PREFLIGHT.md`; update README, CHANGELOG, status, and only genuinely
   resolved human tasks. Safe actuation establishes integration, not reliable
   pick-and-place task success.
-- [ ] Run the full suite, idle fast-lane timing, link/hygiene checks, and
-  relevant installed-package checks. Review and commit/push the final source
-  and evidence; verify the remote before creating/pushing annotated `v0.1.0`.
+- [x] Run the full suite, idle fast-lane timing, link/hygiene checks, and
+  relevant source/distribution checks. The final lanes pass 803 full, 502 fast,
+  109 focused, and 28 documentation/hygiene tests.
+- [ ] Review and commit/push the final source and evidence; verify the remote
+  before creating/pushing annotated `v0.1.0`.
 - [ ] Build a new sdist and CPython 3.11/3.12/3.13 wheels from that tag into a
   new directory. Repeat archive/Twine checks and all seven applicable fresh
   install environments described in [DIST_MANIFEST.md](../evidence/DIST_MANIFEST.md).

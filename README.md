@@ -9,11 +9,11 @@ On the pinned Apple M5 Pro test case, MLX fp32 produced a 50-action chunk in
 while that chunk represents **1.67 s** at 30 fps (about **15.0× real-time
 duration**); scope and raw timings are in the [benchmark evidence](docs/BENCHMARK.md#mlx-versus-pytorch-mps).
 
-> **Hardware demo slot:** live follower/camera I/O and four 60-second no-motion
-> MLX loops now pass. Camera framing and a supported inset pose have been
-> verified, but physical actuation remains blocked by the low-controller-limit
-> profile and final physical attestation. This release candidate does not claim
-> real-robot motion. See the
+> **Hardware validation:** a final 60-second no-motion loop, one valid guarded
+> action, and a two-chunk bounded-continuous run passed on a connected SO-101.
+> A separate 20-chunk attempt disabled torque safely but failed exact return
+> under the temporary 10% torque profile. This is bounded integration evidence,
+> not reliable task success or sustained 20-chunk validation. See the
 > [first-contact status](hardware/FIRST_CONTACT.md) and
 > [media guidance](docs/media/README.md).
 
@@ -119,8 +119,8 @@ The server implements the audited four-RPC LeRobot protocol, but robot I/O and
 safety remain the client's responsibility. The generic command above is a
 protocol example, not authorization to actuate hardware. This repository now
 ships a fail-closed Hiwonder SO-101 client under the optional `hardware` extra;
-its no-motion loop passed on a connected follower, while motion remains
-blocked. Review the [hardware runbook](docs/HARDWARE_RUNBOOK.md),
+one guarded action and a short bounded-continuous run passed on the connected
+follower. Review the [hardware runbook](docs/HARDWARE_RUNBOOK.md),
 [current first-contact status](hardware/FIRST_CONTACT.md), and
 [bring-your-own-robot guide](examples/bring_your_own_robot/README.md). Remote
 serving is an explicit trusted-network-only mode because LeRobot 0.6.1 uses
@@ -199,7 +199,7 @@ CPU compatibility path for bit-close deterministic comparison with PyTorch CPU.
 
 ## Limitations
 
-- Connected SO-101 state/camera capture and no-motion MLX RPC loops are validated, but single-action and bounded-continuous motion are not; [first-contact evidence](hardware/FIRST_CONTACT.md) records the results and open physical gates.
+- Connected SO-101 state/camera capture, one valid guarded action, and a two-chunk continuous run are validated. A separate 20-chunk attempt failed exact return under the temporary low-torque profile while still disabling torque; [first-contact evidence](hardware/FIRST_CONTACT.md) records the bounded result and limitation.
 - Raw `lerobot/smolvla_base` output is not a physical-action interface because its saved state/action statistics do not bind to the generic keys. Motion clients must use a reviewed checkpoint with effective statistics matching the robot.
 - Production Metal fp32 passes the statistical gate but fails the strict `0.005` deterministic maximum; use strict mode for that contract and see the [mode table](docs/BENCHMARK.md#default-production-correctness-metal).
 - Native training is a research preview. The retained LoRA export passes the [post-repair fixed parity gates](docs/evidence/TRAINED_PARITY_REPAIR.md); this does not establish task success on a robot or generalize to every training run. The original [T3B verdict](docs/evidence/FAILURE_LORA_FINETUNE_B.md) is preserved as historical evidence.

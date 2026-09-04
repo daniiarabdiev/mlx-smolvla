@@ -43,8 +43,10 @@ def test_hardware_runbook_has_exact_gate_commands_safety_and_evidence() -> None:
     assert "hand on the power switch" in runbook
     assert "torque and speed limits" in runbook
     assert "kill the server, then power off" in runbook
-    assert "follower read path and 60-second no-motion loop" in runbook
-    assert "motion has not run" in runbook
+    assert "final 60-second no-motion check" in runbook
+    assert "two-chunk bounded-continuous run passed" in runbook
+    assert "--arming-mode" in runbook
+    assert "raw controller minimum and maximum" in runbook
     assert "Raw `lerobot/smolvla_base` is suitable for no-motion diagnosis only" in runbook
     assert ".cache/hardware/server-venv" in runbook
     assert ".cache/hardware/client-venv" in runbook
@@ -58,14 +60,16 @@ def test_hardware_runbook_has_exact_gate_commands_safety_and_evidence() -> None:
         assert evidence in runbook
 
 
-def test_public_hardware_status_is_explicitly_no_motion_only() -> None:
+def test_public_hardware_status_matches_bounded_motion_evidence() -> None:
     first_contact = Path("hardware/FIRST_CONTACT.md").read_text(encoding="utf-8")
     readme = Path("README.md").read_text(encoding="utf-8")
     prose = " ".join(first_contact.split())
 
-    assert "no-motion protocol complete; physical motion blocked" in first_contact
-    assert "No torque-enable or goal-position write occurred" in prose
-    assert "single-action nor bounded- continuous stage ran" in prose
-    assert "drives a real SO-101 from a MacBook” is **not** evidenced" in first_contact
+    assert "bounded physical integration passed on 2026-09-04" in prose
+    assert "one valid single action" in prose
+    assert "two-chunk continuous run" in prose
+    assert "failed exact return-to-start" in prose
+    assert "all six torque bits as zero" in prose
+    assert "reliable task completion are not evidenced" in prose
     assert "Raw `lerobot/smolvla_base` output is not a physical-action interface" in readme
-    assert "single-action and bounded-continuous motion are not" in readme
+    assert "20-chunk attempt failed exact return" in readme

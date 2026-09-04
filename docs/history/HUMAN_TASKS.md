@@ -1,63 +1,42 @@
 # Human Tasks
 
-## Open — complete the hardware gate before announcing v0.1.0
+## Done — complete the bounded hardware integration gate
 
-The operator supplied live `ARM SESSION CONFIRMED`, connected the hardware,
-adjusted the cameras, and explicitly delegated controller setup and client
-execution on 2026-09-04. The current-session amendment in the
-[runbook](../HARDWARE_RUNBOOK.md) supersedes the old operator-only command and
-prescribed motion-phrase requirements. No repeated authorization phrase is
-needed for this session.
+The operator connected the hardware, supplied fresh live authorization, adjusted
+the cameras and pose, cleared the workspace, and explicitly delegated setup and
+client execution on 2026-09-04. Fresh follower identity, calibration, camera,
+profile, status, inset-pose, and zero-drift checks passed. The temporary SRAM
+profile remained acceleration 1, speed 56, and torque limit 100 with mode 0,
+startup force 32, and torque off before arming.
 
-Two fresh 60-second no-motion runs completed after the camera adjustment.
-The cold-server attempt had one initial timeout; the warm repeat passed with
-295 observations, 294 processed chunks, zero timeouts, and no actuator writes.
-The four earlier successful runs remain historical evidence.
+The final 60-second no-motion run passed with 295 observations/chunks and zero
+timeouts or writes. One guarded valid single action then passed after one
+rejected hold chunk, returned exactly, and disabled torque. The accepted
+continuous stage used a two-chunk ceiling, processed one hold and one valid
+action, returned exactly, and ended with an independent all-six torque-off,
+zero-drift, inset/profile/calibration/status check. The loopback server was
+stopped and its port closed.
 
-Low controller settings are now established under that delegation: temporary
-SRAM acceleration 1, speed 56, and torque limit 100 on all six joints, with
-exact readbacks and all torque bits off. This is a new commissioning profile,
-not a claim that its gravity-hold behavior has been physically validated. The
-profile and raw evidence remain private. Power cycling or other configuration
-can reset these settings; the delegate must freshly establish and verify them
-before any arming attempt. No automatic torque increase is permitted.
+## Open follow-up — sustained low-torque return
 
-## Open — physical setup for the first supervised action
+A separate 20-chunk continuous attempt reached its policy cap but could not
+return exactly within the 20-step cleanup cap. Several gravity-loaded joints
+stopped following one-degree return targets under the temporary 10% torque
+profile. The client exited nonzero and still completed verified all-six
+torque-off cleanup; the stopped pose independently passed inset, zero-drift,
+profile, calibration, camera, and status checks.
 
-- The **17:31 UTC** recheck passes all six inset position checks after the
-  operator's adjustment. Lift/elbow read **-54.330/33.187°**, with no measured
-  two-second drift. This resolves the prior 16:52 elbow failure. Existing
-  calibration and the exact reduced controller profile match; all torque
-  bits are off, mode is 0, startup force is 32, and status has no alarms.
-- Fresh images show the raised white follower and tabletop in the fixed view,
-  but the wrist camera now faces the operator/ceiling. With motor power off,
-  turn that camera mount downward toward the gripper and tabletop near the
-  yellow ball while keeping the passing joint pose. Keep the cable outside
-  the moving envelope. Camera identity remains fixed 0, wrist 1; built-in 2
-  is excluded. The earlier
-  short independent rate measurement was 20.10/6.34 FPS at 640x480; actual
-  30 FPS was not demonstrated.
-- Support the arm so it will not fall when torque is off. Secure the base and
-  clear the working envelope.
-  Restore power with hands clear and remain beside the physical power switch.
-  Tell the delegate when the physical setup is ready for a new read-only
-  camera, pose, and controller check. This is an outstanding physical action,
-  not a missing software-execution authorization.
-- The delegate must recheck the supported inset pose and session profile,
-  obtain a fresh passing no-motion result for the final setup, and then run
-  only one guarded `--single-action` while the operator stays ready to cut
-  power. Preserve the exact controller checks, raw-goal preload, one-unit step
-  bounds, watchdog, gradual return, and torque-off verification. Unexpected
-  motion or uncertainty requires a physical stop and review.
-- Review direction, displacement, speed, gripper behavior, camera freshness,
-  telemetry, return-to-start, and torque-off before the bounded `--continuous`
-  stage. Safe actuation validates integration, not reliable pick-and-place.
+Keep this as a documented limitation. Do not raise torque automatically, cite
+the failed attempt as a pass, or claim reliable task completion. A future
+supervised investigation requires a new live hardware authorization and full
+preflight, but it is not a blocker for the narrowly claimed one-action and
+two-chunk v0.1.0 integration result.
 
-The version tag additionally requires final software verification and a
-reviewed, committed, pushed source/evidence checkpoint. Fresh tag-built
-artifacts and their complete install matrix must precede publication. GitHub
-visibility changes, PyPI/Hub uploads, release creation, and announcement remain
-separately authorized actions after those gates pass.
+The version tag still requires final software verification and a reviewed,
+committed, pushed source/evidence checkpoint. Fresh tag-built artifacts and
+their complete install matrix must precede publication. GitHub visibility
+changes, PyPI/Hub uploads, release creation, and announcement remain separately
+authorized actions.
 
 ## Done — correct and verify camera role mapping
 
@@ -212,18 +191,17 @@ separately authorized actions after those gates pass.
 ## Done — confirm the supervised hardware session
 
 - **Status:** done — the operator supplied the exact gate in the live task on
-  2026-09-02. Follower serial/calibration reads, both cameras, and three bounded
-  no-motion MLX loops then ran across 2026-09-02 and 2026-09-03. The leader was
-  not opened and no motor or torque write occurred.
+  2026-09-02, then supplied fresh authorization and explicit execution
+  delegation on 2026-09-04. The follower-only no-motion and bounded motion
+  protocol completed; the leader was never opened.
 - **Gate supplied:**
 
   ```text
   ARM SESSION CONFIRMED
   ```
 
-- **Remaining scope:** this resolved device-read/no-motion authorization, not
-  the failed physical prerequisites listed above. Motion and the public
-  hardware claim remain blocked.
+- **Remaining scope:** future powered sessions require fresh authorization.
+  Publication and visibility changes remain separately authorized actions.
 
 ## Done — provide the normative release brief
 

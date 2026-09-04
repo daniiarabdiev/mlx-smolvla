@@ -3535,3 +3535,67 @@
   from the diff and all changed-document local links resolve. A final hash
   check confirms 696 vendor tracked files and 32 wrapper files are unchanged.
   The focused log is preserved with its hash in `hardware/PREFLIGHT.md`.
+
+## 2026-09-04 — final bounded hardware integration
+
+- Fresh powered preflight matched the follower identity, existing calibration,
+  temporary all-six acceleration 1 / goal velocity 56 / torque limit 100
+  profile, position mode 0, startup force 32, alarm-free status, and torque
+  off. Both camera views passed, every joint was inside the 10%-inset envelope,
+  and the start pose had zero measured drift over two seconds.
+- The first goal preload exposed that this exact HX-30HM controller enables all
+  six torque bits as a side effect of writing current raw positions to
+  `Goal_Position`. The previous guard failed closed, wrote no policy action,
+  produced no displacement, and verified six torque-off bits during cleanup.
+  Raw present values were independently confirmed inside controller minimum/
+  maximum limits.
+- Added failure-first coverage and implementation for raw-limit checks plus
+  two explicit arming modes. The portable `explicit-torque` mode requires six
+  zeroes after preload before one enable call. The observed `goal-write` mode
+  requires six ones after preload and never enables twice. Any post-write or
+  explicit-enable error runs verified torque-off cleanup.
+- The fresh final no-motion run passed in 60.001971 seconds with 295
+  observations/chunks, 4.916505 FPS, 167.734/173.328 ms median/p95, zero
+  timeouts, and zero writes. It recorded 29 invalid holds, 404 clipped values,
+  and 1,499 rate-limited values.
+- Two initial single-action attempts received invalid timestep-zero policy
+  chunks, held current position, returned exactly, and disabled torque. A
+  ten-prompt no-write probe showed the same sequence. Single-action mode now
+  waits through rejected holds within its 20-chunk cap and stops after the
+  first valid action. The successful retry processed one hold and one valid
+  `(+1, -1, -1, -1, +1, -1)` public-unit action, returned exactly, and passed
+  an independent zero-drift, all-six torque-off check.
+- A 20-chunk continuous attempt moved gradually toward the task object but
+  failed exact return after exhausting the 20-step cleanup cap under torque
+  limit 100. The client exited nonzero, disabled all torque, and stopped inside
+  every inset bound with zero drift and matching profile/calibration/status.
+  No torque setting was raised and the failure is retained.
+- The accepted bounded-continuous run used a two-chunk ceiling: one rejected
+  hold plus one valid one-unit action. It returned exactly and exited zero in
+  6.513631 seconds with zero timeouts. An independent final check passed exact
+  pose, zero drift, inset/profile/calibration/status, and all-six torque-off.
+  The loopback server was stopped and its port closed.
+- Focused controller, session, client, and readiness tests pass 109/109. The
+  hardware gate is complete for the narrowly stated one-action/two-chunk
+  integration claim. Reliable task completion and sustained 20-chunk motion
+  remain unvalidated; final fast/full, source checkpoint, tag, and tag-built
+  artifact gates continue next.
+
+## 2026-09-04 — final source verification after hardware
+
+- The final hardware/readiness slice passes 109/109 in 3.90 seconds.
+- With 79.66% idle CPU and no competing project job, the unchanged fast lane
+  collected 803 tests, deselected the same 301 slow tests, and passed all 502
+  selected tests in 106.44 pytest seconds / 109.48 command wall seconds. This
+  remains below the fixed two-minute gate.
+- A separate 80.5%-idle preflight preceded the unchanged full lane. All 803
+  tests passed in 752.18 pytest seconds / 755.65 wall seconds, with no skip,
+  xfail, or failure. Hardware remained closed throughout both software runs.
+- Logs and idle preflights are preserved under the ignored
+  `.cache/release-final-20260904-3Fy3sOul/` directory; hashes are recorded in
+  `hardware/PREFLIGHT.md`.
+- The final public-release, repository-hygiene, distribution, and hardware-
+  readiness slice passes 28/28 in 16.20 pytest seconds / 19.50 wall seconds.
+  Lock validation resolves 122 packages and the active 100-package environment
+  passes dependency checking. Diff scanning finds no private home path or
+  exact device serial.

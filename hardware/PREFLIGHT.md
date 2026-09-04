@@ -10,7 +10,9 @@ Hardware-client source: initial protocol
 `404467190aeceea91f58cb98076148ab1aa0c0df`; dual-camera follow-up
 `fbd34ed9f1bd3da095c5c7ee3bdc15d4f2bf795c`; camera-identity recheck
 `61b3cf2edd40af25c46aac0f8e30c7c2ebd2c0fa`; stale-goal/gradual-return
-hardening `b2b97e1255f721f591ef115528216bd5526798fe`
+hardening `b2b97e1255f721f591ef115528216bd5526798fe`; final powered-validation
+source was based on pushed `cf01267f82d518285f81775cdb85294d1a6b1e1f`
+plus the controller-arming and bounded-single-action changes recorded below.
 
 ## Scope and result
 
@@ -21,12 +23,17 @@ they are redacted from this public report.
 
 Read-only serial/calibration preflight and four 60-second no-motion loops
 completed across the original and follow-up sessions. No torque-enable or
-goal-position write was issued. The corrected camera-identity recheck closed
-the camera blocker. A later supported-pose read cleared the inset start-pose
-blocker but found a hazardous stale goal, prompting the software hardening
-recorded below. Motion remains blocked because no operator-verified low
-hardware-limit profile exists and the physical motion checklist has not been
-attested.
+goal-position write was issued during those first four runs. The corrected
+camera-identity recheck closed the camera blocker. A later supported-pose read
+cleared the inset start-pose blocker but found a hazardous stale goal,
+prompting the software hardening recorded below.
+
+The final 2026-09-04 session then established the temporary reduced controller
+profile, completed the physical checklist, passed another 60-second no-motion
+run, executed one valid guarded action, and passed a two-chunk continuous run.
+A separate 20-chunk attempt failed exact return-to-start under the same low
+torque profile while still completing verified torque-off cleanup. The final
+section is the current result and supersedes the historical pending gates.
 
 ## Serial and calibration
 
@@ -557,3 +564,143 @@ Private evidence: `.cache/hardware/pose-recheck-20260904T173059Z-xj1676sr/`.
 | Combined check summary | `9063d2cf1a5f4a42791c7f0fc8361213faac988d34b18c9a4cb5a2a7233cfe65` |
 | Fixed image | `30aa1aff92da02a4f022f4474a8c492f61c40d447a7175351360b5955416d984` |
 | Wrist image | `3b4491e95037d54c338e2b92298554ba893bddf8b3b72f0901ff354222c358c9` |
+
+## 2026-09-04 final no-motion and powered motion evidence
+
+The operator completed the remaining physical setup and authorized the powered
+retry. Fresh checks matched the follower identity, existing calibration, and
+all profile registers. Temporary SRAM values were acceleration 1, goal
+velocity 56, and torque limit 100 on all six motors. Mode 0, startup force 32,
+status 0, and torque 0 also matched. The fixed camera showed the whole arm and
+clear task area; the wrist camera showed the gripper and table. Every joint was
+inside the 10%-inset range and the pre-motion pose showed no two-second drift.
+
+### Goal-write arming discovery
+
+On this exact controller, writing the six raw present positions back to
+`Goal_Position` changed all six `Torque_Enable` bits from 0 to 1 in about
+12 ms without calling the host's explicit enable method. The original guard
+failed closed because it expected torque to remain zero. It wrote no policy
+action, produced no displacement, disabled all six motors with exact zero
+readback, closed the adapter, and exited nonzero. An independent offline audit
+confirmed that every raw present value was within its current raw controller
+minimum and maximum.
+
+The corrected client checks raw minimum/maximum limits before the first write,
+rechecks them afterward, and treats the goal write as the arming boundary. Its
+explicit `goal-write` mode requires all six torque bits to become one and never
+calls the enable method twice. The default `explicit-torque` path instead
+requires six zeroes after preload before enabling once. Failure injection
+covers automatic enable, invalid raw limits, partial explicit-enable failure,
+and post-enable read failure; every post-write failure attempts verified
+all-six torque-off cleanup.
+
+Private evidence:
+`.cache/hardware/motion-ready-20260904T174510Z-3tiyf6ed/`.
+
+| Record | SHA-256 |
+| --- | --- |
+| Failed arming I/O trace | `e6b1022724ce124aff49bd76dad2de0449090d588da1446feb946dbb0f93836a` |
+| Failed arming telemetry | `81b0e6826914c451644d32da2b618b8463e1c42b65df33f315860c4c303090ca` |
+| Raw preload/range audit | `966a5a0dff8bd5e7a31d2c5ba8a2d3b64a6d01542788b168daccec7a64c004c7` |
+
+### Final no-motion result
+
+The fresh stats-active run completed 60.001971 seconds with 295 observations
+and 295 processed chunks at 4.916505 sampled FPS. Observation-to-chunk
+median/p95 was 167.734/173.328 ms. It had zero timeouts and zero writes; its
+simulation recorded 29 rejected hold chunks, 404 clipped values, and 1,499
+rate-limited values. First and last positions were identical.
+
+### Single valid action
+
+Two initial single-action invocations each received an invalid timestep-zero
+chunk, wrote a current-position hold, returned exactly, and disabled torque.
+A ten-prompt read-only policy probe produced the same invalid timestep-zero
+shape and made no hardware write. The mode was therefore corrected to wait
+through rejected holds while retaining a 20-chunk attempt cap and stopping
+immediately after its first valid non-hold action.
+
+The accepted retry processed two observations/chunks: one rejected hold and
+one valid target with per-joint deltas `(+1, -1, -1, -1, +1, -1)` public
+units. It stopped with `action_limit`, recorded one clipped and six
+rate-limited values, had zero timeouts, returned to its exact recorded start,
+and passed an independent zero-drift/profile/calibration/status check with all
+six torque bits zero.
+
+### Continuous attempts
+
+The 20-chunk attempt produced gradual motion toward the task object under the
+same one-unit bounds. It exited nonzero because several gravity-loaded joints
+stopped following one-degree return targets under torque limit 100 and the
+20-step return cap expired before exact start. The failure is retained as a
+sustained-operation limitation. Cleanup still read all six torque bits as
+zero, and the stopped pose was inside all inset bounds with zero drift, exact
+profile/calibration readback, live cameras, and no status alarms. No limit was
+raised and no automatic retry occurred.
+
+From that independently checked safe pose, a two-chunk continuous stage passed:
+one rejected current-position hold followed by one valid one-unit action. It
+stopped with `chunk_limit`, returned exactly, exited zero in 6.513631 seconds,
+and recorded zero timeouts, one clipped value, and six rate-limited values. A
+final independent check found exact final pose
+`(24.439560, -40.527473, 72.747253, 25.274725, -1.450549, 12.671847)`,
+zero drift over two seconds, all inset/profile/calibration/status gates passing,
+and all torque bits zero. The owned server was stopped and its loopback port
+was closed.
+
+Private powered-session evidence:
+`.cache/hardware/powered-retry-20260904T5gzCJz/`.
+
+| Record | SHA-256 |
+| --- | --- |
+| Final no-motion telemetry | `ed2cb9116974d5ed5da742c1fbb361ad7c4cf612117b7ef95819052446f0e3b3` |
+| Final no-motion I/O trace | `866b590f645dd66698fe5226363585c1c4b4b80c44a8081136d9e8ec8e174470` |
+| Successful single-action telemetry | `b2d367f302f7868a67fb7b9c2730e8e8072bafb23ad4f4199f380564066f02c1` |
+| Successful single-action I/O trace | `8472dcdac833c128835ac7b0156fc505fcafb8440398bc95ed659600062eaed4` |
+| Post-single independent check | `5f8c4ae90eea972fa5b46deeb92ecc49eda2872ccef9f00dd9b219ecd01123fb` |
+| Failed 20-chunk telemetry | `c24d21ce3e640ce4fd5edac878c79b46a021283be9448861b3a6fe086e844865` |
+| Failed 20-chunk I/O trace | `4a8a5b9dc4b23f1463893307554e999e350ff5e0973b6093b81fb3b30c944368` |
+| Failed 20-chunk process result | `85f0653742f20f991be437b040abcecc8455392707db09ce9a402f6a2cdc4bda` |
+| Post-failure independent check | `874b410152b55a6563ce53961d33b008dd3b9fd7e2b4f72b55c5205349498419` |
+| Passing two-chunk telemetry | `edcd92744c9fd588a59810515a31525a6357a76bb08501ecd91936ab7b87185e` |
+| Passing two-chunk I/O trace | `e3e1dba4bfac1b90f2114bbceb3f9500a994040532649715fd416084062451b0` |
+| Final independent check | `d063c7ae96543a3548ef2757eec823228b72d6a91ec6f894fc6c02eb5027f2eb` |
+| Server latency telemetry | `c2081b3e5344409e97af6d76626f86e7c15a93dd80775aa95d2f198e97cd5271` |
+| Server log | `72718a8040fa27fc6e1bcfb2246d2dfad41cfca1b040fae356841468d332993f` |
+| Server stop record | `ca31bdf9f48d9b7717866844c70a250a724f9c8074ae23d173559d785dd4a27b` |
+
+This closes the required bounded first-contact integration gate. It does not
+close the sustained 20-chunk return limitation or establish reliable
+pick-and-place success.
+
+## 2026-09-04 final current-source verification
+
+With no competing test, training, server, hardware-client, or benchmark process,
+the fast preflight measured 79.66% idle CPU. The unchanged `make test-fast`
+target collected 803 tests, deselected the same 301 slow tests, and passed all
+502 selected tests in 106.44 pytest seconds / 109.48 complete-command wall
+seconds, below the two-minute requirement.
+
+A second idle preflight measured 80.5% idle CPU. The unchanged `make test`
+target passed all 803 tests in 752.18 pytest seconds / 755.65 wall seconds. It
+reported no skip, xfail, or failure. The final-source controller and session
+slice passes 109/109 in 3.90 seconds. No hardware was accessed during software
+verification.
+
+Private verification directory:
+`.cache/release-final-20260904-3Fy3sOul/`.
+
+| Record | SHA-256 |
+| --- | --- |
+| Fast idle preflight | `116b01044da706148a30974f36bcef733709d859b76299e45225e0a8e6bfdcde` |
+| Full idle preflight | `ca893756c4fb4469914450faac242aa83ea3c213f45ce81b3800e4c9fd1cdc78` |
+| Fast-lane log | `ab17c29c8e18ceb1ce16db5db0abeea5473be1b28159841136466f56e70bf5ff` |
+| Full-suite log | `02647746229200ade22b18b1b699f06675249a080b9a5270c1480e785a9c4f01` |
+
+The final public-release, repository-hygiene, distribution, and hardware-
+readiness slice passed 28/28 in 16.20 pytest seconds / 19.50 wall seconds. Its
+log SHA-256 is
+`593e1c3152fc06e554ef0027895cfab83f1c67876e335f534b33b8fc8ef9a0bb`.
+Lock validation resolves 122 packages and the active 100-package environment
+passes dependency checking.

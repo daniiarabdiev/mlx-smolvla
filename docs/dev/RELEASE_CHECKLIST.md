@@ -73,7 +73,8 @@ repository evidence.
   are the documented compatibility exception.
 - [x] The tracked-root allowlist, internal-link check, personal-detail scan, and
   artifact manifest all pass from the final tree.
-- [x] Hardware claims remain explicitly unvalidated until the separately gated
-  SO-101 protocol produces committed first-contact evidence.
+- [x] Hardware claims match the committed first-contact evidence: one valid
+  guarded action and a two-chunk continuous run passed, while the failed
+  20-chunk exact return remains a disclosed sustained-operation limitation.
 - [x] No package, model, release, or documentation artifact is uploaded as part
   of automated preparation; publication remains an operator action.

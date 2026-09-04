@@ -51,6 +51,12 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--duration-seconds", type=float)
     parser.add_argument("--chunk-limit", type=int, default=20)
     parser.add_argument("--hardware-safety-profile", type=Path)
+    parser.add_argument(
+        "--arming-mode",
+        choices=("explicit-torque", "goal-write"),
+        default="explicit-torque",
+        help="verified controller arming behavior; goal-write must be selected explicitly",
+    )
     parser.add_argument("--telemetry", type=Path, required=True)
     return parser
 
@@ -75,6 +81,7 @@ def resolve_run_config(arguments: argparse.Namespace) -> SafetySessionConfig:
         if duration != 60.0:
             raise ValueError("the graduated no-motion run is fixed at 60 seconds")
         chunk_limit = arguments.chunk_limit
+        stop_on_valid_action = False
     else:
         if arguments.hardware_safety_profile is None:
             raise ValueError("motion requires an operator-verified hardware safety profile")
@@ -86,7 +93,8 @@ def resolve_run_config(arguments: argparse.Namespace) -> SafetySessionConfig:
             arguments.hardware_safety_profile.expanduser().resolve(strict=True)
         )
         duration = 90.0 if arguments.duration_seconds is None else arguments.duration_seconds
-        chunk_limit = 1 if arguments.mode == "single-action" else arguments.chunk_limit
+        chunk_limit = arguments.chunk_limit
+        stop_on_valid_action = arguments.mode == "single-action"
 
     return SafetySessionConfig(
         no_motion=no_motion,
@@ -96,6 +104,7 @@ def resolve_run_config(arguments: argparse.Namespace) -> SafetySessionConfig:
         timeout_limit=3,
         duration_seconds=duration,
         chunk_limit=chunk_limit,
+        stop_on_valid_action=stop_on_valid_action,
     )
 
 
@@ -132,6 +141,7 @@ def main(argv: Sequence[str] | None = None) -> int:
                     "fixed_camera": arguments.fixed_camera,
                     "duration_seconds": config.duration_seconds,
                     "chunk_limit": config.chunk_limit,
+                    "stop_on_valid_action": config.stop_on_valid_action,
                     "watchdog_seconds": config.watchdog_seconds,
                     "move_time_ms": config.move_time_ms,
                     "return_move_time_ms": config.return_move_time_ms,
@@ -147,6 +157,7 @@ def main(argv: Sequence[str] | None = None) -> int:
                     fixed_camera=arguments.fixed_camera,
                     safety_profile=profile,
                     robot_serial=arguments.robot_serial,
+                    arming_mode=arguments.arming_mode,
                 )
                 envelope = SafetyEnvelope(
                     adapter.joint_names,

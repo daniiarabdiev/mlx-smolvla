@@ -90,6 +90,8 @@ class _FakeBus:
             "Torque_Enable": {name: 0 for name in JOINTS},
             "Operating_Mode": {name: 0 for name in JOINTS},
             "Minimum_Startup_Force": {name: 5 for name in JOINTS},
+            "Min_Position_Limit": {name: -4096 for name in JOINTS},
+            "Max_Position_Limit": {name: 4096 for name in JOINTS},
         }
         self.sync_writes: list[tuple[str, dict[str, float]]] = []
         self.sync_write_options: list[tuple[str, bool, int]] = []
@@ -98,10 +100,20 @@ class _FakeBus:
         self.enable_calls = 0
         self.disable_calls = 0
         self.fail_disable = False
+        self.fail_enable_after_write = False
+        self.fail_next_torque_read_after_enable = False
         self.ignore_goal_writes = False
+        self.auto_enable_on_goal_write = False
 
     def sync_read(self, register: str, *, normalize: bool = True, num_retry: int = 0):
         self.events.append(f"read:{register}:{normalize}:{num_retry}")
+        if (
+            register == "Torque_Enable"
+            and self.enable_calls
+            and self.fail_next_torque_read_after_enable
+        ):
+            self.fail_next_torque_read_after_enable = False
+            raise ConnectionError("injected torque read failure")
         return dict(self.registers[register])
 
     def sync_write(
@@ -117,11 +129,15 @@ class _FakeBus:
         self.events.append(f"write:{register}:{normalize}:{num_retry}")
         if not (register == "Goal_Position" and self.ignore_goal_writes):
             self.registers[register] = dict(values)
+        if register == "Goal_Position" and self.auto_enable_on_goal_write:
+            self.registers["Torque_Enable"] = {name: 1 for name in JOINTS}
 
     def enable_torque(self) -> None:
         self.enable_calls += 1
         self.events.append("enable_torque")
         self.registers["Torque_Enable"] = {name: 1 for name in JOINTS}
+        if self.fail_enable_after_write:
+            raise ConnectionError("injected enable failure")
 
     def disable_torque(self, *, num_retry: int = 0) -> None:
         self.disable_calls += 1
@@ -534,6 +550,42 @@ def test_rejected_motion_chunk_holds_the_read_back_position() -> None:
     assert hold_write[1] == 200
 
 
+def test_single_action_waits_for_one_valid_chunk_with_a_bounded_attempt_cap() -> None:
+    safety = _hardware_safety()
+    robot = _FakeRobot()
+    session = safety.SafetySession(
+        robot,
+        _envelope(safety),
+        safety.SafetySessionConfig(
+            no_motion=False,
+            chunk_limit=3,
+            stop_on_valid_action=True,
+        ),
+    )
+
+    with session:
+        rejected = session.process_chunk(
+            np.array([[np.nan, 0.0, 0.0, 0.0, 0.0, 50.0]])
+        )
+        assert rejected.hold is True
+        assert session.stop_reason is None
+
+        accepted = session.process_chunk(
+            np.array([[1.0, 0.0, 0.0, 0.0, 0.0, 50.0]])
+        )
+        assert accepted.hold is False
+        assert session.stop_reason == "action_limit"
+
+    assert session.telemetry.chunks == 2
+    assert session.telemetry.rejected_chunks == 1
+    np.testing.assert_array_equal(
+        robot.writes[0][0], np.array([0, 0, 0, 0, 0, 50])
+    )
+    np.testing.assert_array_equal(
+        robot.writes[1][0], np.array([1, 0, 0, 0, 0, 50])
+    )
+
+
 def test_third_consecutive_watchdog_timeout_holds_and_stops_session() -> None:
     safety = _hardware_safety()
     robot = _FakeRobot()
@@ -798,6 +850,7 @@ def test_standalone_client_help_exposes_fail_closed_modes_and_caps() -> None:
     assert "--duration-seconds" in completed.stdout
     assert "--chunk-limit" in completed.stdout
     assert "--hardware-safety-profile" in completed.stdout
+    assert "--arming-mode" in completed.stdout
 
 
 def test_motion_profile_requires_exact_safe_register_readback_and_torque_off() -> None:
@@ -829,6 +882,11 @@ def test_motion_profile_requires_exact_safe_register_readback_and_torque_off() -
     torque = profile.verify_readback(JOINTS, enabled)
     assert torque.ok is False
     assert torque.mismatches == ("Torque_Enable.shoulder_pan: expected 0, read 1",)
+
+    all_enabled = {**expected, "Torque_Enable": {name: 1 for name in JOINTS}}
+    assert profile.verify_readback(
+        JOINTS, all_enabled, expected_torque=1
+    ).ok is True
 
 
 def test_motion_profile_rejects_incomplete_or_unattested_data() -> None:
@@ -1016,6 +1074,83 @@ def test_vendor_adapter_preloads_present_raw_goal_before_enabling_torque() -> No
     )
     assert robot.bus.enable_calls == 1
     assert adapter.armed is True
+
+
+def test_vendor_adapter_accepts_explicit_verified_goal_write_arming_mode() -> None:
+    safety = _hardware_safety()
+    client = _hiwonder_client()
+    profile, registers = _matching_profile(safety)
+    present = {
+        name: value
+        for name, value in zip(JOINTS, [2011, 1877, 2203, 1912, 2044, 2310], strict=True)
+    }
+    robot = _FakeVendorRobot()
+    robot.bus.registers.update(registers)
+    robot.bus.registers["Present_Position"] = present
+    robot.bus.auto_enable_on_goal_write = True
+    adapter = client.HiwonderSO101IO(
+        robot,
+        joint_names=JOINTS,
+        safety_profile=profile,
+        robot_serial="TEST-FOLLOWER-001",
+        arming_mode="goal-write",
+    )
+
+    adapter.prepare_motion(move_time_ms=200)
+
+    assert robot.bus.sync_writes == [("Goal_Position", present)]
+    assert robot.bus.enable_calls == 0
+    assert robot.bus.disable_calls == 0
+    assert adapter.armed is True
+
+
+@pytest.mark.parametrize(
+    "failure",
+    ["enable", "readback"],
+)
+def test_vendor_adapter_disables_after_explicit_torque_enable_failure(failure: str) -> None:
+    safety = _hardware_safety()
+    client = _hiwonder_client()
+    profile, registers = _matching_profile(safety)
+    robot = _FakeVendorRobot()
+    robot.bus.registers.update(registers)
+    robot.bus.fail_enable_after_write = failure == "enable"
+    robot.bus.fail_next_torque_read_after_enable = failure == "readback"
+    adapter = client.HiwonderSO101IO(
+        robot,
+        joint_names=JOINTS,
+        safety_profile=profile,
+        robot_serial="TEST-FOLLOWER-001",
+    )
+
+    with pytest.raises(ConnectionError, match="injected"):
+        adapter.prepare_motion(move_time_ms=200)
+
+    assert robot.bus.disable_calls == 1
+    assert set(robot.bus.registers["Torque_Enable"].values()) == {0}
+    assert adapter.armed is False
+
+
+def test_vendor_adapter_rejects_raw_present_position_outside_controller_limits() -> None:
+    safety = _hardware_safety()
+    client = _hiwonder_client()
+    profile, registers = _matching_profile(safety)
+    robot = _FakeVendorRobot()
+    robot.bus.registers.update(registers)
+    robot.bus.registers["Min_Position_Limit"]["elbow_flex"] = 1
+    adapter = client.HiwonderSO101IO(
+        robot,
+        joint_names=JOINTS,
+        safety_profile=profile,
+        robot_serial="TEST-FOLLOWER-001",
+    )
+
+    with pytest.raises(RuntimeError, match="raw controller position limits"):
+        adapter.prepare_motion(move_time_ms=200)
+
+    assert robot.bus.sync_writes == []
+    assert robot.bus.enable_calls == 0
+    assert adapter.armed is False
 
 
 def test_vendor_adapter_aborts_unarmed_if_goal_preload_readback_mismatches() -> None:
@@ -1923,7 +2058,8 @@ def test_standalone_modes_resolve_to_non_overridable_safety_caps(tmp_path: Path)
         )
     )
     assert single.no_motion is False
-    assert single.chunk_limit == 1
+    assert single.chunk_limit == 20
+    assert single.stop_on_valid_action is True
 
 
 def test_standalone_motion_requires_profile_and_matching_serial(tmp_path: Path) -> None:

@@ -52,7 +52,7 @@ never opened.
 | Mode | Fixed limits | Writes |
 | --- | --- | --- |
 | `--no-motion` | exactly 60 s, 5 Hz, 500 ms RPC watchdog | no torque or actuator writes |
-| `--single-action` | one chunk, one enveloped action, then cleanup | gated motion only |
+| `--single-action` | at most 20 chunks; rejected chunks hold, then the first valid action stops the session | gated motion only |
 | `--continuous` | at most 90 s or 20 chunks, whichever comes first | gated motion only |
 
 Motion modes additionally require:
@@ -67,14 +67,22 @@ Motion modes additionally require:
   no greater than the smaller of its persistent and temporary torque caps;
 - a start pose already inside the 10%-inset calibrated range.
 
-Only after those checks does the adapter read each raw present position, write
-those exact raw values to `Goal_Position` while torque is still off, and
-require goal and fresh-present readback equality. It rereads all nine safety
-registers, position mode, startup force, and torque after that write. Startup
-force must remain unchanged across preload. It rechecks all six torque bits as
-zero immediately before enabling torque, then enables and verifies all six
-enabled bits. This prevents arming against a stale goal retained from an
-earlier session. Every action must be shape `(1, 6)`, finite, and inside the
+Only after those checks does the adapter read each raw present position and its
+raw `Min_Position_Limit`/`Max_Position_Limit`, require every present value to
+lie inside the inclusive controller range, and write those exact raw values to
+`Goal_Position`. It then requires exact goal and fresh-present equality,
+unchanged raw limits, and unchanged values for all nine safety registers,
+position mode, and startup force.
+
+The first `Goal_Position` write is the arming boundary. In the default
+`explicit-torque` mode it must leave all six torque bits at zero before the
+client calls `enable_torque()` and verifies six ones. The explicit
+`goal-write` mode is limited to a controller already observed to auto-enable on
+that write; it requires six ones after preload and never calls
+`enable_torque()`. Every exception after the write or explicit-enable attempt
+runs the verified all-six torque-off path. This prevents both stale-goal
+arming and a second enable command on the observed controller. Every action
+must be shape `(1, 6)`, finite, and inside the
 vendor driver's full public domain (body joints −180°–180°, gripper 0–100). Valid
 values are clipped to the 10%-inset calibration and rate-limited from current
 servo readback by the stricter of 2% of calibrated span or one public unit.
@@ -88,8 +96,10 @@ enable torque. The 500 ms timeout applies only to observation/action traffic.
 ## Writes and cleanup
 
 The only actuator register the client can write is `Goal_Position`. Its first
-write copies the raw present encoder values while torque is off and must pass
-exact readback before arming; later writes require the armed state. The
+write copies raw present encoder values after torque-off and raw-range checks;
+because that write can energize the tested controller, all subsequent
+verification is inside torque-off-on-error cleanup. Later writes require the
+armed state. The
 Hiwonder manual states that the position-mode `Time` field is not applicable,
 so the client does not pretend `Goal_Time` controls speed. It enforces a
 minimum 200 ms command/dwell interval while independently requiring

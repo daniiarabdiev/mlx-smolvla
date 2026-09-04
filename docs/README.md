@@ -8,11 +8,11 @@
 - [Hardware runbook](HARDWARE_RUNBOOK.md): separately authorized SO-101 safety
   and validation procedure.
 - [Hardware preflight](../hardware/PREFLIGHT.md): redacted connected-device,
-  camera, calibration, register, and no-motion evidence.
+  camera, calibration, register, no-motion, and bounded-motion evidence.
 - [Hardware client design](../hardware/CLIENT_DESIGN.md): fail-closed client
   architecture and motion-gate contract.
-- [First-contact status](../hardware/FIRST_CONTACT.md): completed no-motion
-  results and the physical prerequisites still blocking motion.
+- [First-contact status](../hardware/FIRST_CONTACT.md): bounded single-action
+  and two-chunk continuous evidence plus the sustained-return limitation.
 - [Prepared model card](MODEL_CARD.md): intended use, sources, evidence, and
   limitations for a future Hub presentation.
 - [Evidence index](evidence/README.md): correctness, compatibility, training,

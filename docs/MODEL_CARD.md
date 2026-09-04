@@ -52,9 +52,10 @@ prospective verdict is not overwritten or relabeled. See
 
 ## Limitations
 
-- Connected Hiwonder SO-101 state/camera capture and no-motion RPC serving have
-  completed, but physical motion has not passed the gated protocol and is not
-  claimed.
+- Connected Hiwonder SO-101 state/camera capture, one valid guarded action, and
+  a two-chunk continuous stage passed. A separate 20-chunk attempt failed exact
+  return under the temporary low-torque profile, so sustained operation and
+  reliable task completion are not claimed.
 - Raw `lerobot/smolvla_base` output does not have effective physical
   state/action statistics for the generic keys. A motion client must use a
   reviewed checkpoint whose statistics match the target robot.

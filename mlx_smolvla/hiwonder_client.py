@@ -340,6 +340,7 @@ def open_hiwonder_follower(
     fixed_camera: int,
     safety_profile: HardwareSafetyProfile | None = None,
     robot_serial: str | None = None,
+    arming_mode: str = "explicit-torque",
     _vendor_loader: Callable = _load_vendor_api,
 ) -> "HiwonderSO101IO":
     """Open the follower and two cameras without calling vendor configure/calibrate."""
@@ -393,6 +394,7 @@ def open_hiwonder_follower(
         joint_names=SO101_JOINTS,
         safety_profile=safety_profile,
         robot_serial=robot_serial,
+        arming_mode=arming_mode,
     )
     try:
         robot.bus.connect(handshake=True)
@@ -688,6 +690,7 @@ class HiwonderSO101IO:
         camera_names: Sequence[str] = ("wrist_camera", "top_camera"),
         safety_profile: HardwareSafetyProfile | None = None,
         robot_serial: str | None = None,
+        arming_mode: str = "explicit-torque",
         sleep: Callable[[float], None] = time.sleep,
         clock: Callable[[], float] = time.monotonic,
     ) -> None:
@@ -696,6 +699,9 @@ class HiwonderSO101IO:
         self.camera_names = tuple(camera_names)
         self.safety_profile = safety_profile
         self.robot_serial = robot_serial
+        if arming_mode not in ("explicit-torque", "goal-write"):
+            raise ValueError("arming mode must be 'explicit-torque' or 'goal-write'")
+        self.arming_mode = arming_mode
         self._sleep = sleep
         self._clock = clock
         self.last_write_monotonic: float | None = None
@@ -748,7 +754,7 @@ class HiwonderSO101IO:
         if isinstance(move_time_ms, bool) or not isinstance(move_time_ms, int) or move_time_ms < 200:
             raise ValueError("move time must be at least 200 ms")
 
-        def verify_controller_state() -> dict[str, int]:
+        def verify_controller_state(*, expected_torque: int) -> dict[str, int]:
             readback = {
                 register: {
                     name: int(value)
@@ -759,7 +765,11 @@ class HiwonderSO101IO:
                 }
                 for register in (*REQUIRED_SAFETY_REGISTERS, "Torque_Enable")
             }
-            verdict = self.safety_profile.verify_readback(self.joint_names, readback)
+            verdict = self.safety_profile.verify_readback(
+                self.joint_names,
+                readback,
+                expected_torque=expected_torque,
+            )
             if not verdict.ok:
                 raise RuntimeError(
                     "hardware safety readback mismatch: " + "; ".join(verdict.mismatches)
@@ -788,7 +798,7 @@ class HiwonderSO101IO:
                     )
             return {name: int(startup[name]) for name in self.joint_names}
 
-        startup_before = verify_controller_state()
+        startup_before = verify_controller_state(expected_torque=0)
 
         def read_raw_positions(register: str) -> dict[str, int]:
             values = self.robot.bus.sync_read(
@@ -807,46 +817,74 @@ class HiwonderSO101IO:
             return {name: int(values[name]) for name in self.joint_names}
 
         # A servo may retain a goal from an earlier session while torque is off.
-        # Prime the goal to the present raw encoder value and verify it before
-        # torque enable so arming cannot jump toward that stale target.
+        # Validate the raw target before the first write, which some controllers
+        # treat as their arming command.
         present_raw = read_raw_positions("Present_Position")
-        self.robot.bus.sync_write(
-            "Goal_Position",
-            present_raw,
-            normalize=False,
-            num_retry=5,
-        )
-        goal_raw = read_raw_positions("Goal_Position")
-        present_after_raw = read_raw_positions("Present_Position")
-        preload_mismatches = tuple(
+        raw_minimum = read_raw_positions("Min_Position_Limit")
+        raw_maximum = read_raw_positions("Max_Position_Limit")
+        invalid_raw = tuple(
             name
             for name in self.joint_names
-            if goal_raw[name] != present_after_raw[name]
+            if not raw_minimum[name] < raw_maximum[name]
+            or not raw_minimum[name] <= present_raw[name] <= raw_maximum[name]
         )
-        if preload_mismatches:
+        if invalid_raw:
             raise RuntimeError(
-                "goal preload readback mismatch: " + ", ".join(preload_mismatches)
+                "present values violate raw controller position limits: "
+                + ", ".join(invalid_raw)
             )
 
-        # Verify the complete controller state again after the goal write: a
-        # reset or firmware side effect must not silently undo the low limits.
-        if verify_controller_state() != startup_before:
-            raise RuntimeError("Minimum_Startup_Force changed during goal preload")
+        try:
+            self.robot.bus.sync_write(
+                "Goal_Position",
+                present_raw,
+                normalize=False,
+                num_retry=5,
+            )
+            goal_raw = read_raw_positions("Goal_Position")
+            present_after_raw = read_raw_positions("Present_Position")
+            preload_mismatches = tuple(
+                name
+                for name in self.joint_names
+                if goal_raw[name] != present_raw[name]
+                or present_after_raw[name] != present_raw[name]
+            )
+            if preload_mismatches:
+                raise RuntimeError(
+                    "goal preload readback mismatch: " + ", ".join(preload_mismatches)
+                )
+            if (
+                read_raw_positions("Min_Position_Limit") != raw_minimum
+                or read_raw_positions("Max_Position_Limit") != raw_maximum
+            ):
+                raise RuntimeError("raw controller position limits changed during goal preload")
 
-        torque_before_enable = self.robot.bus.sync_read(
-            "Torque_Enable",
-            normalize=False,
-            num_retry=5,
-        )
-        if any(torque_before_enable.get(name) != 0 for name in self.joint_names):
-            raise RuntimeError("follower torque changed before verified enable")
+            expected_after_preload = 1 if self.arming_mode == "goal-write" else 0
+            if (
+                verify_controller_state(expected_torque=expected_after_preload)
+                != startup_before
+            ):
+                raise RuntimeError("Minimum_Startup_Force changed during goal preload")
+        except BaseException as error:
+            try:
+                self.disable_torque()
+            except BaseException as cleanup_error:
+                error.add_note(f"hardware cleanup also failed: {cleanup_error}")
+            raise
 
-        self.robot.bus.enable_torque()
-        enabled = self.robot.bus.sync_read("Torque_Enable", normalize=False)
-        if any(enabled.get(name) != 1 for name in self.joint_names):
-            self.robot.bus.disable_torque(num_retry=5)
-            raise RuntimeError("torque enable readback failed; torque was disabled")
-        self.armed = True
+        try:
+            if self.arming_mode == "explicit-torque":
+                self.robot.bus.enable_torque()
+            enabled = self.robot.bus.sync_read("Torque_Enable", normalize=False)
+            if any(enabled.get(name) != 1 for name in self.joint_names):
+                raise RuntimeError("torque enable readback failed")
+            self.armed = True
+        except BaseException as error:
+            try:
+                self.disable_torque()
+            except BaseException as cleanup_error:
+                error.add_note(f"hardware cleanup also failed: {cleanup_error}")
+            raise
 
     def write_positions(self, target: np.ndarray, *, move_time_ms: int) -> None:
         """Write one bounded target, then enforce the command/dwell floor."""

@@ -111,8 +111,13 @@ class HardwareSafetyProfile:
         self,
         joint_names: Sequence[str],
         actual_registers: Mapping[str, Mapping[str, int]],
+        *,
+        expected_torque: int = 0,
     ) -> HardwareLimitVerdict:
-        """Require torque off and exact equality with every operator-approved value."""
+        """Require exact torque state and equality with every approved value."""
+
+        if isinstance(expected_torque, bool) or expected_torque not in (0, 1):
+            raise ValueError("expected torque must be exactly 0 or 1")
 
         names = tuple(joint_names)
         mismatches: list[str] = []
@@ -128,8 +133,10 @@ class HardwareSafetyProfile:
         torque = actual_registers.get("Torque_Enable", {})
         for name in names:
             read = torque.get(name)
-            if read != 0:
-                mismatches.append(f"Torque_Enable.{name}: expected 0, read {read}")
+            if read != expected_torque:
+                mismatches.append(
+                    f"Torque_Enable.{name}: expected {expected_torque}, read {read}"
+                )
         return HardwareLimitVerdict(ok=not mismatches, mismatches=tuple(mismatches))
 
 
@@ -193,6 +200,7 @@ class SafetySessionConfig:
     timeout_limit: int = 3
     duration_seconds: float = 60.0
     chunk_limit: int = 20
+    stop_on_valid_action: bool = False
 
     def __post_init__(self) -> None:
         if not isinstance(self.no_motion, bool):
@@ -233,6 +241,8 @@ class SafetySessionConfig:
             or not 0 < self.chunk_limit <= 20
         ):
             raise ValueError("session chunk limit cannot exceed 20")
+        if not isinstance(self.stop_on_valid_action, bool):
+            raise TypeError("stop_on_valid_action must be a boolean")
 
 
 @dataclass
@@ -370,6 +380,7 @@ class SafetySession:
         self.started_at: float | None = None
         self.consecutive_timeouts = 0
         self.chunk_count = 0
+        self.valid_action_count = 0
         self.stop_reason: str | None = None
         self.telemetry = SessionTelemetry()
 
@@ -424,8 +435,13 @@ class SafetySession:
                 self.robot.write_positions(target, move_time_ms=self.config.move_time_ms)
         self.consecutive_timeouts = 0
         self.chunk_count += 1
-        if not self.config.no_motion and self.chunk_count >= self.config.chunk_limit:
-            self.stop_reason = "chunk_limit"
+        if not self.config.no_motion:
+            if not decision.hold:
+                self.valid_action_count += 1
+            if self.config.stop_on_valid_action and self.valid_action_count >= 1:
+                self.stop_reason = "action_limit"
+            elif self.chunk_count >= self.config.chunk_limit:
+                self.stop_reason = "chunk_limit"
         return decision
 
     def check_limits(self) -> bool:

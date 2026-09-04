@@ -1,6 +1,8 @@
 # Full-Scope Status
 
-CURRENT CONTROLLER-STATE CHANGE VERIFIED — ALL 798 TESTS PASS
+CURRENT BOUNDED HARDWARE INTEGRATION PASSES — SUSTAINED 20-CHUNK RETURN LIMITED
+
+CURRENT SOURCE VERIFIED — 109 FOCUSED / 502 FAST / 803 FULL TESTS PASS
 
 PRIOR BASELINE: FULL-SCOPE SOFTWARE COMPLETE — FINAL AUDIT PASSED
 
@@ -8,7 +10,7 @@ TRAINED CHECKPOINT STRICT-PARITY REPAIR VERIFIED — ALL 56 FIXED-LIMIT CASES PA
 
 PRIOR BASELINE: FINAL VERIFICATION COMPLETE — 790/790 TESTS PASS
 
-PRIOR HARDWARE NO-MOTION CHECKS PASS — FINAL-SETUP RECHECK AND PHYSICAL MOTION PENDING
+FINAL NO-MOTION, ONE VALID ACTION, AND TWO-CHUNK CONTINUOUS CHECK PASS
 
 T3B-1 COMPLETE — SELF-CONSISTENCY FLOOR RECORDED
 
@@ -42,7 +44,7 @@ STAGE Q P2-4 COMPLETE — HONESTLY DISABLED MACOS-15 WORKFLOW COMMITTED
 
 STAGE Q COMPLETE
 
-STAGE H COMPLETE — DOCUMENTS/SOFTWARE PLUS NO-MOTION HARDWARE; MOTION NOT RUN
+STAGE H BOUNDED INTEGRATION COMPLETE — SUSTAINED 20-CHUNK RETURN NOT VALIDATED
 
 The protected SmolVLA MLX v0.1 inference baseline is intact. At full-scope
 kickoff on 2026-08-31, `make test` passed **179/179** in **158.71 seconds** on
@@ -870,3 +872,44 @@ retained to show how the error was found and corrected.
   must face the gripper/task surface before final inference and motion checks.
   No write was attempted; all device handles closed. Physical readiness and
   the final no-motion, single-action, and continuous checks remain open.
+
+## 2026-09-04 final bounded hardware integration
+
+- The operator corrected the wrist view and completed the physical setup.
+  Fresh follower identity, existing calibration, controller profile, mode,
+  startup force, status, camera framing, inset pose, and zero-drift checks all
+  passed. The temporary profile remained acceleration 1, goal velocity 56,
+  and torque limit 100; no controller limit was raised.
+- The exact controller auto-enabled all six torque bits when current raw
+  positions were first written to `Goal_Position`. The prior client failed
+  closed and disabled torque without policy motion. The corrected client now
+  validates raw position limits before that write and supports exact
+  `explicit-torque` and controller-observed `goal-write` arming paths. It
+  never double-enables the observed unit and runs verified torque-off cleanup
+  after every post-write error.
+- The final 60-second no-motion run passed with 295 observations/chunks,
+  4.916505 sampled FPS, 167.734/173.328 ms median/p95, zero timeouts, and zero
+  writes. It recorded 29 invalid holds, 404 clipped values, and 1,499
+  rate-limited values.
+- Single-action mode now waits through rejected holds within the existing
+  20-chunk hard cap and stops after its first valid non-hold action. The
+  accepted run processed one rejected hold and one valid one-unit action,
+  returned exactly to start, showed zero drift, and ended with six torque-off
+  bits and no timeout.
+- A 20-chunk continuous attempt moved gradually but failed exact return within
+  its 20-step cleanup cap under torque limit 100. It exited nonzero, disabled
+  all torque, and stopped in an independently verified inset, zero-drift pose
+  with matching calibration/profile/status and live cameras. This is retained
+  as a failed sustained-motion result.
+- The accepted bounded-continuous stage used a two-chunk ceiling. It processed
+  one hold and one valid one-unit action, returned exactly, and exited zero.
+  The independent final check matched the exact final pose, all inset/profile/
+  calibration/status gates, zero two-second drift, and all-six torque off. The
+  server was stopped and its loopback port closed.
+- This closes the v0.1.0 hardware gate at the stated bounded scope. It does
+  not establish reliable pick-and-place behavior or sustained 20-chunk
+  operation. Focused current-source hardware/readiness checks pass 109/109.
+  The unchanged fast lane passes 502 selected tests in 106.44 pytest seconds /
+  109.48 wall seconds, and the full suite passes all 803 tests in 752.18 pytest
+  seconds / 755.65 wall seconds, without skips or expected failures. Tag-built
+  artifact verification remains pending.

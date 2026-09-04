@@ -1,29 +1,30 @@
 # Supervised SO-101 first-contact runbook
 
-**Hardware validation status: follower read path and 60-second no-motion loop
-passed; motion has not run.** See the measured
-[first-contact status](../hardware/FIRST_CONTACT.md) and
-[preflight evidence](../hardware/PREFLIGHT.md). The project does not yet claim
-physical SO-101 actuation.
+**Hardware validation status: the final 60-second no-motion check, one valid
+single action, and a two-chunk bounded-continuous run passed on 2026-09-04.**
+A separate 20-chunk attempt disabled torque safely but could not return exactly
+to its recorded start within the cleanup cap under the temporary 10% torque
+profile. See the measured [first-contact status](../hardware/FIRST_CONTACT.md)
+and [preflight evidence](../hardware/PREFLIGHT.md). This establishes bounded
+integration, not reliable task completion or sustained 20-chunk operation.
 
-## Current-session delegation — 2026-09-04
+## Recorded session delegation — 2026-09-04
 
-The operator explicitly amended this runbook in the live session and delegated
-controller setup and repository-client execution. The existing live
-`ARM SESSION CONFIRMED` remains valid for this connected session. The delegate
-may perform read-only checks, no-motion runs, and reviewed controller setup;
-the operator need not type or execute every command or repeat a prescribed
-motion-confirmation phrase. A manufacturer-documented setup can establish a
-new verified limit profile under this authorization; a pre-existing operator
-profile is not the only permitted route.
+The operator explicitly amended this runbook in the completed live session and
+delegated controller setup and repository-client execution. That authorization
+covered read-only checks, no-motion runs, reviewed controller setup, and the
+two bounded motion modes without requiring the operator to type each command.
+A manufacturer-documented setup established the verified temporary limit
+profile used in that session.
 
-This delegation does not establish physical facts. Before torque enable, the
+Delegation does not establish physical facts. Before torque enable, the
 supported start pose must pass, the workspace and base must be checked, low
 controller torque and speed limits must be verified, and the operator must be
 present with a hand on the power switch. No-motion runs may precede those
 motion-specific checks. Preserve all existing client safeguards and stop on
-unexpected behavior. The default confirmation wording below applies when no
-equivalent current-session authorization has been given.
+unexpected behavior. The completed session does not authorize later device
+access; the confirmation wording below applies to every future session unless
+equivalent live authorization is supplied.
 
 ## Execution gate
 
@@ -199,16 +200,25 @@ The current-session verified safety-profile file must contain the exact nine-
 register readback described in
 [`hardware/CLIENT_DESIGN.md`](../hardware/CLIENT_DESIGN.md). Its serial and the
 selected port must match. The client validates all of this, the checkpoint
-statistics, and the 10%-inset start pose before torque enable. It then copies
-the raw present encoder values into `Goal_Position` while torque remains off,
-requires exact goal/fresh-present readback equality, and rereads every safety
-register before enabling. Both checks require position mode (0) and startup
-force no greater than the verified torque cap; startup force must not change
-across the preload. Torque is checked again immediately before enabling.
-Any stale-goal or controller-state mismatch aborts unarmed.
+statistics, and the 10%-inset start pose before the first actuator write. It
+reads each raw present position plus its raw controller minimum and maximum,
+requires every present value to lie inside that inclusive range, and only then
+copies the raw present values into `Goal_Position`. Exact goal and fresh-present
+equality, unchanged raw limits, the complete safety profile, position mode 0,
+and unchanged startup force are verified after that write.
+
+The first goal write is an arming boundary because some controllers, including
+the tested HX-30HM unit, enable torque as a side effect. The default
+`explicit-torque` mode requires all six torque bits to remain zero after the
+goal preload, then explicitly enables torque and requires six ones. Select
+`goal-write` only for a controller already observed to auto-enable on that
+write: it requires all six bits to be one and never calls the explicit enable
+path a second time. Any exception after the first goal write invokes verified
+all-six torque-off cleanup before propagating the error.
 
 ```bash
 export HARDWARE_SAFETY_PROFILE='<ABSOLUTE_PATH_TO_SESSION_VERIFIED_PROFILE_JSON>'
+export ARMING_MODE='explicit-torque'
 export CLIENT_TELEMETRY='.cache/hardware/first-contact-single-action-client.jsonl'
 test -f "$HARDWARE_SAFETY_PROFILE"
 test ! -e "$CLIENT_TELEMETRY"
@@ -225,15 +235,26 @@ test ! -e "$CLIENT_TELEMETRY"
   --task "$FIRST_TASK" \
   --server-address 127.0.0.1:8080 \
   --hardware-safety-profile "$HARDWARE_SAFETY_PROFILE" \
+  --arming-mode "$ARMING_MODE" \
   --telemetry "$CLIENT_TELEMETRY"
 ```
 
-The client applies one enveloped action, holds, returns to the recorded start
-pose through fresh-readback steps of at most one public unit with a 1000 ms
-dwell per step, verifies torque off, and exits. The same one-unit/2%-span
-limiter and 200 ms dwell floor bound outbound actions. Do not invoke
-`--continuous` until the single-action evidence has been reviewed and
+For the tested controller, the verified session selected
+`ARMING_MODE='goal-write'`; that observation does not change the portable
+default. In single-action mode, rejected chunks write only a current-position
+hold and do not consume the one valid-action allowance. The client waits for
+the first valid enveloped action within the hard 20-chunk attempt cap, then
+stops, returns to the recorded start through fresh-readback steps of at most one
+public unit with a 1000 ms dwell, verifies torque off, and exits. The same
+one-unit/2%-span limiter and 200 ms dwell floor bound outbound actions. Do not
+invoke `--continuous` until the single-action evidence has been reviewed and
 accepted.
+
+For continuous validation, reuse the command with `--continuous`; keep the
+90-second and 20-chunk ceilings or choose a smaller positive chunk limit. The
+2026-09-04 accepted bounded stage used `--chunk-limit 2`. A separate run at the
+20-chunk ceiling exposed the return limitation recorded above, so it must not
+be cited as a passing sustained-motion result.
 
 ## What to observe
 

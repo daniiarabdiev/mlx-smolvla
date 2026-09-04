@@ -3,36 +3,52 @@
 Date: 2026-09-04
 
 `mlx-smolvla` is a 0.1.0 software release candidate on the canonical renamed
-GitHub repository. The connected follower, corrected cameras, and native MLX
-server complete bounded no-motion inference. The latest warm 60-second run
-passed with 295 observations, 294 processed chunks, and zero timeouts/writes;
-a preceding cold-server attempt's initial timeout is retained as a failed
-timing gate. Physical motion has not run.
+GitHub repository. The final connected-hardware session passed a fresh
+60-second no-motion run, one valid guarded single action, and a two-chunk
+bounded-continuous run with exact return and verified torque-off shutdown. A
+separate attempt at the 20-chunk ceiling exited nonzero because several
+gravity-loaded joints did not return exactly within the cleanup cap under the
+temporary 10% torque profile; torque-off cleanup and the independent safe-pose
+check still passed. Claims are limited to the bounded result.
 
-Under the operator's explicit delegation, temporary controller acceleration,
-speed, and torque settings were staged and exactly read back with torque off.
-The 17:31 UTC recheck resolves the elbow position: all six joints pass the
-inset envelope with zero measured drift over two seconds. The wrist camera
-now faces upward and needs its mount aimed at the task surface. Physical
-support, workspace clearance, base security, and readiness at the power switch
-still need to hold before motion. The new client rechecks all controller limits, position
-mode, and startup force after raw-goal preload. Its full suite passes all 798
-tests, and its fast lane passes within the unchanged two-minute limit. The version tag, uploads,
-visibility change, release creation, announcement, and hardware-motion claim
-remain withheld.
+The controller was observed to auto-enable all six torque bits on the first raw
+goal preload. The client now checks raw controller position limits before that
+write, supports explicit controller arming modes, never double-enables the
+observed unit, and disables torque after any post-write failure. Single-action
+mode waits through rejected holds within its 20-chunk cap and stops after its
+first valid action. Focused hardware/readiness verification passes 109 tests. The unchanged final
+fast lane passes 502 selected tests in 106.44 pytest seconds / 109.48 wall
+seconds, and the complete lane passes all 803 tests in 752.18 pytest seconds /
+755.65 wall seconds, with no skips or expected failures. Tag-built artifact
+verification remains pending. The repository remains private and publication actions remain
+withheld.
 
 ## Stage outcomes
 
 | Stage | Outcome | Evidence |
 | --- | --- | --- |
-| A — real SO-101 | **Partial: no-motion passes; reduced settings and current numeric pose verified; physical motion pending** | The latest warm run passed 60 seconds with 295 observations/294 processed chunks and zero timeouts or actuator writes; a cold first-request timeout is preserved. At 17:31 UTC all joints pass the inset envelope and the temporary acceleration 1, speed 56, and torque limit 100 still match with torque off. The wrist view now points upward after the pose adjustment. Correct that mount, verify final physical readiness, and repeat no-motion before the first action and bounded continuous stage. See [`FIRST_CONTACT.md`](../../hardware/FIRST_CONTACT.md) and [`HUMAN_TASKS.md`](HUMAN_TASKS.md). |
+| A — real SO-101 | **Bounded integration complete; sustained return limited** | A fresh 60-second no-motion run, one valid single action, and a two-chunk continuous run passed with exact return and all-six torque off. The separate 20-chunk attempt failed exact return under torque limit 100 but still disabled torque and stopped in a verified safe pose. See [`FIRST_CONTACT.md`](../../hardware/FIRST_CONTACT.md) and [`PREFLIGHT.md`](../../hardware/PREFLIGHT.md). |
 | B — macOS / MLX floor | **Complete** | Official macOS 14 arm64 wheels for MLX 0.32.0, 0.32.1, and 0.32.2 were hash- and Mach-O-verified, then passed the unchanged correctness and installed-runtime gates. See [`MLX_COMPATIBILITY.md`](../evidence/MLX_COMPATIBILITY.md). |
-| C — public-release preparation | **Complete** | Canonical distribution/import/CLI/cache/GitHub identities, prior-project acknowledgment, community metadata, hobbyist-first README, agent guide, and root hygiene are committed. Hardware wording is restricted to the observed no-motion result. |
-| D — software verification | **Current source complete; final tag-built artifacts pending** | The current source passes all 798 tests in 723.25 test seconds / 726.60 wall seconds, 104 focused hardware/readiness checks, and the final 497-test fast lane in 99.57 seconds wall. No skips or expected failures were introduced. The reference repair passed all 56 trained-checkpoint fixed gates. Existing distributions from `8bb5c7e` retain their prior hashes and seven-environment smoke evidence but predate this guard. Fresh tag-built artifacts and repeated installed checks remain gated on hardware completion. See [`TRAINED_PARITY_REPAIR.md`](../evidence/TRAINED_PARITY_REPAIR.md) and [`DIST_MANIFEST.md`](../evidence/DIST_MANIFEST.md). |
+| C — public-release preparation | **Complete** | Canonical identity and community metadata are committed. Hardware wording now states the bounded passing scope and the failed sustained-return result. |
+| D — software verification | **Current source complete; tag-built artifacts pending** | The current changes pass 109 focused tests, 502 selected fast-lane tests under two minutes, and all 803 full-suite tests without skips or expected failures. Existing untagged distributions predate these changes and must not be published. |
 
 ## Hardware continuation evidence
 
-Current update — 2026-09-04: the operator delegated setup and client execution,
+Final update — 2026-09-04: all physical preflight gates passed. The final
+no-motion run completed 295 observations/chunks in 60.002 seconds with zero
+timeouts and writes. The successful single-action run held one rejected chunk,
+executed one valid one-unit action, returned exactly, and disabled torque. The
+accepted two-chunk continuous stage likewise held once, executed one valid
+action, returned exactly, and ended with an independent zero-drift,
+profile/calibration/status, all-six torque-off check. The server was stopped.
+
+The earlier 20-chunk continuous attempt moved gradually but failed exact return
+within its 20-step cleanup cap at torque limit 100. It exited nonzero, disabled
+torque, and stopped inside every inset bound with zero drift. No controller
+limit was raised. This is a sustained-operation limitation, not a failure of
+the accepted bounded two-chunk gate.
+
+Earlier same-day checkpoint (historical): the operator delegated setup and client execution,
 and the runbook now reflects that amendment. Two new 60-second runs used the
 reviewed stats-active checkpoint; the warm repeat met the zero-timeout gate.
 At 16:52 UTC, calibration matched and all six controllers reported model 777,
@@ -239,30 +255,22 @@ the final no-motion and motion checks. No write was attempted; all handles close
 
 | Blocker | Status | Reason |
 | --- | --- | --- |
-| Serve untested on hardware | **Partial / motion deferred** | Four historical no-motion runs and the latest warm repeat passed; the preceding cold timeout is preserved. Reduced controller settings and the 17:31 numeric pose pass exact readback. The wrist camera now points upward after repositioning; correct it, verify physical readiness, and repeat no-motion on the final setup. Neither motion stage has run. |
+| Serve untested on hardware | **Clear at bounded scope** | No-motion, one valid action, and two continuous chunks passed. The failed 20-chunk exact return remains a disclosed limitation; sustained operation is not claimed. |
 | macOS / MLX floor | **Clear** | MLX 0.32.0–0.32.2 and their official macOS 14 wheel family passed the fixed software gates. |
-| Claims exceed evidence | **Clear** | Public language distinguishes live no-motion RPC evidence from unperformed physical motion; no claim says the model drives the arm. |
+| Claims exceed evidence | **Clear** | Public language limits hardware evidence to one valid action and two continuous chunks and preserves the failed 20-chunk return. |
 | Operator material in tree | **Clear** | The current tracked tree contains no exact device serial or private path. Telemetry, camera frames, and the bystander-containing image remain ignored and untracked; public evidence is redacted. |
-| First-page friction | **Clear** | The README, existing artifact matrix, and prior installed `doctor` checks are verified. The current unchanged `make test-fast` target passed all 497 selected tests in 99.57 seconds complete-command wall time, below two minutes. Existing artifacts predate the controller guard and require a fresh tag-built matrix after hardware completion. |
+| First-page friction | **Clear** | The README, existing artifact matrix, and prior installed `doctor` checks are verified. The unchanged `make test-fast` target passed all 502 selected tests in 109.48 seconds wall time, below two minutes; the full suite passed all 803. Existing artifacts predate the final controller changes and require a fresh tag-built matrix. |
 
 ## Exact next gate
 
-The physical prerequisites are maintained in
-[`HUMAN_TASKS.md`](HUMAN_TASKS.md), with the remaining sequence in the
-[continuation plan](PLAN_HARDWARE_RELEASE_CONTINUATION.md). The physically
-present operator supplied `ARM SESSION CONFIRMED` for the 2026-09-04 read-only
-session and subsequently delegated setup and client execution. The amended
-runbook does not require another prescribed motion phrase in this session.
-A later session still needs its own live authorization.
+Complete the focused documentation, hygiene, link, and distribution checks.
+Commit and push the reviewed source/evidence, verify remote parity, then create
+and push the annotated `v0.1.0` tag. Build fresh
+sdist and CPython 3.11/3.12/3.13 wheels from that tag, repeat all seven clean
+installation smoke environments, refresh `DIST_MANIFEST.md`, and commit/push
+that evidence.
 
-The current numeric pose and exact reduced controller profile pass. Aim the
-wrist mount downward with motor power off, then freshly check both views,
-supported pose, and profile after any reset. Verify workspace clearance, base
-security, and operator readiness at the physical power switch. Complete a
-fresh bounded no-motion check with new logs on the final setup. The authorized
-delegate may then execute one guarded action and review it before continuous
-motion. Delegation permits execution; it does not establish physical readiness.
-
-Until single-action and bounded-continuous results are reviewed and committed,
-do not tag, publish, make the repository public, create a GitHub Release,
-announce hardware motion support, or share the release as complete.
+Making the repository public, uploading to PyPI or a model Hub, creating the
+GitHub Release, and announcing the release still require separate explicit
+publication authorization. The failed 20-chunk return must remain disclosed in
+all hardware claims.

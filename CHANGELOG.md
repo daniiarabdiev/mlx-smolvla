@@ -36,13 +36,20 @@ Initial public release candidate.
 - Recheck the complete controller-limit profile after goal preload, require
   integer position mode, and reject startup force above the torque cap or
   changed during arming preparation.
+- Treat the first goal-position write as an arming boundary. Raw present values
+  must pass controller minimum/maximum checks first; explicit-torque and
+  observed goal-write arming modes require exact all-six readback and verified
+  torque-off cleanup on every post-write failure.
+- Let single-action mode hold rejected chunks within its 20-chunk attempt cap
+  and stop immediately after the first valid non-hold action.
 
 ### Known limitations
 
-- Connected Hiwonder SO-101 state/camera capture passed the latest warm
-  60-second no-motion MLX run; the preceding cold attempt missed its first
-  deadline and failed the zero-timeout gate. The single-action and bounded-
-  continuous gates have not run; no real-robot motion claim is made. See the
+- Connected Hiwonder SO-101 state/camera capture, one guarded valid action, and
+  a two-chunk continuous run passed with exact return and torque-off shutdown.
+  A separate 20-chunk attempt failed exact return under the temporary 10%
+  torque profile while still disabling torque. Sustained motion and reliable
+  task completion are not claimed. See the
   [measured evidence](hardware/FIRST_CONTACT.md).
 - Raw `lerobot/smolvla_base` output lacks effective generic-key physical
   statistics and is restricted to no-motion diagnostics by the fail-closed

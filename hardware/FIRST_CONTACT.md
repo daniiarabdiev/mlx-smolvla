@@ -1,19 +1,23 @@
 # SO-101 first-contact status
 
-**Status: prior no-motion protocol checks pass; final-setup recheck and
-physical motion remain pending.**
+**Status: bounded physical integration passed on 2026-09-04. The final
+60-second no-motion check, one valid single action, and a two-chunk continuous
+run passed with verified torque-off shutdown. A separate 20-chunk attempt
+failed exact return-to-start under the temporary low-torque profile.**
 
 The operator supplied `ARM SESSION CONFIRMED` in the live task on 2026-09-02.
 The follower-only serial path, both cameras, native MLX server, and four
 60-second no-motion loops were exercised across the original and 2026-09-03
-follow-up sessions. No torque-enable or goal-position write occurred, and all
-six torque bits read zero after the runs. The leader device was detected but
-never opened.
+follow-up sessions. During those first four runs, no torque-enable or
+goal-position write occurred, and all six torque bits read zero afterward. The
+leader device was detected but never opened.
 
-This is real-hardware protocol evidence, but it is not evidence that the
-project drives a physical SO-101: neither the single-action nor bounded-
-continuous stage ran. The precise physical blockers are in
-[`PREFLIGHT.md`](PREFLIGHT.md).
+The later 2026-09-04 powered session adds limited physical-actuation evidence.
+It proves the guarded client can execute one valid bounded action and a short
+continuous stage, return exactly for those accepted runs, and disable torque.
+It does not prove reliable task completion or sustained 20-chunk operation.
+Sections below are chronological; the final verdict supersedes earlier pending
+status recorded before motion.
 
 ## Connected surface
 
@@ -67,7 +71,7 @@ no-motion run. Its server receive-to-chunk median/p95 was 146.642/148.338 ms
 and inference median/p95 was 146.239/147.978 ms. Numeric indices remain
 session-local and require visual validation after device changes.
 
-## Anomalies and blockers
+## Historical anomalies and pre-motion blockers
 
 - Both intended UVC streams open together and return nonblack frames. The
   fixed view contains the task surface; the wrist view is an unobstructed,
@@ -232,11 +236,68 @@ and task surface before the final inference/motion checks. No motor write was
 attempted and all handles closed. A passing numeric pose does not establish
 workspace/base/power readiness. Evidence hashes are in [PREFLIGHT.md](PREFLIGHT.md).
 
+## 2026-09-04 final powered validation
+
+Fresh follower identity, existing calibration, controller profile, status,
+pose, and camera checks passed before motion. The temporary SRAM profile was
+acceleration 1, goal velocity 56, and torque limit 100 on all six controllers;
+mode was 0, startup force was 32, status had no alarms, and all torque bits were
+zero. The fixed view contained the complete arm and work area, and the wrist
+view faced the gripper and table. The start pose was inside every 10%-inset
+bound and showed zero drift over two seconds.
+
+The first arming attempt exposed a controller-specific behavior. Writing each
+current raw `Present_Position` back to `Goal_Position` changed all six torque
+bits from zero to one in about 12 ms without an explicit enable call. The old
+guard rejected that state and verified all-six torque-off cleanup; no policy
+action ran and there was no displacement. An offline raw audit confirmed that
+all six present values were within the controller's raw minimum and maximum.
+The client was then changed to check those limits before its first write and to
+support two explicit arming modes. The tested unit used `goal-write`, which
+requires the observed all-six enabled state and never enables twice. The
+portable `explicit-torque` default still requires torque to remain off after
+preload before one explicit enable. Every post-write error follows the verified
+disable path.
+
+The final no-motion run passed for 60.002 seconds with 295 observations and 295
+processed chunks at 4.917 sampled FPS. Observation-to-chunk median/p95 was
+167.734/173.328 ms, with zero timeouts and zero writes. It recorded 29 rejected
+hold chunks, 404 clipped values, and 1,499 rate-limited values. The first two
+single-action trials then held their rejected timestep-zero chunks and returned
+without displacement. That finding led to the bounded single-action rule: wait
+through rejected holds, stop after the first valid non-hold action, and retain
+the 20-chunk hard attempt cap.
+
+The successful single-action run processed two chunks: one rejected hold and
+one valid action. Its commanded per-joint delta was
+`(+1, -1, -1, -1, +1, -1)` public units, within the one-unit limit. It stopped
+with `action_limit`, returned to the exact recorded start, showed zero
+post-run drift, and read all six torque bits as zero. There were no timeouts.
+
+A subsequent 20-chunk continuous attempt moved the arm gradually toward the
+task object. Its exact return failed because the 20-step cleanup cap was
+exhausted while several gravity-loaded joints stopped following one-degree
+return targets under torque limit 100. This run exited nonzero and is retained
+as a failed sustained-motion result. Cleanup still disabled all six torque
+bits, and an independent check found the stopped pose inside every inset bound,
+with zero drift, matching calibration/profile readbacks, clear camera views,
+and no status alarm. The controller limits were not raised.
+
+The accepted bounded-continuous stage used a two-chunk ceiling from that safe
+pose. It processed one rejected current-position hold followed by one valid
+one-unit action, stopped at `chunk_limit`, returned exactly, and passed an
+independent final pose/profile/calibration/status check with zero two-second
+drift and all six torque bits off. It exited zero in 6.514 seconds with no
+timeouts, one clipped value, and six rate-limited values. The owned loopback
+server was stopped and its port was closed after validation. Exact private
+record hashes are in [`PREFLIGHT.md`](PREFLIGHT.md).
+
 ## Current verdict
 
-The claim “exchanges live camera/state observations and MLX action chunks with
-a connected SO-101 on a MacBook, with motor writes suppressed” is evidenced.
-The broader claim “drives a real SO-101 from a MacBook” is **not** evidenced and
-must not be published. Resume only with the single-action gate after every
-blocker above is cleared and a fresh no-motion check passes; bounded continuous
-remains gated on the reviewed single-action result.
+The claim “executes a guarded single action and a short bounded-continuous run
+on a connected SO-101 from a MacBook, with exact torque-off shutdown” is
+evidenced. The evidence is limited to one valid action and two continuous
+chunks under the temporary 10% torque profile. The failed 20-chunk return means
+sustained 20-chunk operation and reliable task completion are not evidenced.
+Future powered sessions require fresh authorization, physical preflight, and
+profile readback; the client must never raise the torque limit automatically.
