@@ -65,9 +65,13 @@ Motion modes additionally require:
   still off;
 - a start pose already inside the 10%-inset calibrated range.
 
-Only after those checks does the adapter enable torque and verify six enabled
-bits. Every action must be shape `(1, 6)`, finite, and inside the vendor
-driver's full public domain (body joints −180°–180°, gripper 0–100). Valid
+Only after those checks does the adapter read each raw present position, write
+those exact raw values to `Goal_Position` while torque is still off, and
+require goal and fresh-present readback equality. It rechecks all six torque
+bits as zero immediately before enabling torque, then enables and verifies all
+six enabled bits. This prevents arming against a stale goal retained from an
+earlier session. Every action must be shape `(1, 6)`, finite, and inside the
+vendor driver's full public domain (body joints −180°–180°, gripper 0–100). Valid
 values are clipped to the 10%-inset calibration and rate-limited from current
 servo readback by the stricter of 2% of calibrated span or one public unit.
 Invalid values hold. Three consecutive 500 ms action timeouts terminate the
@@ -79,18 +83,22 @@ enable torque. The 500 ms timeout applies only to observation/action traffic.
 
 ## Writes and cleanup
 
-The only actuator register the client can write is `Goal_Position`, and only
-after arming. The Hiwonder manual states that the position-mode `Time` field is
-not applicable, so the client does not pretend `Goal_Time` controls speed. It
-enforces a minimum 200 ms command/dwell interval while independently requiring
+The only actuator register the client can write is `Goal_Position`. Its first
+write copies the raw present encoder values while torque is off and must pass
+exact readback before arming; later writes require the armed state. The
+Hiwonder manual states that the position-mode `Time` field is not applicable,
+so the client does not pretend `Goal_Time` controls speed. It enforces a
+minimum 200 ms command/dwell interval while independently requiring
 operator-established low hardware limits.
 
 On a normal cap, watchdog stop, exception, SIGINT, or SIGTERM, a motion session
-attempts—in order—to hold current position, return slowly to the recorded start
-pose, disable torque with all-zero readback, disconnect cameras, and close the
-follower bus. Cleanup continues after individual failures and reports every
-failure. A no-motion session skips all hold/return/torque operations and closes
-I/O without a write.
+attempts—in order—to hold current position, return to the recorded start pose
+through fresh-readback steps bounded by the same one-public-unit envelope,
+disable torque with all-zero readback, disconnect cameras, and close the
+follower bus. Each return step uses the 1000 ms return dwell and the number of
+steps cannot exceed the session chunk cap. Cleanup continues after individual
+failures and reports every failure. A no-motion session skips all
+hold/return/torque operations and closes I/O without a write.
 
 ## Telemetry boundary
 

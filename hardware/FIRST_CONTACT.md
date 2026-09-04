@@ -72,9 +72,10 @@ session-local and require visual validation after device changes.
   fixed view contains the task surface; the wrist view is an unobstructed,
   close desk view that is soft at the parked camera's focus distance. The
   operator confirmed the framing, so the camera blocker is closed.
-- `shoulder_lift` and `elbow_flex` are near calibrated endpoints and outside
-  the required 10%-inset start envelope. The post-teleoperation read at
-  `2026-09-03T14:09:05Z` still failed both joints at -93.275 and 96.484.
+- After the failed post-teleoperation read, the operator manually moved and
+  mechanically supported the torque-free arm. The latest lift/elbow read was
+  -20.396/62.989 degrees, and every joint passed the 10%-inset start envelope.
+  All six torque bits remained zero.
 - Controller torque/current/velocity/acceleration readbacks have not been
   established as low by an operator-known procedure; no accepted safety
   profile exists. The same read found `Acceleration=254` and
@@ -88,6 +89,15 @@ path and streams leader targets, whereas the MLX path has additional
 start-envelope and exact-profile gates before its first torque-enable. The
 read-only recheck confirmed both cameras and all-zero torque, so this is not a
 camera enumeration or dead-motor failure.
+
+The supported-pose read also found that the retained shoulder-lift and elbow
+goals differed from present position by 84.396 and 33.495 degrees. No torque
+was enabled. Failure-first software hardening now preloads and verifies raw
+present positions as goals while torque is off, then rechecks torque-off before
+enable. Return-to-start now uses bounded one-unit readback steps rather than a
+single direct command. The new behavior passes 96 hardware/readiness tests,
+482 fast tests, and all 773 tests, but remains unexercised on moving hardware
+until the low-profile and physical gates below are satisfied.
 
 The server-environment anomaly was closed after these runs: a fresh `.[serve]`
 environment contained no PyAV and its loopback-only startup/shutdown emitted

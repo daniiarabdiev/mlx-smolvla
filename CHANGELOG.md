@@ -22,13 +22,16 @@ Initial public release candidate.
 
 ### Fixed
 
-- Stabilized simultaneous Hiwonder dual-camera startup on macOS by connecting
-  the fixed view before the wrist view, preserving the existing feature names,
-  indices, and 640x480/30 FPS contract.
+- Corrected Hiwonder camera guidance to assign session-local roles by visual
+  preflight and exclude built-in or Continuity cameras; both startup orders
+  pass with the two intended UVC devices.
+- Prevented torque-enable against retained servo goals by preloading and
+  exactly verifying fresh raw positions while torque remains off. Outbound and
+  return-to-start commands are both bounded to gradual one-public-unit steps.
 
 ### Known limitations
 
-- Connected Hiwonder SO-101 state/camera capture and two 60-second no-motion
+- Connected Hiwonder SO-101 state/camera capture and four 60-second no-motion
   MLX loops pass, but the single-action and bounded-continuous gates have not
   run; no real-robot motion claim is made in this release candidate.
 - Raw `lerobot/smolvla_base` output lacks effective generic-key physical

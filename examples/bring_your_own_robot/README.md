@@ -45,5 +45,6 @@ Do not infer actuation readiness from the shipped code or completed no-motion
 test. Follow the exact [hardware runbook](../../docs/HARDWARE_RUNBOOK.md),
 [client design](../../hardware/CLIENT_DESIGN.md), and current
 [first-contact status](../../hardware/FIRST_CONTACT.md). The 2026-09-02
-no-motion protocol passed, but camera framing, start pose, and verified low
-controller limits still block the first physical action.
+no-motion protocol passed; later checks also verified camera framing and a
+supported inset pose. The exact operator-attested low-controller profile and
+the final physical checklist still block the first physical action.

@@ -9,7 +9,8 @@ Runtime: Python 3.12.13, MLX 0.32.2, `Device(gpu, 0)`
 Hardware-client source: initial protocol
 `404467190aeceea91f58cb98076148ab1aa0c0df`; dual-camera follow-up
 `fbd34ed9f1bd3da095c5c7ee3bdc15d4f2bf795c`; camera-identity recheck
-`61b3cf2edd40af25c46aac0f8e30c7c2ebd2c0fa`
+`61b3cf2edd40af25c46aac0f8e30c7c2ebd2c0fa`; stale-goal/gradual-return
+hardening `b2b97e1255f721f591ef115528216bd5526798fe`
 
 ## Scope and result
 
@@ -21,9 +22,11 @@ they are redacted from this public report.
 Read-only serial/calibration preflight and four 60-second no-motion loops
 completed across the original and follow-up sessions. No torque-enable or
 goal-position write was issued. The corrected camera-identity recheck closed
-the camera blocker. Motion remains blocked because the start pose is outside
-the tightened envelope, no operator-verified low hardware-limit profile
-exists, and the physical motion checklist has not been attested.
+the camera blocker. A later supported-pose read cleared the inset start-pose
+blocker but found a hazardous stale goal, prompting the software hardening
+recorded below. Motion remains blocked because no operator-verified low
+hardware-limit profile exists and the physical motion checklist has not been
+attested.
 
 ## Serial and calibration
 
@@ -211,6 +214,30 @@ operator-verified nine-register profile, requires the start pose inside the
 success therefore proves that the motors and leader/follower path work, but it
 does not clear the separate autonomous-motion gate.
 
+## 2026-09-03 supported pose and stale-goal hardening
+
+The operator manually moved and then mechanically supported the torque-free
+follower. A read-only recheck measured 6.242, -20.396, 62.989, 44.176, -1.802,
+and 23.013 in public joint order. Every joint passed the 10%-inset start
+envelope and all six torque bits remained zero.
+
+The same read exposed a distinct arming hazard: the retained
+`Goal_Position` differed from the present shoulder-lift position by 84.396
+degrees and from the present elbow position by 33.495 degrees. Enabling torque
+against those stale targets could have caused a large immediate move. No
+hardware write or torque-enable was attempted.
+
+Failure-first tests reproduced both missing protections. Commit `b2b97e1`
+now requires an exact raw `Present_Position` to `Goal_Position` preload and
+goal/fresh-present readback match while torque is off, followed by another
+torque-off check before enable. Cleanup now returns through fresh-readback
+steps bounded by the same maximum one-public-unit action envelope and a 1000
+ms dwell, rather than one direct start-pose command. The hardware/readiness
+suite passes 96/96, the fast suite passes 482/482 selected tests with 291
+deselected in 99.16 seconds, and the full suite passes 773/773 in 660.64
+seconds. These changes are software-verified but have not yet enabled torque
+or moved the connected follower.
+
 ## Server and model mapping
 
 - The native server listened only on `127.0.0.1:8080` and reported MLX GPU as
@@ -257,9 +284,9 @@ was identical before and after access:
 
 ## Hard blockers before motion
 
-1. With torque disabled, manually place the lift and elbow inside their
-   10%-inset ranges, preferably near the calibrated neutral pose; repeat the
-   position readback.
+1. Keep the arm mechanically supported. The latest pose passed the inset
+   envelope, but it must be re-read immediately before arming and must still
+   pass without anyone holding it.
 2. Establish and attest low controller torque/current/velocity/acceleration
    limits using an operator-known procedure; capture their exact readback in a
    safety-profile JSON file.

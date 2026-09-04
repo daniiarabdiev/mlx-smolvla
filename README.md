@@ -9,10 +9,11 @@ On the pinned Apple M5 Pro test case, MLX fp32 produced a 50-action chunk in
 while that chunk represents **1.67 s** at 30 fps (about **15.0× real-time
 duration**); scope and raw timings are in the [benchmark evidence](docs/BENCHMARK.md#mlx-versus-pytorch-mps).
 
-> **Hardware demo slot:** live follower/camera I/O and two 60-second no-motion
-> MLX loops now pass, but physical actuation is blocked by the documented
-> camera, start-pose, and controller-limit gates. This release candidate does
-> not claim real-robot motion. See the
+> **Hardware demo slot:** live follower/camera I/O and four 60-second no-motion
+> MLX loops now pass. Camera framing and a supported inset pose have been
+> verified, but physical actuation remains blocked by the low-controller-limit
+> profile and final physical attestation. This release candidate does not claim
+> real-robot motion. See the
 > [first-contact status](hardware/FIRST_CONTACT.md) and
 > [media guidance](docs/media/README.md).
 

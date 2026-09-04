@@ -592,3 +592,23 @@ retained to show how the error was found and corrected.
   60 Hz leader-write path; it does not enforce the MLX client's inset-pose or
   exact-profile gates. No safety condition will be weakened to equate those
   two workflows. `PUBLIC RELEASE READY` remains unreached.
+
+## 2026-09-03 stale-goal safety checkpoint
+
+- A mechanically supported, torque-free read measured lift/elbow at
+  -20.396/62.989 degrees; every joint passed the 10%-inset envelope and all six
+  torque bits remained zero.
+- Retained goal offsets of -84.396 degrees on lift and +33.495 degrees on
+  elbow identified a credible jump-on-enable hazard. No write or torque-enable
+  was attempted during diagnosis.
+- Pushed source `b2b97e1255f721f591ef115528216bd5526798fe` now preloads exact
+  raw present positions as raw goals while unarmed, verifies those goals
+  against fresh present readback, and rechecks torque-off before enable.
+  Return-to-start is gradual: fresh-readback, one-public-unit steps with a
+  1000 ms dwell and a hard session-step cap.
+- The hardware/readiness slice passed 96/96, the fast lane passed 482/482 with
+  291 deselected in 99.16 seconds, and the complete lane passed 773/773 in
+  660.64 seconds.
+- The pose blocker is clear at the recorded supported pose. The exact low-limit
+  profile, physical checklist, and exact live motion statement remain open;
+  no physical motion has run. `PUBLIC RELEASE READY` remains unreached.

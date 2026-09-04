@@ -176,7 +176,10 @@ The safety-profile file is operator-owned and must contain the exact nine-
 register readback described in
 [`hardware/CLIENT_DESIGN.md`](../hardware/CLIENT_DESIGN.md). Its serial and the
 selected port must match. The client validates all of this, the checkpoint
-statistics, and the 10%-inset start pose before torque enable.
+statistics, and the 10%-inset start pose before torque enable. It then copies
+the raw present encoder values into `Goal_Position` while torque remains off,
+requires exact goal/fresh-present readback equality, and rechecks torque-off
+before enabling. Any stale-goal or readback mismatch aborts unarmed.
 
 ```bash
 export HARDWARE_SAFETY_PROFILE='<ABSOLUTE_PATH_TO_OPERATOR_VERIFIED_PROFILE_JSON>'
@@ -199,9 +202,12 @@ test ! -e "$CLIENT_TELEMETRY"
   --telemetry "$CLIENT_TELEMETRY"
 ```
 
-The client applies one enveloped action, holds, returns slowly to the recorded
-start pose, verifies torque off, and exits. Do not invoke `--continuous` until
-the single-action evidence has been reviewed and accepted.
+The client applies one enveloped action, holds, returns to the recorded start
+pose through fresh-readback steps of at most one public unit with a 1000 ms
+dwell per step, verifies torque off, and exits. The same one-unit/2%-span
+limiter and 200 ms dwell floor bound outbound actions. Do not invoke
+`--continuous` until the single-action evidence has been reviewed and
+accepted.
 
 ## What to observe
 

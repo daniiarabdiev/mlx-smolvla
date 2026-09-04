@@ -3032,3 +3032,27 @@
   first torque-enable until the inset pose, exact nine-register profile, and
   physical gate are satisfied. The remaining block is therefore a deliberate
   autonomous-motion safety gate, not a camera or motor defect.
+
+## 2026-09-03 — supported pose, stale-goal fix, and gradual return
+
+- After the operator manually moved and mechanically supported the torque-free
+  follower, a read-only check measured lift/elbow at -20.396/62.989 degrees.
+  Every joint passed the 10%-inset envelope and all six torque bits read zero.
+- The same read exposed retained goal offsets of -84.396 degrees for lift and
+  +33.495 degrees for elbow. Enabling torque against those goals could have
+  caused a large immediate move. No write or torque-enable occurred.
+- Failure-first tests now cover the hazard. Pushed commit
+  `b2b97e1255f721f591ef115528216bd5526798fe` copies raw present positions to
+  raw goals while torque remains off, requires exact goal/fresh-present
+  equality, and rechecks all-zero torque before enabling.
+- Cleanup now returns from fresh readback through the same maximum
+  one-public-unit envelope with a 1000 ms dwell per step and the session chunk
+  cap as a hard bound. Outbound actions retain their one-unit/2%-span limiter
+  and 200 ms dwell floor.
+- The hardware/readiness slice passed 96/96 tests, `make test-fast` passed
+  482/482 selected tests with 291 deselected in 99.16 seconds, and `make test`
+  passed all 773 tests in 660.64 seconds.
+- The inset-pose gate is clear at the recorded supported pose. Motion remains
+  blocked on an exact operator-attested low-controller profile, the physical
+  workspace/base/power checklist, and the exact in-session statement. The new
+  path has not enabled torque or moved hardware.

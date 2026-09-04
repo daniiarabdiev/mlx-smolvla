@@ -14,12 +14,11 @@
 
 ## Open — clear the remaining physical prerequisites for one action
 
-- With torque disabled, manually place `shoulder_lift` and `elbow_flex` near
-  their calibrated neutral positions. At minimum, readback must be inside
-  −83.833°–83.833° for lift and −77.187°–77.187° for elbow. Do not recalibrate
-  or command the motors to reach that pose. The latest read-only check at
-  `2026-09-03T14:09:05Z` measured −93.275° and 96.484°, respectively, so both
-  still fail.
+- **Current pose status:** passed after the operator manually moved and
+  mechanically supported the torque-free arm. The latest lift/elbow read was
+  −20.396°/62.989°, inside the required −83.833°–83.833° /
+  −77.187°–77.187° ranges. Leave it supported; the client must re-read and
+  pass the pose immediately before arming.
 - Using the operator's known-good Hiwonder/ServoStudio procedure, establish low
   torque, current, velocity, and acceleration limits. Do not copy the observed
   defaults in `PREFLIGHT.md`. Save the exact readback for every joint and every
@@ -40,7 +39,11 @@
   writes the vendor's 254 acceleration defaults and streams leader targets,
   while the autonomous MLX client must verify the separate inset-pose and
   exact low-profile gates before enabling torque.
-- After all four items are physically true, send this exact new in-session
+- The client now prevents stale-goal jumps by preloading and exactly verifying
+  the current raw position as the goal while torque is off. Outbound and
+  return motion are both bounded to gradual one-public-unit steps. This does
+  not replace the low-limit or physical checks.
+- After all listed items are physically true, send this exact new in-session
   statement before a single-action attempt:
 
   ```text
