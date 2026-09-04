@@ -2,7 +2,7 @@
 
 CURRENT BOUNDED HARDWARE INTEGRATION PASSES — SUSTAINED 20-CHUNK RETURN LIMITED
 
-CURRENT SOURCE VERIFIED — 109 FOCUSED / 502 FAST / 803 FULL TESTS PASS
+V0.1.0 TAG AND ALL SEVEN TAG-BUILT INSTALL ENVIRONMENTS VERIFIED
 
 PRIOR BASELINE: FULL-SCOPE SOFTWARE COMPLETE — FINAL AUDIT PASSED
 
@@ -912,4 +912,27 @@ retained to show how the error was found and corrected.
   The unchanged fast lane passes 502 selected tests in 106.44 pytest seconds /
   109.48 wall seconds, and the full suite passes all 803 tests in 752.18 pytest
   seconds / 755.65 wall seconds, without skips or expected failures. Tag-built
-  artifact verification remains pending.
+  artifact verification is recorded in the release section below.
+
+## 2026-09-04 final tagged artifact verification
+
+- Committed/pushed source `9b28dc216e24aa86d121d9b805c1fc1733afbf9d`
+  carries the final controller guard, bounded hardware evidence, and honest
+  sustained-return limitation. Local and remote `main` matched before tagging.
+- The pushed annotated `v0.1.0` tag resolves to that exact commit. A clean
+  detached tag checkout built one sdist and CPython 3.11/3.12/3.13 native
+  wheels with macOS deployment target 14.0. Canonical archive inspection,
+  `twine check`, and independent `vtool` minimum-version inspection pass.
+- Four base fresh installs import only from their environments, pass `doctor`,
+  use the native backend, and emit finite six-component predictions offline.
+  The serve environment passes loopback `Ready` and both quantized predictions;
+  the hardware environment verifies the packaged arming/raw-limit/single-action
+  behavior without device access; the cache shim passes all precedence cases.
+- The reference/train environment preserves all 500 tensors / 450,046,176
+  scalars with zero mismatch on CPU fp32, CPU fp64, and MPS fp32. All seven
+  environments pass dependency integrity. Exact artifact and evidence hashes
+  are in `docs/evidence/DIST_MANIFEST.md`.
+- The preceding untagged artifacts remain preserved. The verified tag-built
+  bytes are mirrored to ignored `dist/`. Nothing was uploaded, the repository
+  remains private, and no GitHub Release was created. Those publication actions
+  still require separate explicit authorization.

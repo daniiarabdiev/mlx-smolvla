@@ -29,7 +29,7 @@ repository evidence.
   release-candidate source checkpoint, inspect their file lists, install them
   into clean environments, and exercise the installed CLI rather than the
   checkout. Source: [PyPA packaging flow](https://packaging.python.org/en/latest/flow/).
-- [ ] After the supervised hardware gate and final verification clear, create
+- [x] After the supervised hardware gate and final verification clear, create
   the annotated tag on the committed, pushed final source. Build a fresh sdist
   and CPython 3.11/3.12/3.13 wheels from that tag into a new directory; repeat
   the fresh-install smoke matrix and record exact hashes in

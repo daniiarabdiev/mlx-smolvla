@@ -66,44 +66,25 @@ authorized actions.
   ```
 
 - Verify the public, logged-out view before sharing the link. Do not run this
-  command while the hardware blocker remains open.
+  command until the operator explicitly authorizes the visibility change.
+
+## Done — prepare the final tag and Python distributions
+
+- Verified source commit `9b28dc216e24aa86d121d9b805c1fc1733afbf9d` is
+  pushed on `main`; pushed annotated tag `v0.1.0` resolves to that exact commit.
+- A clean detached tag checkout produced the sdist and CPython 3.11/3.12/3.13
+  macOS 14 arm64 wheels in ignored `.cache/release-v0.1.0-artifacts/`. The
+  preceding untagged `dist/` bytes were preserved before the verified tagged
+  bytes were mirrored there.
+- Canonical archive inspection, native `minos 14.0`, Twine, four base fresh
+  installs, serve/quantization, hardware no-device, cache-shim, and
+  reference/training identity checks all pass. Exact hashes are in
+  [`../evidence/DIST_MANIFEST.md`](../evidence/DIST_MANIFEST.md).
 
 ## Open — publish the Python distributions
 
-- After the supervised hardware evidence is committed and `v0.1.0` is tagged,
-  rebuild from that tag into a new directory. Do not publish the current
-  untagged candidate merely because its smoke matrix passed:
-
-  ```sh
-  FINAL_RELEASE_SOURCE="$PWD/.cache/release-v0.1.0-source"
-  FINAL_RELEASE_ARTIFACTS="$PWD/.cache/release-v0.1.0-artifacts"
-  UV_CACHE_DIR="$PWD/.cache/uv"
-  UV_PYTHON_INSTALL_DIR="$PWD/.cache/uv-pythons"
-  export UV_CACHE_DIR UV_PYTHON_INSTALL_DIR
-  test ! -e "$FINAL_RELEASE_SOURCE" && test ! -e "$FINAL_RELEASE_ARTIFACTS"
-  git worktree add --detach "$FINAL_RELEASE_SOURCE" v0.1.0
-  mkdir -p "$FINAL_RELEASE_ARTIFACTS"
-  (cd "$FINAL_RELEASE_SOURCE" && \
-    MACOSX_DEPLOYMENT_TARGET=14.0 uv build --sdist \
-      --out-dir "$FINAL_RELEASE_ARTIFACTS" && \
-    MACOSX_DEPLOYMENT_TARGET=14.0 uv build --wheel --python 3.11 \
-      --out-dir "$FINAL_RELEASE_ARTIFACTS" && \
-    MACOSX_DEPLOYMENT_TARGET=14.0 uv build --wheel --python 3.12 \
-      --out-dir "$FINAL_RELEASE_ARTIFACTS" && \
-    MACOSX_DEPLOYMENT_TARGET=14.0 uv build --wheel --python 3.13 \
-      --out-dir "$FINAL_RELEASE_ARTIFACTS")
-  uvx --from twine twine check "$FINAL_RELEASE_ARTIFACTS"/*
-  ```
-
-- Repeat the archive inspection and all seven fresh-install environments,
-  including base offline predictions/`doctor`, serving/quantization, hardware
-  imports without device access, cache compatibility, reference/training
-  exact-weight checks, and hash capture from
-  [`../evidence/DIST_MANIFEST.md`](../evidence/DIST_MANIFEST.md). Refresh that
-  manifest with the tag-built bytes and commit/push it before uploading.
-- Obtain separate explicit authorization for the PyPI upload after the final
-  artifact set and manifest are reviewable. Recheck that the name is still
-  available immediately before that authorized publication:
+- Obtain separate explicit authorization for the PyPI upload. Immediately
+  before an authorized publication, recheck that the name is still available:
 
   ```sh
   python -c 'import urllib.request; urllib.request.urlopen("https://pypi.org/pypi/mlx-smolvla/json")'
@@ -113,7 +94,7 @@ authorized actions.
   stop and resolve the naming conflict.
 - Supply the operator's PyPI credential securely through the environment,
   outside this repository and shell history. With explicit upload authorization
-  and that credential already configured, upload only the final
+  and that credential already configured, upload only the four final
   manifest-matched artifacts:
 
   ```sh
@@ -148,11 +129,12 @@ authorized actions.
     --repo-type model
   ```
 
-## Optional — add the hardware video after validation
+## Optional — add a bounded hardware video
 
-- After the hardware report passes, place the reviewed ≤20-second, ≤8-MiB file
-  at `docs/media/so101-first-contact.webp`, update the README slot, rerun both
-  test lanes, and commit it with the matching first-contact evidence.
+- A reviewed ≤20-second, ≤8-MiB file may be placed at
+  `docs/media/so101-first-contact.webp`. Its caption must state the one-action/
+  two-chunk evidence and the failed 20-chunk return, then the documentation
+  checks must be repeated before committing it.
 
 ## Done — finish the GitHub repository rename
 

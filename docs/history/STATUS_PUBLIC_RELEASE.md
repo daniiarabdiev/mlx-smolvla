@@ -2,8 +2,8 @@
 
 Date: 2026-09-04
 
-`mlx-smolvla` is a 0.1.0 software release candidate on the canonical renamed
-GitHub repository. The final connected-hardware session passed a fresh
+`mlx-smolvla` 0.1.0 now has a verified local release package on the canonical
+renamed GitHub repository. The final connected-hardware session passed a fresh
 60-second no-motion run, one valid guarded single action, and a two-chunk
 bounded-continuous run with exact return and verified torque-off shutdown. A
 separate attempt at the 20-chunk ceiling exited nonzero because several
@@ -16,12 +16,14 @@ goal preload. The client now checks raw controller position limits before that
 write, supports explicit controller arming modes, never double-enables the
 observed unit, and disables torque after any post-write failure. Single-action
 mode waits through rejected holds within its 20-chunk cap and stops after its
-first valid action. Focused hardware/readiness verification passes 109 tests. The unchanged final
-fast lane passes 502 selected tests in 106.44 pytest seconds / 109.48 wall
+first valid action. Focused hardware/readiness verification passes 109 tests.
+The unchanged final fast lane passes 502 selected tests in 106.44 pytest
+seconds / 109.48 wall
 seconds, and the complete lane passes all 803 tests in 752.18 pytest seconds /
-755.65 wall seconds, with no skips or expected failures. Tag-built artifact
-verification remains pending. The repository remains private and publication actions remain
-withheld.
+755.65 wall seconds, with no skips or expected failures. Pushed annotated tag
+`v0.1.0` resolves to the verified source; its sdist and three native wheels pass
+archive, Twine, macOS-floor, and seven-environment installed smoke checks. The
+repository remains private and publication actions remain withheld.
 
 ## Stage outcomes
 
@@ -30,7 +32,7 @@ withheld.
 | A — real SO-101 | **Bounded integration complete; sustained return limited** | A fresh 60-second no-motion run, one valid single action, and a two-chunk continuous run passed with exact return and all-six torque off. The separate 20-chunk attempt failed exact return under torque limit 100 but still disabled torque and stopped in a verified safe pose. See [`FIRST_CONTACT.md`](../../hardware/FIRST_CONTACT.md) and [`PREFLIGHT.md`](../../hardware/PREFLIGHT.md). |
 | B — macOS / MLX floor | **Complete** | Official macOS 14 arm64 wheels for MLX 0.32.0, 0.32.1, and 0.32.2 were hash- and Mach-O-verified, then passed the unchanged correctness and installed-runtime gates. See [`MLX_COMPATIBILITY.md`](../evidence/MLX_COMPATIBILITY.md). |
 | C — public-release preparation | **Complete** | Canonical identity and community metadata are committed. Hardware wording now states the bounded passing scope and the failed sustained-return result. |
-| D — software verification | **Current source complete; tag-built artifacts pending** | The current changes pass 109 focused tests, 502 selected fast-lane tests under two minutes, and all 803 full-suite tests without skips or expected failures. Existing untagged distributions predate these changes and must not be published. |
+| D — software and tagged artifacts | **Complete** | The current changes pass 109 focused, 502 fast-lane, and 803 full-suite tests. The pushed `v0.1.0` tag produced one sdist and three wheels that pass canonical archive/Twine/`minos 14.0` checks and all seven clean-install smoke environments. Exact bytes are in [`DIST_MANIFEST.md`](../evidence/DIST_MANIFEST.md). |
 
 ## Hardware continuation evidence
 
@@ -259,18 +261,13 @@ the final no-motion and motion checks. No write was attempted; all handles close
 | macOS / MLX floor | **Clear** | MLX 0.32.0–0.32.2 and their official macOS 14 wheel family passed the fixed software gates. |
 | Claims exceed evidence | **Clear** | Public language limits hardware evidence to one valid action and two continuous chunks and preserves the failed 20-chunk return. |
 | Operator material in tree | **Clear** | The current tracked tree contains no exact device serial or private path. Telemetry, camera frames, and the bystander-containing image remain ignored and untracked; public evidence is redacted. |
-| First-page friction | **Clear** | The README, existing artifact matrix, and prior installed `doctor` checks are verified. The unchanged `make test-fast` target passed all 502 selected tests in 109.48 seconds wall time, below two minutes; the full suite passed all 803. Existing artifacts predate the final controller changes and require a fresh tag-built matrix. |
+| First-page friction | **Clear** | The README and final artifact matrix are verified. The unchanged fast lane passed all 502 selected tests under two minutes, the full suite passed 803, and all seven tag-built clean-install environments passed. |
 
 ## Exact next gate
 
-Complete the focused documentation, hygiene, link, and distribution checks.
-Commit and push the reviewed source/evidence, verify remote parity, then create
-and push the annotated `v0.1.0` tag. Build fresh
-sdist and CPython 3.11/3.12/3.13 wheels from that tag, repeat all seven clean
-installation smoke environments, refresh `DIST_MANIFEST.md`, and commit/push
-that evidence.
-
-Making the repository public, uploading to PyPI or a model Hub, creating the
-GitHub Release, and announcing the release still require separate explicit
-publication authorization. The failed 20-chunk return must remain disclosed in
-all hardware claims.
+The technical preparation is complete. Making the repository public, uploading
+to PyPI or a model Hub, creating the GitHub Release, and announcing the release
+require separate explicit publication authorization. Immediately before any
+authorized PyPI upload, recheck name availability and match every uploaded byte
+to `DIST_MANIFEST.md`. The failed 20-chunk return must remain disclosed in all
+hardware claims.

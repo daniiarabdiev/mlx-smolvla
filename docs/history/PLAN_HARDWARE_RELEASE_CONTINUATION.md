@@ -105,9 +105,9 @@ profile and remains a documented sustained-operation limitation.
 - [x] Run the full suite, idle fast-lane timing, link/hygiene checks, and
   relevant source/distribution checks. The final lanes pass 803 full, 502 fast,
   109 focused, and 28 documentation/hygiene tests.
-- [ ] Review and commit/push the final source and evidence; verify the remote
+- [x] Review and commit/push the final source and evidence; verify the remote
   before creating/pushing annotated `v0.1.0`.
-- [ ] Build a new sdist and CPython 3.11/3.12/3.13 wheels from that tag into a
+- [x] Build a new sdist and CPython 3.11/3.12/3.13 wheels from that tag into a
   new directory. Repeat archive/Twine checks and all seven applicable fresh
   install environments described in [DIST_MANIFEST.md](../evidence/DIST_MANIFEST.md).
   Record exact hashes and tag/source provenance in the manifest and commit/push

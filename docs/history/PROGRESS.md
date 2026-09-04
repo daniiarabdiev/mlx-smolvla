@@ -3599,3 +3599,31 @@
   Lock validation resolves 122 packages and the active 100-package environment
   passes dependency checking. Diff scanning finds no private home path or
   exact device serial.
+
+## 2026-09-04 — final v0.1.0 tag-built artifacts
+
+- Committed and pushed final source/evidence as
+  `9b28dc216e24aa86d121d9b805c1fc1733afbf9d`, then verified local and remote
+  `main` equality. Created and pushed annotated tag `v0.1.0`; its peeled remote
+  target matches that exact commit.
+- A clean detached tag checkout built the 150-entry sdist and 73-entry native
+  CPython 3.11/3.12/3.13 wheels with deployment target 14.0. Canonical archive
+  inspection confirms version/name/entry point/extras, repaired reference
+  loader, and final hardware controller/session behavior. All extensions report
+  `platform MACOS`, `minos 14.0`; Twine passes all four artifacts.
+- Four clean base installs across the sdist and wheels pass import isolation,
+  the native backend, `doctor`, and finite six-component offline prediction.
+  The clean serve environment passes descriptor identity, loopback `Ready`,
+  CLI surfaces, and both quantized predictions with PyAV absent. The clean
+  hardware environment verifies stats-active mapping plus the raw-limit,
+  arming-mode, single-valid-action, stale-goal, and gradual-return code without
+  opening hardware; PyAV is absent.
+- The cache shim passes legacy/current/explicit precedence. The clean
+  reference/train environment matches all 500 retained-checkpoint tensors and
+  450,046,176 scalars on CPU fp32, CPU fp64, and MPS fp32 with zero mismatch.
+  All seven environments pass dependency integrity.
+- Exact final artifact SHA-256 values are recorded in
+  `docs/evidence/DIST_MANIFEST.md`. The prior untagged `dist/` bytes were moved
+  intact to `.cache/dist-pre-tag-v0.1.0-20260904`; verified tag-built bytes now
+  occupy ignored `dist/`. Nothing was uploaded, no visibility changed, and no
+  GitHub Release was created.
