@@ -693,3 +693,27 @@ retained to show how the error was found and corrected.
   under the separate hardware/publication workflow. The next physical session
   must freshly validate camera roles, pose, limits, and supervised motion; this
   run does not authorize or imply robot task success.
+
+## 2026-09-04 release-status and fast-lane closeout
+
+- Refreshed `STATUS_PUBLIC_RELEASE.md` to distinguish the later passing
+  camera-role/framing and mechanically supported inset-pose checks from the
+  earlier failures. Four no-motion loops are recorded; neither motion mode
+  has run. The exact low-controller-limit profile and final physical
+  attestation remain open, with fresh camera/pose validation required after
+  reconnecting. Hardware remains powered off and untouched.
+- The unmodified `make test-fast` target passed **489/489**, with 301 slow
+  tests deselected, in **99.71 test seconds / 103.03 seconds wall**, with no
+  skip or xfail. The unchanged two-minute gate passes without moving tests,
+  changing markers, filtering cases, or modifying runtime code. Preflight CPU
+  was 93.23% idle; no competing project compute ran. The earlier 144.09-second
+  observation remains recorded; its cause is not established by this recheck.
+- Current artifacts remain the verified `8bb5c7e` bytes; this closeout updates
+  documentation only. The raw preflight and test log are retained at
+  `.cache/release-status-closeout-20260904-uwICdV/`.
+- The closing `make test` passed **790/790 in 721.59 test seconds / 724.74
+  seconds wall**, with no skip or xfail. Its separate preflight found 92.82%
+  idle CPU and no competing project jobs; no other model, training, floor,
+  test, or build job ran concurrently. Existing package and original failure
+  hashes are unchanged. `PUBLIC RELEASE READY` remains unreached only under
+  the separately gated hardware/publication workflow.

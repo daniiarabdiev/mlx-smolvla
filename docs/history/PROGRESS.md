@@ -3208,3 +3208,46 @@
   56-case repair outcome still validates against the fixed gates. Final diff
   and whitespace checks pass; only the five evidence/status/plan documents
   enter the closing checkpoint.
+
+## 2026-09-04 — release-status refresh and idle fast-lane recheck
+
+- Scope: the operator requested only the stale release-status correction and
+  the under-two-minute fast-lane recheck. Starting source was clean pushed
+  `3792d4d8b24cfb86ff4c8417723d41606109d7ff`. No hardware, serial port, camera,
+  or vendor tree was accessed; no training, floor, upload, or release action
+  was initiated.
+- Updated `STATUS_PUBLIC_RELEASE.md` from the later first-contact and human-
+  task evidence: four no-motion runs, corrected camera roles/framing, and a
+  supported pose that passed. These are historical successes, not permanent
+  arming clearance. The exact low-limit profile, final physical checklist,
+  single action, and bounded continuous run remain open. Prior verification
+  numbers are retained under an explicitly historical heading; current
+  artifact and trained-parity evidence are linked separately.
+- Preflight at `2026-09-04T07:50:04Z`: no repository trainer, floor worker,
+  pytest, build, policy server, or hardware client; aggregate CPU 93.23% idle;
+  no recorded thermal/performance warning. Unrelated resident Python services
+  remained untouched. No test-selection, plugin, or offline environment
+  override was inherited. No project compute ran alongside the timing.
+- `/usr/bin/time -p make test-fast` passed **489/489**, with 301 slow tests
+  deselected, in **99.71 test seconds / 103.03 wall seconds**, with no skip or
+  xfail. The two-minute requirement passes on this recheck; no test, marker,
+  tolerance, runtime, or build configuration needed changing. The prior
+  144.09-second run is not erased and its cause is not inferred from a faster
+  rerun. Logs: `.cache/release-status-closeout-20260904-uwICdV/`.
+- Fast-log SHA-256:
+  `3829d0f07645ea936de21781a891a30da9681d4f82f1c201ed8228dbd0ad0850`.
+  Both original LoRA failure files still match their protected SHA-256 values.
+  A separate full-suite preflight at `2026-09-04T07:53:24Z` again found no
+  competing project compute and 92.82% idle CPU before launching `make test`.
+- Closing `make test` passed **790/790 in 721.59 test seconds / 724.74 wall
+  seconds**, no skip or xfail. No other model, training, floor, test, or build
+  job ran concurrently; lightweight documentation review continued. Full-log
+  SHA-256:
+  `44634d517d4c053dabb7215ba49f1ef1c531dbe6bd29725d7424301a6de0ca35`.
+  All four existing distribution files still match `DIST_MANIFEST.md`, so no
+  rebuild is needed for these status/progress-only edits.
+- Full log: `.cache/release-status-closeout-20260904-uwICdV/full-tests.log`.
+  After recording the complete result, the final release-document, repository-
+  hygiene, and distribution slice passed **25/25 in 13.90 seconds**. Read-only
+  review found the factual/safety updates aligned with the recorded evidence;
+  its pending full-result requirement is now recorded in all three documents.

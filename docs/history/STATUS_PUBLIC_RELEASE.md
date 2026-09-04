@@ -1,21 +1,25 @@
 # Public-release status
 
-Date: 2026-09-03
+Date: 2026-09-04
 
 `mlx-smolvla` is a 0.1.0 software release candidate on the canonical renamed
-GitHub repository. The connected-follower read path and three bounded no-motion
-RPC loops now pass, but physical motion has not run. The version tag, uploads,
-visibility change, release creation, announcement, and hardware-motion claim
-remain withheld.
+GitHub repository. The connected-follower read path and four bounded no-motion
+RPC loops passed. Camera identity/framing and the mechanically supported inset
+pose were subsequently verified; they are not unresolved failures. Physical
+motion has not run because the exact low-controller-limit profile and final
+physical attestation remain open. The operator is now away and the hardware is
+powered off, so the next session must freshly verify the connected setup.
+The version tag, uploads, visibility change, release creation, announcement,
+and hardware-motion claim remain withheld.
 
 ## Stage outcomes
 
 | Stage | Outcome | Evidence |
 | --- | --- | --- |
-| A — real SO-101 | **Partial: no-motion complete; motion blocked** | The live `ARM SESSION CONFIRMED` gate was supplied. Follower-only calibration/state reads, two cameras, and three 60-second native-MLX no-motion loops completed with all six torque bits off and zero motor writes. Camera framing, neutral start pose, low-limit attestation, and the physical checklist block single-action and continuous modes. See [`FIRST_CONTACT.md`](../../hardware/FIRST_CONTACT.md) and [`PREFLIGHT.md`](../../hardware/PREFLIGHT.md). |
+| A — real SO-101 | **Partial: no-motion complete; motion deferred** | Four 60-second native-MLX no-motion loops completed with all six torque bits off and zero motor writes. The corrected fixed/wrist camera mapping and supported inset pose passed in the last connected session. The low-controller-limit profile, final physical attestation, single action, and bounded-continuous result remain open. Recheck camera identity and pose after reconnecting; prior confirmation is not current motion clearance. See [`FIRST_CONTACT.md`](../../hardware/FIRST_CONTACT.md) and [`HUMAN_TASKS.md`](HUMAN_TASKS.md). |
 | B — macOS / MLX floor | **Complete** | Official macOS 14 arm64 wheels for MLX 0.32.0, 0.32.1, and 0.32.2 were hash- and Mach-O-verified, then passed the unchanged correctness and installed-runtime gates. See [`MLX_COMPATIBILITY.md`](../evidence/MLX_COMPATIBILITY.md). |
 | C — public-release preparation | **Complete** | Canonical distribution/import/CLI/cache/GitHub identities, prior-project acknowledgment, community metadata, hobbyist-first README, agent guide, and root hygiene are committed. Hardware wording is restricted to the observed no-motion result. |
-| D — software verification | **Complete; publication held** | Fresh canonical artifacts include the optional hardware surface and pass archive, Twine, native-binary, fresh-install, offline prediction, doctor, quantization, serving, and hardware-extra checks. The clean fast lane passes 479/479 and the complete suite passes 770/770. See [`DIST_MANIFEST.md`](../evidence/DIST_MANIFEST.md). |
+| D — software verification | **Complete; publication held** | This closeout's full suite passed 790/790; its fast lane passed 489/489 in 99.71 test seconds / 103.03 seconds wall, below two minutes. The reference repair passed all 56 trained-checkpoint fixed gates. The current sdist and three wheels from `8bb5c7e` passed seven fresh-install environments, including exact trained-weight loading. See [`TRAINED_PARITY_REPAIR.md`](../evidence/TRAINED_PARITY_REPAIR.md) and [`DIST_MANIFEST.md`](../evidence/DIST_MANIFEST.md). |
 
 ## Hardware continuation evidence
 
@@ -32,7 +36,22 @@ remain withheld.
   4.895 sampled camera FPS. Observation-to-chunk latency was 152.080 ms median
   and 154.139 ms p95; one chunk was held invalid, with zero timeouts and zero
   writes. Both streams opened together at the requested format, but visual
-  framing still failed the motion gate.
+  framing still failed the motion gate at that point; the purported fixed
+  view was subsequently identified as the built-in Mac camera.
+- The camera-identity correction established fixed index 0 and wrist index 1,
+  excluding built-in index 2. Both intended UVC streams passed both startup
+  orders at 640x480/30. The fourth 60-second no-motion loop recorded 293
+  observations, 292 chunks, 4.876 sampled FPS, 148.907/150.512 ms
+  observation-to-chunk median/p95, zero timeouts, and all six torque bits off.
+  The operator confirmed the fixed workspace view and unobstructed, soft-focus
+  wrist view. Numeric camera indices are session-local, not permanent IDs.
+- The later mechanically supported, torque-free pose read measured lift/elbow
+  at -20.396/62.989 degrees. Every joint passed the 10%-inset start envelope.
+  This resolves the earlier pose finding for that session; freshly support and
+  re-read the pose before any future arming attempt.
+- Stale-goal hardening now preloads and verifies raw present positions as goals
+  while torque is off; outward and return motion are gradual and bounded.
+  These software guards have not yet been exercised with physical actuation.
 - The repository-owned client is fail-closed around exact follower identity,
   calibration, torque-off readback, camera validity, checkpoint statistics,
   controller-limit profile, inset start pose, action shape/domain, rate limit,
@@ -47,7 +66,56 @@ remain withheld.
   modified; its 696-file tracked-content composite remained
   `d280efa881ab9e412cd071bbef38d8d9ec5050e484b49b5a2397df2a39bdb764`.
 
-## Closing software verification
+## Latest software verification — 2026-09-04
+
+- The reference-loader repair preserves the retained trained fp32 weights.
+  All 56 fixed-limit cases passed: normalized maximum
+  `0.000021457672119140625`, physical maximum `0.00042724609375`, and
+  Torch/MLX held-out MAE ratio `1.00000078541285`. Original T3/T3B failures and
+  their historical verdicts are unchanged; training remains a research preview.
+- Clean pushed source `8bb5c7eca16062d120478956824a3ed79759f21e` produced the
+  current sdist and Python 3.11/3.12/3.13 wheels. All seven isolated installed
+  environments passed their checks. Exact artifact hashes and smoke details
+  are in [`DIST_MANIFEST.md`](../evidence/DIST_MANIFEST.md); prior package
+  bytes remain backed up rather than deleted.
+- The repair's complete suite recorded **790/790 in 774.76 seconds**, and
+  subsequent documentation/artifact checks recorded **47/47 in 14.38 seconds**,
+  with no skip or xfail. Those are correctness-run durations, not model
+  throughput benchmarks.
+- The repair's intermediate fast run passed all 482 selected tests but took
+  **144.09 seconds**, above the unchanged two-minute target. It is retained as
+  evidence, not replaced by an earlier faster run. The fresh unmodified
+  `make test-fast` recheck passed **489/489**, with 301 existing slow tests
+  deselected, in **99.71 test seconds / 103.03 seconds complete-command wall**.
+  It reported no skip or xfail and meets the unchanged **120-second** limit.
+  No extra test filter, plugin override, marker change, or tolerance change
+  was used; the fast lane now includes the seven added repair guards.
+- At the `2026-09-04T07:50:04Z` preflight, CPU was **93.23% idle**, with no
+  active repository training, floor, test, build, policy-server, or hardware
+  client. macOS reported no recorded thermal/performance warning. Unrelated
+  resident services were left untouched. No other project compute was launched
+  alongside the timed run; only this documentation update was in progress.
+  This establishes a passing idle recheck, not the cause of the prior slower
+  observation or a promise that every future host run takes under two minutes.
+  Local preflight and raw timing log are under
+  `.cache/release-status-closeout-20260904-uwICdV/`.
+  Fast-log SHA-256:
+  `3829d0f07645ea936de21781a891a30da9681d4f82f1c201ed8228dbd0ad0850`.
+- This closeout's final `make test` passed **790/790 in 721.59 test seconds /
+  724.74 seconds complete-command wall**, with no skip or xfail. A separate
+  preflight found no competing project jobs and 92.82% idle CPU. No other
+  model, training, floor, test, or build job ran alongside the full suite;
+  lightweight documentation review continued. The raw log is
+  `.cache/release-status-closeout-20260904-uwICdV/full-tests.log`, SHA-256:
+  `44634d517d4c053dabb7215ba49f1ef1c531dbe6bd29725d7424301a6de0ca35`.
+- Final release-document, repository-hygiene, and distribution checks after
+  recording the full-suite result passed **25/25 in 13.90 seconds**.
+- Only documentation changed. No runtime, test selection, marker, tolerance,
+  hardware configuration, or distribution bytes changed. The four existing
+  package files and both original training failure records still match their
+  recorded hashes. Hardware remained powered off and untouched.
+
+## Historical verification — 2026-09-03 (superseded by the evidence above)
 
 - Clean, pushed source `79a97e734afd49981ad09eb08d4877d82c707eea`
   produced the sdist and CPython 3.11/3.12/3.13 native arm64 wheels. All four
@@ -86,21 +154,23 @@ remain withheld.
 
 | Blocker | Status | Reason |
 | --- | --- | --- |
-| Serve untested on hardware | **Partial / blocked for motion** | The connected no-motion stage passes. Both camera views are operationally misframed, lift/elbow are outside the 10%-inset start envelope, no operator-attested low controller profile exists, and the workspace/base/power checklist is not recorded. |
+| Serve untested on hardware | **Partial / motion deferred** | The four no-motion runs, corrected camera roles/framing, and supported inset pose passed in the recorded sessions. The exact low-controller-limit profile and physical checklist are still missing, and neither motion stage has run. Fresh camera/pose checks are required after reconnection, not because the earlier fixes failed. |
 | macOS / MLX floor | **Clear** | MLX 0.32.0–0.32.2 and their official macOS 14 wheel family passed the fixed software gates. |
 | Claims exceed evidence | **Clear** | Public language distinguishes live no-motion RPC evidence from unperformed physical motion; no claim says the model drives the arm. |
 | Operator material in tree | **Clear** | The current tracked tree contains no exact device serial or private path. Telemetry, camera frames, and the bystander-containing image remain ignored and untracked; public evidence is redacted. |
-| First-page friction | **Clear** | The README leads with requirements/install/run/serve/train paths and links the hardware evidence; the rebuilt artifact matrix and installed `doctor` checks pass. |
+| First-page friction | **Clear** | The README, rebuilt artifact matrix, and installed `doctor` checks are verified. The unchanged `make test-fast` target passed all 489 selected tests in 103.03 seconds complete-command wall time, below two minutes. |
 
 ## Exact next gate
 
 The physical prerequisites and exact new statement are maintained in
-[`HUMAN_TASKS.md`](HUMAN_TASKS.md). Power the follower off before manually
-reframing cameras or moving the arm. Motion may resume only after both cameras
-show the complete workspace, lift/elbow are manually inside their inset ranges,
-an operator-known procedure has produced an exact low-limit JSON profile, and
-the workspace/base/power checklist is true. The required new in-session phrase
-is:
+[`HUMAN_TASKS.md`](HUMAN_TASKS.md). Begin a new supervised session after the
+operator returns and reconnects the hardware. Visually re-identify the fixed
+and wrist cameras and freshly verify the supported inset pose; the previous
+passes remain valid historical evidence, not a persistent clearance. Power
+off before any manual adjustment and support the torque-free arm safely.
+Motion may resume only after an operator-known procedure has produced the
+exact low-limit JSON profile and the workspace/base/power checklist is true.
+The required new in-session phrase is:
 
 ```text
 MOTION PREREQUISITES CONFIRMED: cameras framed, arm neutral, low limits profiled, workspace clear, base secure, hand on power.
