@@ -5,8 +5,8 @@
 **Strict-parity repair validated, 2026-09-04.** The unchanged retained T3B
 checkpoint passes all 56 cases and every original fixed limit with the
 corrected reference loader. This is a separate software-repair result, not a
-retrospective reassignment of the original T3/T3B milestones. Final suite and
-distribution verification follow below when complete.
+retrospective reassignment of the original T3/T3B milestones. The complete
+software suite passes **790/790 tests**, with no skip or expected failure.
 
 The operator authorized software-only completion while the robot is powered
 off. No hardware, camera, serial port, or vendor-tree access was involved.
@@ -200,3 +200,27 @@ Ignored run directory: `.cache/training/parity-repair-20260904/`.
 - `precision-red-2.log`: genuine regression failure before the fix.
 - `floor-source/`: exact archived support bytes used to verify historical
   floor inputs. No generated weights or private observation data enter git.
+
+## Closing verification
+
+- Baseline at `f41594a`: `make test`, **773 passed in 746.12 seconds**.
+- Focused precision/export/floor/evaluator/import checks: **123 passed**.
+- Added evidence-publication guards: **13 passed**.
+- Closing `make test`: **790 passed in 774.76 seconds**, no skip or xfail.
+  These are correctness-run durations, not throughput benchmarks. No training
+  or floor was active; non-inference builds/installations overlapped part of
+  the closing suite, and installed model probes ran separately afterward.
+- Final distribution, release, naming, repository-hygiene, import-isolation,
+  and repair-guard checks after refreshing the documentation and artifacts:
+  **47 passed in 14.38 seconds**.
+- The lock resolves 122 packages. Actionlint passes with only the deliberately
+  disabled hosted-CI condition excluded. Both original failure records, the
+  original floor, and the retained export still match their protected hashes.
+- Clean pushed source `8bb5c7e` produced a new sdist and CPython 3.11/3.12/3.13
+  wheels. All seven fresh-install environments pass: four base predictions and
+  import/doctor/backend checks, serving/quantization, hardware-import-only,
+  cache compatibility, and reference/training exact-weight checks. The actual
+  trained export has zero stored-weight mismatches on CPU fp32, CPU fp64, and
+  MPS fp32 from the installed package. See [`DIST_MANIFEST.md`](DIST_MANIFEST.md)
+  for artifact hashes and retained local logs. Previous distribution bytes
+  are backed up, not deleted. No distributions or weights were uploaded.

@@ -39,7 +39,7 @@
 - [x] Teacher-force exact reference prefix/cache and per-layer operator inputs. The reference query projection matches bf16-rounded export weights exactly, but differs from original fp32 weights by `0.0045614540576934814`.
 - [x] Write the supported root cause and regression-first loader fix design before changing implementation. See `docs/evidence/TRAINED_PARITY_REPAIR.md`.
 
-### Task 3: Regression-first repair and canonical evaluation
+### Task 3: Regression-first repair and fixed-limit validation
 
 **Files:** `training/reference_export.py`, new `tests/test_reference_export_precision.py`, and `docs/evidence/TRAINED_PARITY_REPAIR.md`. No MLX inference or training algorithm changes are indicated.
 
@@ -49,13 +49,13 @@
 - [x] Freeze the corrected reference source and run `scripts/compute_self_consistency_floor.py --checkpoint .cache/training/t3b/export --evaluation-dir .cache/training/t3-evaluation --work-dir .cache/training/parity-repair-20260904/self-consistency --output .cache/training/parity-repair-20260904/reference-envelope-v3.json --purpose retrospective_diagnostic`. All nine workers complete; actual path/hashes and legacy context explanation recorded in the repair evidence.
 - [x] Write a fresh repair-start manifest after the informational envelope and before inference, binding current implementation/input hashes, original history, exact output paths, and all original fixed limits. The marker binds 454 files; the independently reviewed harness passes 13 regressions and is committed/pushed as `8b5c485`.
 - [x] Run the existing all-56 `run_finetune_outcome_evaluation` inside a newly reserved private directory. All original fixed gates pass; normalized max `0.000021457672119140625`, physical max `0.00042724609375`, Torch/MLX ratio `1.00000078541285`. Chronology and unchanged inputs/history are enforced. No original T3B derived acceptance is claimed and no limit increased.
-- [ ] Commit the independently passing repair and its evidence. A lower diagnostic error alone is not completion.
+- [x] Commit the independently passing repair and its evidence: `5180912`, `8b5c485`, and `8bb5c7e`, all pushed. All-56 fixed-limit acceptance, not a single-case diagnostic, supports the repair.
 
 ### Task 4: Complete software verification and handoff
 
 **Files:** `docs/evidence/TRAINED_PARITY_REPAIR.md`, `docs/history/PROGRESS.md`, `docs/history/STATUS_FULL.md`, training limitations in current docs, and `docs/evidence/DIST_MANIFEST.md` if runtime artifacts change.
 
-- [ ] Run `make test` on final code and record exact totals. Preserve hardware limitations and original historical verdicts.
-- [ ] Rebuild sdist and Python 3.11/3.12/3.13 wheels because the reference loader is included in distributions. Repeat isolated base/serve/hardware-import/cache-shim smokes plus an installed-reference exact-weight smoke without hardware; refresh the manifest with exact hashes.
-- [ ] Review `git diff --check`, artifact import isolation, historical failure hashes, and the complete changed-file diff. Update current status only to milestones actually verified.
+- [x] Run `make test` on final code: 790 passed in 774.76 seconds, no skip or xfail. Hardware limitations and original historical verdicts remain explicit.
+- [x] Rebuild sdist and Python 3.11/3.12/3.13 wheels because the reference loader is included in distributions. Seven isolated install environments pass, including actual trained-weight identity on CPU fp32/fp64 and MPS fp32. Manifest refreshed; previous bytes backed up.
+- [x] Review `git diff --check`, artifact import isolation, historical failure hashes, and the complete changed-file diff. Current status includes only verified milestones. Final documentation/artifact-focused checks: 47 passed in 14.38 seconds.
 - [ ] Commit and push to `origin`; verify clean worktree and remote commit. Hand off the software result and retain physical validation for when the operator returns home.

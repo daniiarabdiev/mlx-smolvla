@@ -4,7 +4,7 @@ FULL-SCOPE SOFTWARE COMPLETE — FINAL AUDIT PASSED
 
 TRAINED CHECKPOINT STRICT-PARITY REPAIR VERIFIED — ALL 56 FIXED-LIMIT CASES PASS
 
-FINAL VERIFICATION COMPLETE — 773/773 TESTS PASS
+FINAL VERIFICATION COMPLETE — 790/790 TESTS PASS
 
 HARDWARE NO-MOTION VALIDATION COMPLETE — PHYSICAL MOTION NOT RUN
 
@@ -677,3 +677,19 @@ retained to show how the error was found and corrected.
   remains a research preview: one retained LoRA run is validated, full mode is
   code/smoke only, and real-robot task success remains untested. Hardware stays
   powered off; no device access or uploads occurred during this repair.
+- Closing `make test` passes **790/790 in 774.76 seconds**, with no skip or
+  xfail. The unchanged-code baseline was 773/773 in 746.12 seconds. The lock
+  still resolves 122 packages, and actionlint passes with only the explicit
+  constant-false hosted-CI condition excluded. These durations are test-run
+  evidence, not new performance benchmarks.
+- Clean source `8bb5c7e` produced all four fresh distribution artifacts. Seven
+  isolated installs pass dependency checks, base import/doctor/offline prediction,
+  serving and quantization, hardware imports without device access, cache-shim
+  precedence, and actual trained-weight identity on CPU fp32/fp64 and MPS fp32.
+  `docs/evidence/DIST_MANIFEST.md` binds the new hashes; ignored `dist/` contains
+  exactly these four artifacts. Prior bytes remain recoverable at
+  `.cache/dist-pre-reference-precision-20260904`.
+- **Software repair complete.** `PUBLIC RELEASE READY` remains unreached only
+  under the separate hardware/publication workflow. The next physical session
+  must freshly validate camera roles, pose, limits, and supervised motion; this
+  run does not authorize or imply robot task success.

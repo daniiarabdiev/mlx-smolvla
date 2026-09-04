@@ -2,7 +2,7 @@
 
 This manifest records the `mlx-smolvla` 0.1.0 release-candidate artifacts
 built locally from clean, pushed source commit
-`0f9488c1420477c28a94b691d7b6dc2a29bc9518` on 2026-09-04. Nothing was
+`8bb5c7eca16062d120478956824a3ed79759f21e` on 2026-09-04. Nothing was
 uploaded. The hardware gate remains open, so no release tag was created.
 
 ## Build environment
@@ -13,18 +13,19 @@ uploaded. The hardware gate remains open, so no release tag was created.
 - Deployment target: `MACOSX_DEPLOYMENT_TARGET=14.0`.
 - Interpreters: repository-local CPython 3.11.15, 3.12.13, and 3.13.14.
 - Build/download cache: repository-local `.cache/uv`.
-- Source: clean detached worktree `.cache/release-mlx-smolvla-0f9488c` at
-  the commit above.
+- Source: clean `git archive` of the commit above, materialized in
+  `.cache/release-mlx-smolvla-8bb5c7e-KNkxdO` before building.
 - Output: ignored directory
-  `.cache/release-mlx-smolvla-0f9488c-artifacts`.
+  `.cache/release-mlx-smolvla-8bb5c7e-artifacts`.
 - The four verified bytes were mirrored into ignored `dist/` for local use.
   The preceding 0.1.0 candidate bytes were moved intact to
-  `.cache/dist-pre-stale-goal-20260904` rather than deleted.
+  `.cache/dist-pre-reference-precision-20260904` rather than deleted. The older
+  `.cache/dist-pre-stale-goal-20260904` backup is also retained.
 
 The sdist was built with `uv build --sdist`; each native wheel used
 `uv build --wheel --python <repository-local-interpreter>`. All four commands
 set the deployment target and repository-local uv/Python cache roots. The
-sdist contains 148 entries, including the PEP 517 backend, package-local CMake
+sdist contains 150 entries, including the PEP 517 backend, package-local CMake
 project, native sources, canonical runtime, reference tools, training tools,
 hardware safety/client modules, and tests; it contains no prebuilt `.so` or
 `.dylib`.
@@ -33,10 +34,10 @@ hardware safety/client modules, and tests; it contains no prebuilt `.so` or
 
 | Artifact | Bytes | SHA-256 | Wheel tag / contents | Project extension `minos` |
 | --- | ---: | --- | --- | ---: |
-| `mlx_smolvla-0.1.0.tar.gz` | 439,269 | `66058ab965571c09fc95eda7ebc6647d3825d87c7cca0a283d7b7a3d773936be` | Source distribution; native extension built during installation | 14.0 in the installation smoke |
-| `mlx_smolvla-0.1.0-cp311-cp311-macosx_14_0_arm64.whl` | 378,752 | `accc36e5aa38de1714ad3d484e0e65a868683ce27749a08b364f1c2ad70ac086` | `cp311-cp311-macosx_14_0_arm64`; 73 entries | 14.0 |
-| `mlx_smolvla-0.1.0-cp312-cp312-macosx_14_0_arm64.whl` | 377,753 | `f52ebee81089442dc0728a20aa5650bb9841e723d5d6219a3090d876a6215166` | `cp312-cp312-macosx_14_0_arm64`; 73 entries | 14.0 |
-| `mlx_smolvla-0.1.0-cp313-cp313-macosx_14_0_arm64.whl` | 377,792 | `44cd428c1de43ba0347bf62c4cc6ff1cf52ff29904f353ba0c3165580e29ed1e` | `cp313-cp313-macosx_14_0_arm64`; 73 entries | 14.0 |
+| `mlx_smolvla-0.1.0.tar.gz` | 441,745 | `8e69411bbb5d525c096de416869e21a02806a397eb370f2431e49caf95925268` | Source distribution; native extension built during installation | 14.0 in the installation smoke |
+| `mlx_smolvla-0.1.0-cp311-cp311-macosx_14_0_arm64.whl` | 379,081 | `ca7a981c60aae2dd3d6be9edc7e093d7e1658280bf5e3e15b913756400b78ce3` | `cp311-cp311-macosx_14_0_arm64`; 73 entries | 14.0 |
+| `mlx_smolvla-0.1.0-cp312-cp312-macosx_14_0_arm64.whl` | 378,081 | `cf651589c99b45e5197dec2a4fde310039ca9db27506333375dae07ee65ffab4` | `cp312-cp312-macosx_14_0_arm64`; 73 entries | 14.0 |
+| `mlx_smolvla-0.1.0-cp313-cp313-macosx_14_0_arm64.whl` | 378,120 | `e4db345cc4395277eb29d4bc1adf5914a2b93438886d672dd26d94986c609552` | `cp313-cp313-macosx_14_0_arm64`; 73 entries | 14.0 |
 
 Archive inspection found only the canonical `mlx_smolvla/` package path.
 Each wheel declares distribution `mlx-smolvla`, version `0.1.0`,
@@ -56,13 +57,18 @@ apparent order failure involved the built-in Mac camera under the wrong role.
 These bytes remain a local, untagged candidate and are not hardware-motion
 release artifacts.
 
+Every archive also contains the repaired `training/reference_export.py`
+byte-exactly, SHA-256
+`48af935ea41355d25a0a342a8ccbb6aaa4d87c48fb3034243540010983557801`.
+This changes optional reference loading, not native inference or training math.
+
 `twine check` passed the sdist and all three wheels without warnings.
 
 ## Fresh-environment smoke matrix
 
 Each artifact was installed with dependencies into a new virtual environment.
-Every probe ran from `/private/tmp/mlx-smolvla-smoke-0f9488c`, outside both the
-main checkout and detached build worktree, and asserted that the imported
+Every probe ran from `/private/tmp/mlx-smolvla-smoke-8bb5c7e-Fh7DuG`, outside
+both the main checkout and clean build source, and asserted that the imported
 module path was inside the virtual environment. Hub and dataset access were
 forced offline for prediction.
 
@@ -112,12 +118,31 @@ shim: `SMOLVLA_MLX_CACHE` alone is used with a `FutureWarning`;
 when both are set; and an explicit cache path wins while the warning says the
 legacy value was ignored because an explicit directory was supplied.
 
+A seventh clean CPython 3.12 environment installed the cp312 wheel with both
+`reference` and `train` extras. Its installed reference loader matched the
+archive/source hash and preserved all **500 tensors / 450,046,176 scalars** of
+the actual retained T3B checkpoint with **zero mismatches** on CPU fp32,
+CPU fp64, and MPS fp32. Checkpoint SHA-256 remained
+`858704fa572501d9e5a048076f8da692693b90c463feda29201a72f3f0b18883`.
+No model inference, training, or hardware access was needed for this identity
+probe. Reference/data extras retain their known PyAV/OpenCV import warnings;
+the serving and hardware-only environments still contain no PyAV.
+
+All seven environments passed dependency integrity checks. Reproduction helpers,
+archive audit, and smoke outputs are retained under
+`.cache/release-smoke-8bb5c7e/`; environments use `.cache/smoke-8bb5c7e-*`.
+The complete project suite passed **790/790 tests**, with no skip or xfail.
+
 ## Verified MLX range and macOS floor
 
 The current host selected MLX 0.32.2's specialized macOS 26 wheel, which is
 why the captured doctor report names that dependency tag. Separate official
 macOS 14 arm64 wheel pairs were hash-verified and binary-inspected for each
 supported MLX release:
+
+The range evidence below is retained from the prior compatibility audit; this
+rebuild's seven fresh environments use MLX 0.32.2. No new cross-version timing
+or throughput measurement was taken, and native runtime sources are unchanged.
 
 | MLX | Official core wheel SHA-256 | Official `mlx-metal` SHA-256 | Dependency binary `minos` | Fixed gates / installed smoke |
 | --- | --- | --- | --- | --- |

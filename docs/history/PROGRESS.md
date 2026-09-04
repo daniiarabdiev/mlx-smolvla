@@ -3181,3 +3181,30 @@
 - No trainer, floor worker, benchmark, or competing test was active before
   starting the closing `make test`. Hardware remains offline. No new timing
   benchmark, upload, release, tag, or visibility change was attempted.
+- Closing `make test` passed **790/790 in 774.76 seconds**, no skip or xfail.
+  The retained original floor, export, and both original failure files still
+  hash exactly. Code/evidence checkpoint `8bb5c7e` was committed and pushed.
+  Non-inference build/install work overlapped part of the suite; installed
+  model probes were kept separate. No throughput measurement was taken.
+- Built a new sdist and three macOS-14-arm64 wheels from clean pushed source
+  `8bb5c7e`, retaining 150 sdist / 73 wheel entries. Twine, archive identity,
+  loader-source hash, and native-extension `minos 14.0` checks pass.
+- Seven fresh installed environments pass dependency integrity. Four base
+  environments pass isolated import, verified doctor, native backend, and
+  finite offline prediction. Serving passes `Ready` and 8-bit/4-bit prediction;
+  hardware imports/checkpoint mapping and all cache-shim cases pass without
+  device access. The installed reference/training package preserves every one
+  of 500 actual trained tensors / 450,046,176 scalars exactly on CPU fp32,
+  CPU fp64, and MPS fp32. Its cold import incurred dynamic-loader work, observed
+  read-only; no dependency or OS security checks were bypassed.
+- Promoted precisely the four verified distribution files into ignored
+  `dist/`. The previous bytes were moved intact to
+  `.cache/dist-pre-reference-precision-20260904`; nothing was deleted.
+  Exact hashes and smoke provenance are in `docs/evidence/DIST_MANIFEST.md`.
+  Software repair is complete. Hardware, motion, uploads, tags, visibility,
+  and publication remain outside this powered-off session.
+- Final documentation/artifact-focused checks passed **47/47 in 14.38 seconds**.
+  All four manifest hashes and sizes match `dist/`, and the complete retained
+  56-case repair outcome still validates against the fixed gates. Final diff
+  and whitespace checks pass; only the five evidence/status/plan documents
+  enter the closing checkpoint.
