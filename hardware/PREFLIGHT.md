@@ -336,3 +336,49 @@ the cleared task area, establish the approved low-controller-limit profile,
 and complete the physical checklist. Re-read the supported pose and limits,
 then follow the runbook's fresh no-motion and separately confirmed motion
 sequence. No failed gate is bypassed by reducing software step size.
+
+## 2026-09-04 camera-adjustment and calibration follow-up
+
+The same authorized live session continued at source
+`3b726505c72e2e6c1c0c41bd770abac79d307a3f`. Fresh discovery after the operator's
+first camera adjustment showed fixed 0 including the desk and part of the arm,
+but blurred and without a verified complete workspace. Wrist 1 still faced
+sideways toward the operator. Built-in 2 is excluded; candidate 3 now returns
+a near-dark non-workspace image and remains excluded.
+
+After further operator adjustment, camera-only capture at
+`2026-09-04T14:52:50Z` shows the gripper, yellow ball, and tabletop in wrist 1
+at 640x480. The wrist's task-surface framing is corrected. The operator's hand
+is visible near the gripper, so workspace clearance is not established. The
+fixed camera still needs a sharp view of the complete arm and reachable table
+area; the operator received positioning and focus guidance. These captures
+do not constitute a concurrent camera-rate gate or the fresh no-motion loop.
+
+The operator also reported having calibrated the arm previously. Read-only
+follower access at `2026-09-04T14:48:09Z` matched USB identity and the existing
+calibration. Every joint passed the numeric inset envelope; lift/elbow read
+-73.055/39.868 degrees. Torque remained zero on all six joints, no motor or
+torque write occurred, and the port closed. No calibration was changed or
+repeated. The nine controller readbacks match the prior unapproved settings.
+
+The operator does not know an established low-limit profile. The inspected
+operator setup documents calibration, teleoperation, and gripper-specific
+protection, but does not establish the required six-joint low-limit profile.
+Normal vendor configuration sets acceleration values to 254. The
+[Hiwonder BusLinker manual](https://docs.hiwonder.com/projects/BusLinker/en/latest/docs/1_BusLinker_V3.0_Servo_Debugging_Board_User_Manual.html)
+documents the torque-limit scale as 1000 for 100% stall torque, separate
+acceleration/speed controls, and ignored Time in position mode. These explain
+the readbacks; they do not supply an approved low-limit configuration for this
+assembled arm. No values were guessed, written, or turned into an attested
+profile. All 696 vendor tracked files and 32 operator-wrapper files remain
+unchanged. No motion ran.
+
+Fresh ignored evidence:
+`.cache/hardware/camera-adjustment-20260904T144524Z-utqorp1q/`.
+Follower JSON SHA-256:
+`afc2accc75465f3eda99feeeed177aedc5886a418fbafaf7a2cd30feec89fb9a`.
+Camera-discovery log SHA-256:
+`229fe3a9644b74ca8058fdf7cda0a17520b49b91762a4065199dacbcebf34864`.
+The corrected wrist image is preserved under `wrist-after-second-adjustment/`,
+SHA-256 `aa244b858cd808fde458404d0c700ed9f9b5a3fa4014433e38e11eb8ac8cd9ac`.
+Raw images, device identifiers, calibration hash, and readbacks stay private.

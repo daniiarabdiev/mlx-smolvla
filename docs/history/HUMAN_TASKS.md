@@ -27,14 +27,22 @@
   this new gate. Freshly verify follower identity/calibration, both camera
   viewpoints, and the supported pose after reconnecting; never open the leader.
 - **Current camera framing:** fresh images identify fixed 0 and wrist 1, with
-  built-in 2 excluded. The wrist currently points toward the operator and the
-  fixed view omits the arm's working area. Power off before manually adjusting
-  the setup, aim both intended cameras at the cleared task area, then recheck
-  fresh images. The earlier identity/framing success remains historical evidence.
+  built-in 2 excluded. After further adjustment, the 14:52 UTC wrist image
+  shows the gripper, yellow ball, and tabletop; its task-surface framing is
+  corrected. Fixed 0 now includes part of the arm and desk, but remains blurred
+  without a verified complete workspace. With motor power off, raise/back up
+  the fixed camera and tilt it toward the task surface until the complete arm
+  and reachable table area fit in one sharp view. Secure the camera and recheck.
+  Clear the operator's hand from the gripper area before any motion.
 - **Last pose status:** all six joints passed the numeric inset envelope on
-  2026-09-04; lift/elbow read −73.143°/39.868°. Mechanical support has not been
+  2026-09-04 at 14:48 UTC; lift/elbow read −73.055°/39.868°. Existing calibration
+  again matches the arm. Mechanical support has not been
   freshly attested. Re-support, re-read, and pass the pose immediately before
   arming; do not use this snapshot as persistent clearance.
+- The operator reports no known approved low-limit profile. Reviewed setup
+  code and manufacturer documentation explain the controls but do not establish
+  a low-limit profile for this assembled arm. Calibration does not establish
+  low motor torque or speed; the observed settings remain unapproved.
 - Using the operator's known-good Hiwonder/ServoStudio procedure, establish low
   torque, current, velocity, and acceleration limits. Do not copy the observed
   defaults in `PREFLIGHT.md`. Save the exact readback for every joint and every

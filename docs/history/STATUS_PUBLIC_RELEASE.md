@@ -26,11 +26,16 @@ and hardware-motion claim remain withheld.
 ## Hardware continuation evidence
 
 Current update — 2026-09-04: fresh authorized read-only preflight passed follower
-identity/calibration, all-six torque-off readbacks, and the numeric inset pose
-(lift/elbow -73.143/39.868 degrees). Fixed 0 and wrist 1 return images, but the
-current views do not frame the arm's task area for motion. The controllers still
+identity/calibration, all-six torque-off readbacks, and the numeric inset pose.
+Follow-up at 14:48 UTC again passed those checks (lift/elbow -73.055/39.868
+degrees). Further wrist adjustment corrected its task-surface view, verified
+at 14:52 UTC. Fixed 0 now includes part of the arm and desk, but remains blurred
+without a verified complete workspace; physical clearance is still open.
+The controllers still
 read the earlier unapproved settings; no low-limit profile or final physical
-attestation was supplied. No new no-motion loop or physical actuation ran.
+attestation was supplied. The operator reports no known profile; the reviewed
+setup and manufacturer guidance did not establish one. No new no-motion loop
+or physical actuation ran.
 The four earlier results below remain historical evidence. See the latest
 [`PREFLIGHT.md`](../../hardware/PREFLIGHT.md) entry.
 

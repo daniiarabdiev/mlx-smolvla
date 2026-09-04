@@ -3354,3 +3354,48 @@
   Diff whitespace and private-path/serial checks passed. These are document
   checks; the unchanged runtime's full-suite baseline remains the earlier
   790-test result, not a new hardware validation or release clearance.
+
+## 2026-09-04 — camera adjustment and calibration follow-up
+
+- Continued the same authorized live session from clean pushed `3b72650` after
+  the operator reported adjusting cameras and having calibrated previously.
+  Fresh discovery identified the intended cameras but showed incomplete
+  framing. Fixed 0 now includes part of the arm and desk but is blurred.
+  Built-in 2 and candidate 3's near-dark non-workspace view remain excluded.
+- After further operator adjustment, camera-only capture at 14:52 UTC verified
+  wrist 1 now shows the gripper, yellow ball, and tabletop at 640x480. Its
+  task-surface framing is corrected. A hand remains near the gripper; this is
+  not physical workspace clearance. Provided concrete guidance for widening,
+  tilting, stabilizing, and focusing the fixed camera with motor power off.
+- Fresh follower-only reads at 14:48 UTC matched USB identity and existing
+  calibration, passed the six-joint numeric inset envelope, and measured
+  lift/elbow at -73.055/39.868 degrees. Torque bits stayed zero before/after,
+  the port closed normally, and zero motor or torque writes occurred. No
+  calibration/configuration routine ran; the leader was never opened.
+- The nine limit registers are unchanged. The operator reports no known
+  approved low-limit profile. Searched the existing operator setup and checked
+  official Hiwonder servo controls; neither establishes the required profile
+  for this arm. No settings were guessed, written, or marked approved. All 696
+  vendor tracked files and 32 operator-wrapper files remain unchanged.
+- Private evidence is under
+  `.cache/hardware/camera-adjustment-20260904T144524Z-utqorp1q/`. Follower JSON:
+  `afc2accc75465f3eda99feeeed177aedc5886a418fbafaf7a2cd30feec89fb9a`.
+  Discovery log:
+  `229fe3a9644b74ca8058fdf7cda0a17520b49b91762a4065199dacbcebf34864`.
+  Corrected wrist image:
+  `aa244b858cd808fde458404d0c700ed9f9b5a3fa4014433e38e11eb8ac8cd9ac`.
+  Raw images/readbacks/identifiers stay ignored. No concurrent camera-rate gate,
+  fresh no-motion policy loop, single action, continuous motion, or release
+  action ran; runtime and existing software gates are unchanged.
+- The operator needs time to fix the fixed-camera blur. Device handles are
+  closed and further hardware work is paused for that physical adjustment.
+  Hardware-readiness, public-release documentation, and repository-hygiene
+  checks passed **17/17 in 2.59 seconds**; no skips or expected failures.
+  Log SHA-256:
+  `1eff087f29b5021e14ab1e2c15f73342e5c67837b458812156a964ca15531d02`.
+  Diff whitespace and privacy checks pass; all fresh raw evidence is ignored.
+  The remote still matched the starting source, remained private, and had no
+  `v0.1.0` tag before saving this documentation checkpoint.
+- Independent read-only review found no material factual, privacy, historical,
+  or safety-claim issue in the six-document checkpoint. Fixed-camera framing,
+  physical clearance, approved limits, and all remaining motion gates stay open.

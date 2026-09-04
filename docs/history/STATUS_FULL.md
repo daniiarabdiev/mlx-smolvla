@@ -776,3 +776,23 @@ retained to show how the error was found and corrected.
   is retained under `.cache/hardware/session-20260904T141839Z-b560dkhe/`.
   Source/runtime and the passing software baseline are unchanged. Public
   release readiness, tagging, and publication remain gated on hardware work.
+
+## 2026-09-04 — camera adjustment and calibration follow-up
+
+- A new read-only follower check at 14:48 UTC again matched existing calibration
+  and passed all numeric inset checks, with lift/elbow -73.055/39.868 degrees.
+  All six torque bits stayed zero, no motor/torque write occurred, and the port
+  closed. The nine controller registers remain at the prior unapproved values.
+- Further operator adjustment corrected the wrist view: fresh camera-only
+  capture at 14:52 UTC shows the gripper, yellow ball, and tabletop. The fixed
+  view now includes part of the arm and desk but remains blurred without a
+  verified full workspace. Physical clearance is not attested; a hand was
+  visible near the gripper. Fixed-camera positioning/focus guidance was given.
+- The operator reports no known low-limit profile. Reviewed setup code and
+  manufacturer guidance explain the controls but do not establish an approved
+  low-limit configuration for this arm. No limits, calibration, vendor files,
+  or runtime code were changed. All 696 vendor tracked files and 32 wrapper
+  files are unchanged. No fresh no-motion policy loop or motion ran.
+- Private evidence is retained under
+  `.cache/hardware/camera-adjustment-20260904T144524Z-utqorp1q/` with hashes in
+  `hardware/PREFLIGHT.md`. Existing software/release gates remain unchanged.

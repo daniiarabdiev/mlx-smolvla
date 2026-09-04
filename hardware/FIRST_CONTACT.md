@@ -131,6 +131,29 @@ identical. The reviewed stats-active checkpoint passes its six-axis check and
 retains its recorded model hash. Private frames, serials, and raw readbacks
 remain under ignored `.cache/hardware/session-20260904T141839Z-b560dkhe/`.
 
+## 2026-09-04 camera-adjustment follow-up
+
+At source `3b726505c72e2e6c1c0c41bd770abac79d307a3f`, new images after the
+operator's first adjustment showed fixed 0 including the desk and part of the
+arm, but blurred and without a verified complete workspace. Wrist 1 still
+faced sideways toward the operator. After a further wrist adjustment, a fresh
+640x480 capture at `2026-09-04T14:52:50Z` shows the gripper, yellow ball, and
+tabletop: wrist task-surface framing is corrected. An operator hand remains
+near the gripper, so this does not attest a cleared motion envelope. The fixed
+view still needs widening/focus; concrete positioning guidance was provided.
+Built-in 2 and candidate 3's near-dark non-workspace image remain excluded.
+
+Read-only follower access at `2026-09-04T14:48:09Z` matched the existing
+calibration, passed every numeric inset check, and measured lift/elbow at
+-73.055/39.868 degrees. All torque bits stayed zero and the port closed with
+zero motor/torque writes. The nine controller readbacks are unchanged. The
+operator reports no known approved low-limit profile; calibration does not
+establish one. No concurrent capture-rate gate, fresh no-motion policy loop,
+or physical actuation ran. All 696 vendor tracked files and 32 operator-wrapper
+files remain unchanged.
+
+Private fresh evidence and hashes are recorded in [PREFLIGHT.md](PREFLIGHT.md).
+
 ## Current verdict
 
 The claim “exchanges live camera/state observations and MLX action chunks with
