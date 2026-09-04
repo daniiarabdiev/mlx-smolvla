@@ -46,9 +46,9 @@
 - [x] Add a real-checkpoint parameter-identity regression with independent fp32-only probe values. CPU fp32 fails with four rounded values; save `precision-red-2.log`.
 - [x] Implement one bounded correction. Establish destination dtype before strict state loading; no checkpoint, MLX runtime, or tolerance changes.
 - [x] Run the new regressions and existing export/floor/evaluator/import-isolation tests: 123 passed. `make test-fast`: 482 passed, 294 deselected (before the fourth new regression was added).
-- [ ] Freeze the corrected reference source and run `scripts/compute_self_consistency_floor.py --checkpoint .cache/training/t3b/export --evaluation-dir .cache/training/t3-evaluation --work-dir .cache/training/parity-repair-20260904/self-consistency --output .cache/training/parity-repair-20260904/reference-envelope-v3.json --purpose retrospective_diagnostic`. Record actual T3B path/hashes and explain the v3 schema's legacy T3-only context fields.
-- [ ] Write a fresh repair-start manifest after the informational envelope and before inference, binding current implementation/input hashes, original history, exact output paths, and all original fixed limits.
-- [ ] Run the existing all-56 `run_finetune_outcome_evaluation` inside a newly reserved private directory. Rehash inputs/history and enforce envelope/start/outcome chronology before no-clobber installation of the repair report. Record every normalized, physical, preprocessing, improvement, and round-trip result. Do not claim original T3B derived acceptance or use the envelope to increase a limit.
+- [x] Freeze the corrected reference source and run `scripts/compute_self_consistency_floor.py --checkpoint .cache/training/t3b/export --evaluation-dir .cache/training/t3-evaluation --work-dir .cache/training/parity-repair-20260904/self-consistency --output .cache/training/parity-repair-20260904/reference-envelope-v3.json --purpose retrospective_diagnostic`. All nine workers complete; actual path/hashes and legacy context explanation recorded in the repair evidence.
+- [x] Write a fresh repair-start manifest after the informational envelope and before inference, binding current implementation/input hashes, original history, exact output paths, and all original fixed limits. The marker binds 454 files; the independently reviewed harness passes 13 regressions and is committed/pushed as `8b5c485`.
+- [x] Run the existing all-56 `run_finetune_outcome_evaluation` inside a newly reserved private directory. All original fixed gates pass; normalized max `0.000021457672119140625`, physical max `0.00042724609375`, Torch/MLX ratio `1.00000078541285`. Chronology and unchanged inputs/history are enforced. No original T3B derived acceptance is claimed and no limit increased.
 - [ ] Commit the independently passing repair and its evidence. A lower diagnostic error alone is not completion.
 
 ### Task 4: Complete software verification and handoff
@@ -56,6 +56,6 @@
 **Files:** `docs/evidence/TRAINED_PARITY_REPAIR.md`, `docs/history/PROGRESS.md`, `docs/history/STATUS_FULL.md`, training limitations in current docs, and `docs/evidence/DIST_MANIFEST.md` if runtime artifacts change.
 
 - [ ] Run `make test` on final code and record exact totals. Preserve hardware limitations and original historical verdicts.
-- [ ] If runtime changes, rebuild sdist and Python 3.11/3.12/3.13 wheels, repeat isolated base/serve/hardware-import/cache-shim smokes without hardware, and refresh the manifest with exact hashes.
+- [ ] Rebuild sdist and Python 3.11/3.12/3.13 wheels because the reference loader is included in distributions. Repeat isolated base/serve/hardware-import/cache-shim smokes plus an installed-reference exact-weight smoke without hardware; refresh the manifest with exact hashes.
 - [ ] Review `git diff --check`, artifact import isolation, historical failure hashes, and the complete changed-file diff. Update current status only to milestones actually verified.
 - [ ] Commit and push to `origin`; verify clean worktree and remote commit. Hand off the software result and retain physical validation for when the operator returns home.

@@ -159,13 +159,15 @@ records the immutable revision and regeneration path.
 
 ## Fine-tune on your Mac (preview)
 
-Native MLX training is a preview: step-zero gradients and 25 optimizer updates
-pass the fixed lockstep gates, LoRA/full exports reload through both MLX and
-LeRobot, and the measured expert-only LoRA export has a Torch/MLX held-out MAE
-ratio of **0.9999447392**; however, its strict deterministic maximum is
-**0.0130388588** against the prospectively fixed **0.005** gate, so that gap
-remains under investigation. See the [training evidence](docs/evidence/README.md#training)
-before relying on the workflow.
+Native MLX training supports LoRA/full exports and exact resume. Step-zero
+gradients and 25 optimizer updates pass the fixed lockstep gates. A repaired
+PyTorch reference loader now preserves the native-trained fp32 weights: the
+retained expert-only LoRA export passes all 56 fixed-limit cases, with normalized
+maximum **0.0000214577**, physical maximum **0.0004272461** (both below **0.005**),
+and Torch/MLX held-out MAE ratio **1.0000007854**. See the
+[repair evidence](docs/evidence/TRAINED_PARITY_REPAIR.md). Training remains a
+research preview: this validates one retained LoRA run, while full fine-tuning
+has code/smoke coverage rather than a long-run task-quality study.
 
 ```bash
 uv sync --extra train
@@ -200,7 +202,7 @@ CPU compatibility path for bit-close deterministic comparison with PyTorch CPU.
 - Connected SO-101 state/camera capture and no-motion MLX RPC loops are validated, but single-action and bounded-continuous motion are not; [first-contact evidence](hardware/FIRST_CONTACT.md) records the results and open physical gates.
 - Raw `lerobot/smolvla_base` output is not a physical-action interface because its saved state/action statistics do not bind to the generic keys. Motion clients must use a reviewed checkpoint with effective statistics matching the robot.
 - Production Metal fp32 passes the statistical gate but fails the strict `0.005` deterministic maximum; use strict mode for that contract and see the [mode table](docs/BENCHMARK.md#default-production-correctness-metal).
-- Native training remains statistical alpha because its derived deterministic checkpoint gate fails; the unchanged result is in the [T3B failure record](docs/evidence/FAILURE_LORA_FINETUNE_B.md).
+- Native training is a research preview. The retained LoRA export passes the [post-repair fixed parity gates](docs/evidence/TRAINED_PARITY_REPAIR.md); this does not establish task success on a robot or generalize to every training run. The original [T3B verdict](docs/evidence/FAILURE_LORA_FINETUNE_B.md) is preserved as historical evidence.
 - Checkpoints must match the audited SmolVLA/SmolVLM2 configuration and complete tensor inventory described in the [architecture](docs/ARCHITECTURE.md).
 - The LeRobot serving protocol is suitable only for trusted peers; security boundaries are documented in the [architecture](docs/ARCHITECTURE.md) and [security policy](.github/SECURITY.md).
 

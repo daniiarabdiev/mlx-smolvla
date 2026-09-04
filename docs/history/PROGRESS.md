@@ -3163,3 +3163,21 @@
   `1788504562311518199` ns, before repaired cross-framework inference.
   This is retrospective diagnostic evidence only; the v3 envelope's legacy
   T3 context fields do not describe a new observation or acceptance milestone.
+- The independently reviewed repair harness (`8b5c485`, pushed) passes 13
+  regressions. The fresh start marker binds 454 files, including all 337
+  current floor inputs and the actual native converted model/name map.
+- **TRAINED CHECKPOINT STRICT-PARITY REPAIR VERIFIED:** all 56 cases pass
+  original fixed limits. Normalized max `0.000021457672119140625`, physical
+  max `0.00042724609375`, standardized physical max
+  `0.000021445659513119608`, image max `3.5762786865234375e-7`, state max `0`.
+  Fine/base MAE ratio remains `0.486008430646319`; corrected Torch/MLX MAE
+  ratio is `1.00000078541285`. No weights, native runtime arithmetic, or
+  tolerance changed. Both historical failure hashes remain byte-identical.
+- Repair marker SHA-256 `c53864d301507f4e53c4c31d791874c4e613d90044198bf991a7988f4d01094d`;
+  full outcome `f98b6394454a6682e0f96fb54f9c5f977d6b6a7c3866cff48cf081ebdac9b07e`;
+  separate verdict `213e7d7a662a61f757328895e1aa0bcff2932689a6429acd663a6898a7383d85`.
+  Chronology and before/after byte identity were enforced, including final
+  no-clobber publication. Original T3B derived acceptance was not reassigned.
+- No trainer, floor worker, benchmark, or competing test was active before
+  starting the closing `make test`. Hardware remains offline. No new timing
+  benchmark, upload, release, tag, or visibility change was attempted.

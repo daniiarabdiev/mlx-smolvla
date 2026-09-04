@@ -2,9 +2,38 @@
 
 ## Status
 
-Investigation in progress, 2026-09-04. No acceptance verdict has changed yet.
+**Strict-parity repair validated, 2026-09-04.** The unchanged retained T3B
+checkpoint passes all 56 cases and every original fixed limit with the
+corrected reference loader. This is a separate software-repair result, not a
+retrospective reassignment of the original T3/T3B milestones. Final suite and
+distribution verification follow below when complete.
+
 The operator authorized software-only completion while the robot is powered
-off. No hardware, camera, serial port, or vendor-tree access is involved.
+off. No hardware, camera, serial port, or vendor-tree access was involved.
+
+## All-56-case result
+
+| Check | Repaired result | Unchanged fixed limit | Result |
+| --- | ---: | ---: | --- |
+| Image preprocessing maximum | `3.5762786865234375e-7` | `1e-5` | Pass |
+| State preprocessing maximum | `0.0` | `1e-6` | Pass |
+| Normalized action maximum | `0.000021457672119140625` | `0.005` | Pass |
+| Physical action maximum | `0.00042724609375` | `0.005` | Pass |
+| Standardized physical maximum | `0.000021445659513119608` | `0.005` | Pass |
+| Fine-tuned/base MLX MAE ratio | `0.486008430646319` | `<= 0.9` | Pass |
+| Torch/MLX MAE ratio | `1.00000078541285` | `[0.95, 1.05]` | Pass |
+
+The MLX held-out MAE is unchanged at `2.2550044155546596` versus frozen base
+`4.639846293521779`. Corrected Torch MAE is `2.2550061866641045`. All 56
+frozen cases, saved noise, train-only statistics, checkpoint tensors, native
+conversion, and original training/evaluation source digests are unchanged.
+No retraining, tolerance adjustment, or native inference arithmetic change was
+needed. Strict inference here is the explicit CPU compatibility mode; this
+does not change the separate default-Metal deterministic limitation.
+
+The result validates one retained 3,000-update expert-only LoRA run. Native
+training remains a research preview; full fine-tuning has code/smoke evidence,
+not a long-run task-quality study. Physical robot task success is not claimed.
 
 ## Demonstrated cause
 
@@ -37,6 +66,20 @@ the expert query weight, loads through the production reference adapter, and
 compares every stored parameter exactly. Before the fix it fails on all four
 probe values, with maximum weight error `0.0006510317325592041`. It performs
 no policy inference and uses no held-out data.
+
+## Implemented repair
+
+Source checkpoint `5180912` constructs the reference policy, casts its CPU
+destination parameters to the requested dtype, strictly loads the saved
+safetensors values, and only then transfers it to the requested device. All
+500 tensors / 450,046,176 scalars in the retained T3B export now match their
+stored values exactly. The old load order rounded 98,220,177 scalars across
+112 adapted tensors through bf16.
+
+Real-checkpoint regressions pass on CPU fp32, CPU fp64, and MPS fp32; missing
+or unexpected state keys still fail. The existing focused export/floor/parity/
+import suite passes 123 tests. The default Metal runtime, native MLX training
+math, fixed tolerances, and checkpoint bytes are unchanged.
 
 ## Protected evidence and chronology
 
@@ -85,6 +128,67 @@ check the envelope/start/outcome chronology before installing a separate repair
 verdict. Do not combine archived floor implementation bytes with corrected
 comparison evidence, modify the original trained-parity evaluator, or claim
 original T3B derived acceptance from this post-fix validation.
+
+The corrected-loader nine-worker envelope completed with
+`F = 0.000025600194931030273` and `F64 = 0.000023670888653737343`.
+Its SHA-256 is
+`06e48641f235e74c2c4ddf8fc8e885867499fdaf1cb206fa50ba5b82c26af06f`,
+creation time `1788504562305003000` ns, and actual mtime
+`1788504562311518199` ns. It was written before repaired cross-framework
+inference. No timing benchmark ran during its computation.
+
+The separate repair evaluator is committed as `8b5c485`:
+`scripts/check_trained_parity_repair.py`. Its 13 regressions cover chronology,
+no-clobber outputs, input replacement, frozen-baseline integrity, complete
+sample evidence, physical-action limits, and publication-time mutation. The
+start marker binds all 337 floor inputs, current runtime/reference sources,
+both original and corrected raw worker bundles, original failure/evaluation
+records, and the actual native converted weights/name map (454 file bindings).
+Every canonical output is installed without replacement; all original
+thresholds are retained.
+
+The actual repair chain is:
+
+- Envelope creation/write: `1788504562305003000` /
+  `1788504562311518199` ns.
+- Start creation/write: `1788504791896025000` /
+  `1788504791897735127` ns. Marker SHA-256:
+  `c53864d301507f4e53c4c31d791874c4e613d90044198bf991a7988f4d01094d`.
+- Outcome write: `1788505075900093547` ns. Full outcome SHA-256:
+  `f98b6394454a6682e0f96fb54f9c5f977d6b6a7c3866cff48cf081ebdac9b07e`.
+- Separate repair verdict SHA-256:
+  `213e7d7a662a61f757328895e1aa0bcff2932689a6429acd663a6898a7383d85`.
+
+The evaluator enforced this ordering and rehashed all bindings after inference
+and again at final publication. Both protected failure-file hashes still
+match. Independent review found no remaining issue in the final publication
+and actual-conversion binding checks.
+
+## Reproduction
+
+Use the pinned reference environment and retained repository-local inputs.
+The work/output directories must be new; the commands intentionally refuse to
+overwrite evidence. Do not run training or performance benchmarks concurrently.
+
+```bash
+.venv/bin/python scripts/compute_self_consistency_floor.py \
+  --checkpoint .cache/training/t3b/export \
+  --evaluation-dir .cache/training/t3-evaluation --cache-dir .cache/hf \
+  --work-dir .cache/training/parity-repair-20260904/self-consistency \
+  --output .cache/training/parity-repair-20260904/reference-envelope-v3.json \
+  --purpose retrospective_diagnostic
+
+.venv/bin/python scripts/check_trained_parity_repair.py \
+  --envelope .cache/training/parity-repair-20260904/reference-envelope-v3.json \
+  --variants .cache/training/parity-repair-20260904/self-consistency/variants \
+  --output-dir .cache/training/parity-repair-20260904/fixed-repair
+```
+
+For lossless optional PyTorch reference loading of an fp32 native export,
+use `training.reference_export.TorchExportPolicy.load(export, cache_dir=...)`.
+With the pinned LeRobot version, calling its `from_pretrained` first and then
+casting to fp32 does not preserve every fp32 export value. This adapter is
+reference tooling, not an import in the dependency-light MLX runtime.
 
 ## Local reproduction artifacts
 

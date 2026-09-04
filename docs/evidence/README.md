@@ -61,7 +61,10 @@ outcomes are summarized in the benchmark and cumulative historical status.
   result and original gates.
 - [`LORA_SCOPE_COMPARISON.md`](LORA_SCOPE_COMPARISON.md) and
   [`FAILURE_LORA_FINETUNE_B.md`](FAILURE_LORA_FINETUNE_B.md): second-attempt
-  expert-only outcome—fixed gates pass, derived deterministic gate fails.
+  original expert-only outcome—fixed gates pass, derived deterministic gate fails.
+- [`TRAINED_PARITY_REPAIR.md`](TRAINED_PARITY_REPAIR.md): reference-loader
+  precision-loss fix and separate all-56-case validation at unchanged fixed
+  limits. Both original failure records remain byte-identical.
 - [`TRAINING_UX.md`](TRAINING_UX.md): LoRA/full smoke, exact resume, standard
   export, and reload evidence.
 - [`TRAINING_BENCHMARK.json`](TRAINING_BENCHMARK.json): frozen four-cell native

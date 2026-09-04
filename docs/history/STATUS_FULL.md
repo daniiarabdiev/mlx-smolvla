@@ -2,6 +2,8 @@
 
 FULL-SCOPE SOFTWARE COMPLETE — FINAL AUDIT PASSED
 
+TRAINED CHECKPOINT STRICT-PARITY REPAIR VERIFIED — ALL 56 FIXED-LIMIT CASES PASS
+
 FINAL VERIFICATION COMPLETE — 773/773 TESTS PASS
 
 HARDWARE NO-MOTION VALIDATION COMPLETE — PHYSICAL MOTION NOT RUN
@@ -652,3 +654,26 @@ retained to show how the error was found and corrected.
 - `FINAL VERIFICATION COMPLETE` remains reached. `PUBLIC RELEASE READY`
   remains unreached; no upload, tag, release, visibility change, or public
   announcement occurred.
+
+## 2026-09-04 trained-checkpoint reference precision repair
+
+- The strict trained-checkpoint gap is closed for the retained expert-only
+  LoRA export. The PyTorch adapter had rounded saved fp32 values through bf16
+  parameters before widening them. The repaired loader preserves all 500
+  tensors / 450,046,176 scalars exactly on CPU fp32, CPU fp64, and MPS fp32.
+- Separate all-56 fixed-limit repair validation passes: image maximum
+  `3.5762786865234375e-7`, state `0`, normalized `0.000021457672119140625`,
+  physical `0.00042724609375`, standardized physical
+  `0.000021445659513119608`. Every original limit is unchanged.
+- Held-out MLX MAE remains `2.2550044155546596`; fine/base ratio is
+  `0.486008430646319`, and corrected Torch/MLX ratio is `1.00000078541285`.
+  No training, checkpoint, default-Metal runtime, or tolerance changed.
+- The corrected nine-worker envelope is informational only and was written
+  before repaired comparison. The original prospective floor, T3/T3B failures,
+  and original milestones above remain historical evidence, not reclassified
+  results. See `docs/evidence/TRAINED_PARITY_REPAIR.md` for the hash-bound
+  chronology, original fixed-limit verdict, and reproduction commands.
+- Source checkpoints `5180912` and `8b5c485` are committed and pushed. Training
+  remains a research preview: one retained LoRA run is validated, full mode is
+  code/smoke only, and real-robot task success remains untested. Hardware stays
+  powered off; no device access or uploads occurred during this repair.

@@ -43,6 +43,13 @@ postprocessing. A separate 50-frame population evaluates first-action MAE.
 Thresholds were fixed before evaluation and are indexed in
 [`evidence/README.md`](evidence/README.md).
 
+The retained native-trained expert-only LoRA checkpoint also passes a separate
+56-case, fixed-limit repair validation after correcting reference-loader
+precision loss: normalized maximum `0.000021457672119140625`, physical maximum
+`0.00042724609375`, each below the unchanged `0.005` limit. Its original
+prospective verdict is not overwritten or relabeled. See
+[`TRAINED_PARITY_REPAIR.md`](evidence/TRAINED_PARITY_REPAIR.md).
+
 ## Limitations
 
 - Connected Hiwonder SO-101 state/camera capture and no-motion RPC serving have
@@ -53,9 +60,9 @@ Thresholds were fixed before evaluation and are indexed in
   reviewed checkpoint whose statistics match the target robot.
 - Production Metal fp32 passes the statistical gate but not the strict
   deterministic `0.005` maximum; strict CPU mode owns that contract.
-- Native training is statistical alpha: standard export and Torch/MLX
-  round-trip gates pass, while the trained checkpoint's derived deterministic
-  gate remains a documented failure.
+- Native training is a research preview. The retained LoRA checkpoint passes
+  post-repair fixed parity, but full fine-tuning has code/smoke coverage only;
+  neither result establishes real-robot task success or all-run convergence.
 - Only the audited SmolVLA/SmolVLM2 configuration and complete compatible
   checkpoint inventories are accepted.
 

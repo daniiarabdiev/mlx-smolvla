@@ -22,6 +22,11 @@ Initial public release candidate.
 
 ### Fixed
 
+- Preserve fp32 native-trained weights when loading the optional PyTorch
+  reference, by selecting the destination dtype before strict state loading.
+  The retained 56-case LoRA export now passes every original fixed limit;
+  [repair evidence](docs/evidence/TRAINED_PARITY_REPAIR.md) preserves the prior
+  verdicts and records the separate validation.
 - Corrected Hiwonder camera guidance to assign session-local roles by visual
   preflight and exclude built-in or Continuity cameras; both startup orders
   pass with the two intended UVC devices.
@@ -38,9 +43,9 @@ Initial public release candidate.
   statistics and is restricted to no-motion diagnostics by the fail-closed
   client. Motion requires a reviewed stats-active checkpoint and an
   operator-attested hardware-limit profile.
-- Native MLX training is a preview: lockstep primitives and exported-checkpoint
-  round trips pass, while the deterministic parity gap for an MLX-trained
-  checkpoint remains documented and unresolved.
+- Native MLX training remains a research preview: the retained expert-only
+  LoRA export passes post-repair strict parity, but full fine-tuning has only
+  code/smoke coverage and no robot task-success claim is made.
 
 Evidence and reproducibility details are indexed in
 [`docs/evidence/`](docs/evidence/README.md).
