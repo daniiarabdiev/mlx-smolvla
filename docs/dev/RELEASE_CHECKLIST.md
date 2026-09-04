@@ -29,14 +29,19 @@ repository evidence.
   release-candidate source checkpoint, inspect their file lists, install them
   into clean environments, and exercise the installed CLI rather than the
   checkout. Source: [PyPA packaging flow](https://packaging.python.org/en/latest/flow/).
-- [ ] After the supervised hardware gate clears, tag the final source and
-  confirm the manifest-matched candidate is still the intended publication
-  set before uploading it.
+- [ ] After the supervised hardware gate and final verification clear, create
+  the annotated tag on the committed, pushed final source. Build a fresh sdist
+  and CPython 3.11/3.12/3.13 wheels from that tag into a new directory; repeat
+  the fresh-install smoke matrix and record exact hashes in
+  [DIST_MANIFEST.md](../evidence/DIST_MANIFEST.md). Preserve prior artifacts;
+  the existing untagged candidate must not be uploaded.
 - [x] Render-check the long description and validate every distribution with
   `twine check` before publication. Source: [PyPA PyPI-friendly README guide](https://packaging.python.org/en/latest/guides/making-a-pypi-friendly-readme/).
-- [ ] Use PyPI trusted publishing with narrowly scoped GitHub permissions when
-  publication is enabled; do not store a long-lived upload token in this
-  repository. Source: [PyPA GitHub Actions publishing guide](https://packaging.python.org/en/latest/guides/publishing-package-distribution-releases-using-github-actions-ci-cd-workflows/).
+- [ ] Optional future automation: use PyPI trusted publishing with narrowly
+  scoped GitHub permissions. Active CI and trusted publishing are not v0.1.0
+  prerequisites; an explicitly authorized operator upload may use credentials
+  supplied securely outside the repository and shell history. Source:
+  [PyPA GitHub Actions publishing guide](https://packaging.python.org/en/latest/guides/publishing-package-distribution-releases-using-github-actions-ci-cd-workflows/).
 
 ## First-use experience
 

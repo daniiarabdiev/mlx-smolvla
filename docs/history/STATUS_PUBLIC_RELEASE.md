@@ -7,8 +7,9 @@ GitHub repository. The connected-follower read path and four bounded no-motion
 RPC loops passed. Camera identity/framing and the mechanically supported inset
 pose were subsequently verified; they are not unresolved failures. Physical
 motion has not run because the exact low-controller-limit profile and final
-physical attestation remain open. The operator is now away and the hardware is
-powered off, so the next session must freshly verify the connected setup.
+physical attestation remain open. In the current continuation the operator
+confirmed the hardware is not connected; the handoff reported it powered off.
+The next session must freshly authorize device access and verify the setup.
 The version tag, uploads, visibility change, release creation, announcement,
 and hardware-motion claim remain withheld.
 
@@ -19,7 +20,7 @@ and hardware-motion claim remain withheld.
 | A — real SO-101 | **Partial: no-motion complete; motion deferred** | Four 60-second native-MLX no-motion loops completed with all six torque bits off and zero motor writes. The corrected fixed/wrist camera mapping and supported inset pose passed in the last connected session. The low-controller-limit profile, final physical attestation, single action, and bounded-continuous result remain open. Recheck camera identity and pose after reconnecting; prior confirmation is not current motion clearance. See [`FIRST_CONTACT.md`](../../hardware/FIRST_CONTACT.md) and [`HUMAN_TASKS.md`](HUMAN_TASKS.md). |
 | B — macOS / MLX floor | **Complete** | Official macOS 14 arm64 wheels for MLX 0.32.0, 0.32.1, and 0.32.2 were hash- and Mach-O-verified, then passed the unchanged correctness and installed-runtime gates. See [`MLX_COMPATIBILITY.md`](../evidence/MLX_COMPATIBILITY.md). |
 | C — public-release preparation | **Complete** | Canonical distribution/import/CLI/cache/GitHub identities, prior-project acknowledgment, community metadata, hobbyist-first README, agent guide, and root hygiene are committed. Hardware wording is restricted to the observed no-motion result. |
-| D — software verification | **Complete; publication held** | This closeout's full suite passed 790/790; its fast lane passed 489/489 in 99.71 test seconds / 103.03 seconds wall, below two minutes. The reference repair passed all 56 trained-checkpoint fixed gates. The current sdist and three wheels from `8bb5c7e` passed seven fresh-install environments, including exact trained-weight loading. See [`TRAINED_PARITY_REPAIR.md`](../evidence/TRAINED_PARITY_REPAIR.md) and [`DIST_MANIFEST.md`](../evidence/DIST_MANIFEST.md). |
+| D — software verification | **Complete; publication held** | The offline continuation's full suite passed 790/790 in 723.49 test seconds / 726.60 seconds wall; its fast lane passed 489/489 in 101.38 test seconds / 106.30 seconds wall, below two minutes. The reference repair passed all 56 trained-checkpoint fixed gates. The existing sdist and three wheels from `8bb5c7e` retain their recorded hashes and prior seven-environment smoke evidence. Fresh tag-built artifacts and repeated installed checks remain gated on hardware completion. See [`TRAINED_PARITY_REPAIR.md`](../evidence/TRAINED_PARITY_REPAIR.md) and [`DIST_MANIFEST.md`](../evidence/DIST_MANIFEST.md). |
 
 ## Hardware continuation evidence
 
@@ -66,7 +67,49 @@ and hardware-motion claim remain withheld.
   modified; its 696-file tracked-content composite remained
   `d280efa881ab9e412cd071bbef38d8d9ec5050e484b49b5a2397df2a39bdb764`.
 
-## Latest software verification — 2026-09-04
+## Offline continuation baseline — 2026-09-04
+
+- Starting `main` was clean at `7fdf2fc2f35f41a776250f71c613039d0c41b6f3`;
+  the canonical SSH remote returned the identical HEAD. GitHub was private and
+  had no `v0.1.0` tag. The operator confirmed the hardware is not connected.
+- The idle preflight at `2026-09-04T11:00:39Z` found no competing project
+  compute or inherited test overrides, 92.42% idle CPU, and no recorded
+  thermal/performance warning. Unmodified `make test-fast` passed **489/489**
+  selected tests with 301 slow tests deselected in **101.38 test seconds /
+  106.30 complete-command wall seconds**. No skip or xfail was reported; the
+  unchanged 120-second gate passes.
+- All four candidate artifacts match the manifest's hashes and sizes. All
+  60 packaged Python source files in each wheel match the checkout. Both
+  original failure records, the original T3B floor, and the retained export
+  match their protected hashes. Existing artifacts remain an untagged candidate.
+- Fresh logs are retained under
+  `.cache/hardware-release-continuation-20260904-k9uzrei5/`. The fast-log
+  SHA-256 is `00c7aa67ec0fa144b19be61d277c8390676629cb774aa5b40d499c4723b6de05`.
+- A separate `2026-09-04T11:04:12Z` full-suite preflight found no competing
+  project jobs or test overrides and 92.40% idle CPU. Unmodified `make test`
+  passed **790/790 in 723.49 test seconds / 726.60 complete-command wall
+  seconds**, with no skip or xfail. No other model, training, floor, test, or
+  build job ran concurrently; documentation review and dependency-metadata
+  checks continued. Full-log SHA-256:
+  `6be04ec38c609210e70f9d67115da8308fe3f239a7d225da4898bc8e7e0125a2`.
+- The lock resolves 122 packages. Dependency integrity passes for the
+  development environment (100 packages), existing server environment (56),
+  and existing client environment (65). Both separated environments retain
+  LeRobot 0.6.1 and no PyAV. Raw actionlint output contains only the documented
+  constant-false hosted-CI guard; the check passes when only that diagnostic
+  is excluded. No environment or CI configuration was changed.
+- Final release-document, repository-hygiene/link, and distribution checks
+  passed **25/25 in 15.63 seconds**. The post-suite artifact and protected-file
+  hashes still match; all seven changed documents have resolving local links
+  and no newly added private home path or credential pattern. The focused-log
+  SHA-256 is `e3f71ffd5a3b16c7cc5b2b0082c0ab5bfd1488837c4c2206d1745fc3f9e1e905`.
+- The [continuation plan](PLAN_HARDWARE_RELEASE_CONTINUATION.md) preserves
+  both fresh live confirmations and operator-run client authority. The release
+  checklist now explicitly requires fresh tag-built artifacts and repeated
+  installed checks; the current candidate must not be uploaded. No runtime,
+  tests, limits, tolerances, hardware records, or distribution bytes changed.
+
+## Prior software verification — 2026-09-04
 
 - The reference-loader repair preserves the retained trained fp32 weights.
   All 56 fixed-limit cases passed: normalized maximum
@@ -158,16 +201,20 @@ and hardware-motion claim remain withheld.
 | macOS / MLX floor | **Clear** | MLX 0.32.0–0.32.2 and their official macOS 14 wheel family passed the fixed software gates. |
 | Claims exceed evidence | **Clear** | Public language distinguishes live no-motion RPC evidence from unperformed physical motion; no claim says the model drives the arm. |
 | Operator material in tree | **Clear** | The current tracked tree contains no exact device serial or private path. Telemetry, camera frames, and the bystander-containing image remain ignored and untracked; public evidence is redacted. |
-| First-page friction | **Clear** | The README, rebuilt artifact matrix, and installed `doctor` checks are verified. The unchanged `make test-fast` target passed all 489 selected tests in 103.03 seconds complete-command wall time, below two minutes. |
+| First-page friction | **Clear** | The README, existing artifact matrix, and prior installed `doctor` checks are verified. The current unchanged `make test-fast` target passed all 489 selected tests in 106.30 seconds complete-command wall time, below two minutes. |
 
 ## Exact next gate
 
 The physical prerequisites and exact new statement are maintained in
-[`HUMAN_TASKS.md`](HUMAN_TASKS.md). Begin a new supervised session after the
-operator returns and reconnects the hardware. Visually re-identify the fixed
-and wrist cameras and freshly verify the supported inset pose; the previous
+[`HUMAN_TASKS.md`](HUMAN_TASKS.md), with the remaining sequence in the
+[continuation plan](PLAN_HARDWARE_RELEASE_CONTINUATION.md). The physically
+present operator must reconnect the hardware and supply `ARM SESSION CONFIRMED`
+in the live session before any device access or vendor-checkout read/execute.
+Visually re-identify the fixed and wrist cameras and freshly verify the
+supported inset pose; the previous
 passes remain valid historical evidence, not a persistent clearance. Power
 off before any manual adjustment and support the torque-free arm safely.
+Complete a fresh bounded no-motion check with new logs after preflight.
 Motion may resume only after an operator-known procedure has produced the
 exact low-limit JSON profile and the workspace/base/power checklist is true.
 The required new in-session phrase is:

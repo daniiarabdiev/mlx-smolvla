@@ -3251,3 +3251,64 @@
   hygiene, and distribution slice passed **25/25 in 13.90 seconds**. Read-only
   review found the factual/safety updates aligned with the recorded evidence;
   its pending full-result requirement is now recorded in all three documents.
+
+## 2026-09-04 — offline hardware/release continuation
+
+- The operator requested continuation from the software-complete checkpoint
+  and then confirmed that the hardware is not connected. No new live device
+  authorization or motion attestation was supplied; no device, camera, serial
+  port, or vendor checkout was accessed.
+- Starting `main` was clean at `7fdf2fc2f35f41a776250f71c613039d0c41b6f3`.
+  The canonical SSH remote returned that exact HEAD; GitHub was private and
+  no `v0.1.0` tag existed. No reset, rename, or environment replacement was
+  needed. Existing source, artifacts, caches, and historical evidence remain.
+- Read the required release, hardware, current-status, and repair documents;
+  saved `PLAN_HARDWARE_RELEASE_CONTINUATION.md`. Four no-motion successes,
+  corrected camera roles/framing, and the mechanically supported inset pose
+  remain historical successes. The next session still needs fresh live
+  authorization, connected checks, exact approved low limits, physical
+  attestation, a new no-motion run, reviewed single action, and bounded
+  continuous motion through the existing operator-run client.
+- Clarified current human tasks and the release checklist: only fresh artifacts
+  built from the final annotated tag may be published after their repeated
+  smoke matrix and manifest refresh. Normal commits/pushes are authorized;
+  public visibility, uploads, and GitHub Release creation require separate
+  explicit authorization. No public release readiness or motion claim is made.
+- At `2026-09-04T11:00:39Z`, the fast preflight found no competing project
+  jobs or inherited test overrides, 92.42% idle CPU, and no recorded thermal/
+  performance warning. `/usr/bin/time -p make test-fast` passed **489/489**,
+  with 301 slow tests deselected, in **101.38 test seconds / 106.30 wall
+  seconds**, no skip or xfail. The unchanged two-minute gate passes without
+  selection, marker, tolerance, runtime, or configuration changes.
+- Fresh no-clobber logs: `.cache/hardware-release-continuation-20260904-k9uzrei5/`.
+  Fast-log SHA-256:
+  `00c7aa67ec0fa144b19be61d277c8390676629cb774aa5b40d499c4723b6de05`.
+  The original T3/T3B failures, original floor, retained export, and all four
+  candidate artifacts match their protected hashes. All 60 Python source files
+  in each wheel still match the checkout. Free disk at kickoff was 481.56 GiB.
+- A separate `2026-09-04T11:04:12Z` full-suite preflight found no competing
+  project jobs or test overrides and 92.40% idle CPU. Unmodified
+  `/usr/bin/time -p make test` passed **790/790 in 723.49 test seconds /
+  726.60 wall seconds**, with no skip or xfail. No other model, training,
+  floor, test, or build job ran concurrently; lightweight documentation review
+  and dependency-metadata checks continued. Full-log SHA-256:
+  `6be04ec38c609210e70f9d67115da8308fe3f239a7d225da4898bc8e7e0125a2`.
+- The lock resolves 122 packages. Development/server/client dependency checks
+  pass for 100/56/65 packages respectively. The existing separate hardware
+  environments retain LeRobot 0.6.1 and no PyAV. Raw actionlint reports only
+  the intentional constant-false hosted-CI condition and passes with only that
+  diagnostic excluded. No environment or workflow was changed.
+- Independent read-only review found two older human-task instructions that
+  omitted the final software/tag gate or separate publication authorization.
+  Both were aligned with the handoff and re-reviewed without a remaining
+  material issue. Trusted publishing/active CI are optional; no credential
+  value is placed in the release command examples.
+- Final release-document, repository-hygiene/link, and distribution checks
+  passed **25/25 in 15.63 seconds**. Focused-log SHA-256:
+  `e3f71ffd5a3b16c7cc5b2b0082c0ab5bfd1488837c4c2206d1745fc3f9e1e905`.
+  Post-suite integrity checks still match all four artifacts and all four
+  protected records. All seven changed documents have resolving local links;
+  newly added text contains no private home path or credential pattern.
+  The runtime, tests, build configuration, and lock remain identical to the
+  artifact source checkpoint. The remote still matched the starting HEAD
+  immediately before the documentation checkpoint; no release tag existed.

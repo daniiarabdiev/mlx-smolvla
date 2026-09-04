@@ -7,17 +7,24 @@
   session-local camera mapping: fixed index 0 and wrist index
   1; index 2 was the built-in Mac camera, not the fixed UVC view. First clear
   the remaining physical prerequisites below, then complete the
-  single-action and bounded-continuous stages. Only after
-  `hardware/FIRST_CONTACT.md` contains passing results for all three graduated
-  modes may the release candidate claim hardware motion support, receive the
-  `v0.1.0` tag, or be announced.
+  fresh no-motion, single-action, and bounded-continuous stages. Hardware
+  motion claims require reviewed passing measurements for all three modes in
+  `hardware/FIRST_CONTACT.md`. The annotated `v0.1.0` tag additionally requires
+  final software verification and a reviewed, committed, pushed final source
+  and evidence checkpoint. Publication and announcement remain separately
+  authorized actions after the complete release gates pass.
 
 ## Open — clear the remaining physical prerequisites for one action
 
-- **Current availability:** on 2026-09-04 the operator reported that the
-  hardware is powered off and they are away from it. Do not treat any earlier
-  pose or camera index as current; begin the next attempt as a new supervised
-  session.
+- **Current availability:** in the 2026-09-04 continuation, the operator
+  confirmed that the hardware is not connected. The handoff reported power
+  off; there is no new device-access or motion authorization. Follow the
+  [continuation plan](PLAN_HARDWARE_RELEASE_CONTINUATION.md) while offline.
+- Before any device access or vendor-checkout read/execute, the physically
+  present operator must supply `ARM SESSION CONFIRMED` in the live session.
+  The completed historical session below and the pasted handoff do not satisfy
+  this new gate. Freshly verify follower identity/calibration, both camera
+  viewpoints, and the supported pose after reconnecting; never open the leader.
 - **Last pose status:** passed after the operator manually moved and
   mechanically supported the torque-free arm. Lift/elbow read
   −20.396°/62.989°, inside the required −83.833°–83.833° /
@@ -47,6 +54,11 @@
   the current raw position as the goal while torque is off. Outbound and
   return motion are both bounded to gradual one-public-unit steps. This does
   not replace the low-limit or physical checks.
+- After reconnecting and completing preflight, the operator must run a fresh
+  60-second `--no-motion` check from the runbook before any single action.
+  Use new server/client log paths, require zero writes/timeouts and verified
+  torque-off, and review camera freshness and rejected/clamped/rate-limited
+  chunks. The earlier four successful runs remain historical evidence.
 - After all listed items are physically true, send this exact new in-session
   statement before a single-action attempt:
 
@@ -74,8 +86,10 @@
 
 ## Open — make the GitHub repository public
 
-- After the hardware gate and final verification pass, review the tracked tree
-  and run:
+- After the hardware gate and final verification pass, review the tracked tree.
+  Obtain separate explicit authorization to make the repository public before
+  running this command; the continuation's commit/push authorization does not
+  cover visibility changes:
 
   ```sh
   gh repo edit daniiarabdiev/mlx-smolvla \
@@ -113,11 +127,15 @@
   uvx --from twine twine check "$FINAL_RELEASE_ARTIFACTS"/*
   ```
 
-- Repeat the archive inspection, four base fresh installs, offline predictions,
-  `doctor`, serve-extra loopback, and hash capture from
+- Repeat the archive inspection and all seven fresh-install environments,
+  including base offline predictions/`doctor`, serving/quantization, hardware
+  imports without device access, cache compatibility, reference/training
+  exact-weight checks, and hash capture from
   [`../evidence/DIST_MANIFEST.md`](../evidence/DIST_MANIFEST.md). Refresh that
   manifest with the tag-built bytes and commit/push it before uploading.
-- Recheck that the name is still available immediately before publication:
+- Obtain separate explicit authorization for the PyPI upload after the final
+  artifact set and manifest are reviewable. Recheck that the name is still
+  available immediately before that authorized publication:
 
   ```sh
   python -c 'import urllib.request; urllib.request.urlopen("https://pypi.org/pypi/mlx-smolvla/json")'
@@ -125,11 +143,13 @@
 
   A `404` means the name still appears unclaimed; any successful response means
   stop and resolve the naming conflict.
-- Configure the operator's PyPI credential outside this repository, then upload
-  only the final manifest-matched artifacts:
+- Supply the operator's PyPI credential securely through the environment,
+  outside this repository and shell history. With explicit upload authorization
+  and that credential already configured, upload only the final
+  manifest-matched artifacts:
 
   ```sh
-  UV_PUBLISH_TOKEN='<PYPI_TOKEN>' uv publish \
+  uv publish \
     .cache/release-v0.1.0-artifacts/mlx_smolvla-0.1.0*
   ```
 
@@ -137,7 +157,8 @@
 
 ## Open — create the GitHub Release
 
-- Only after a verified `v0.1.0` tag exists and PyPI publication succeeds:
+- Only after a verified `v0.1.0` tag exists, PyPI publication succeeds, and
+  separate explicit authorization to create the GitHub Release is supplied:
 
   ```sh
   gh release create v0.1.0 \
@@ -149,9 +170,9 @@
 
 ## Optional — publish converted weights deliberately
 
-- The software release does not need redistributed weights. If licensing and
-  provenance are reviewed and a complete converted checkpoint is intentionally
-  published later, use a new model repository and upload only the audited
+- The software release does not need redistributed weights. Only with separate
+  explicit Hub-upload authorization, reviewed licensing/provenance, and a
+  complete converted checkpoint, use a new model repository and upload the audited
   conversion plus its source revision/name map—not local caches or datasets:
 
   ```sh

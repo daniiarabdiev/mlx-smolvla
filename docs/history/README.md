@@ -29,6 +29,7 @@ for provenance; current public documents make no first-port claim.
 | `PLAN_FULL.md` | Full-scope continuation plan. |
 | `PLAN_T3B.md` | Second-attempt training plan. |
 | `PLAN_PUBLIC_RELEASE.md` | Public-release execution plan and hardware stop gate. |
+| [PLAN_HARDWARE_RELEASE_CONTINUATION.md](PLAN_HARDWARE_RELEASE_CONTINUATION.md) | Current continuation from the software-complete checkpoint, fresh live hardware gates, and tag-built artifact sequence. |
 | `STATUS.md` | Early implementation status snapshot. |
 | `STATUS_RELEASE.md` | Stage R status snapshot. |
 | `STATUS_FULL.md` | Cumulative milestone ledger through compatibility/rename work. |

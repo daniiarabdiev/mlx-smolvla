@@ -717,3 +717,41 @@ retained to show how the error was found and corrected.
   test, or build job ran concurrently. Existing package and original failure
   hashes are unchanged. `PUBLIC RELEASE READY` remains unreached only under
   the separately gated hardware/publication workflow.
+
+## 2026-09-04 offline hardware/release continuation
+
+- Starting `main` was clean at `7fdf2fc2f35f41a776250f71c613039d0c41b6f3`,
+  identical to the canonical remote HEAD. GitHub remains private; no release
+  tag exists. The operator confirmed the hardware is not connected, and no
+  fresh device/motion authorization was supplied or inferred from the handoff.
+- Saved [the continuation plan](PLAN_HARDWARE_RELEASE_CONTINUATION.md),
+  clarified the new live hardware gates and operator-run client sequence in
+  `HUMAN_TASKS.md`, and required fresh tag-built artifacts plus repeated
+  installed checks in the release checklist. Publication actions each require
+  separate explicit authorization. No completed software phase was reopened.
+- The unmodified fast lane passed **489/489**, with 301 slow tests deselected,
+  in **101.38 test seconds / 106.30 wall seconds**, below the unchanged
+  two-minute limit. The unmodified full suite passed **790/790 in 723.49 test
+  seconds / 726.60 wall seconds**. Neither run reported a skip or xfail.
+- Separate preflights found 92.42% and 92.40% idle CPU respectively, without
+  competing project compute or inherited test overrides. No other model,
+  training, floor, test, or build job ran alongside either suite. Raw logs and
+  hashes are recorded in `STATUS_PUBLIC_RELEASE.md` and retained under
+  `.cache/hardware-release-continuation-20260904-k9uzrei5/`.
+- All four existing artifact hashes/sizes, both original training failures,
+  the original floor, and the retained checkpoint match their protected
+  records. All 60 Python source files in each wheel match the checkout. The
+  lock and development/server/client dependency checks pass; both separate
+  hardware environments retain LeRobot 0.6.1 without PyAV. No runtime, tests,
+  numerical limits, environments, hardware evidence, or distribution bytes
+  changed.
+- Four historical no-motion successes and the corrected camera/supported-pose
+  results stand. Fresh connected checks, an exact approved controller profile,
+  physical attestation, a reviewed single action, and bounded continuous run
+  remain required. No device or vendor access, motion, tag, upload, visibility
+  change, release creation, or hardware-motion/task-success claim occurred.
+  `PUBLIC RELEASE READY` remains unreached.
+- Final release-document, repository-hygiene/link, and distribution checks
+  passed **25/25 in 15.63 seconds**. Post-suite protected/artifact hashes and
+  changed-document link/privacy checks pass; review found no remaining
+  material issue in the offline documentation milestone.
