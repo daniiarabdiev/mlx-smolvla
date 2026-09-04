@@ -755,3 +755,24 @@ retained to show how the error was found and corrected.
   passed **25/25 in 15.63 seconds**. Post-suite protected/artifact hashes and
   changed-document link/privacy checks pass; review found no remaining
   material issue in the offline documentation milestone.
+
+## 2026-09-04 authorized reconnection preflight
+
+- The operator supplied fresh live `ARM SESSION CONFIRMED`. Follower identity,
+  existing calibration, all-six torque-off readbacks, and the numeric inset
+  pose passed. Lift/elbow read -73.143/39.868 degrees; mechanical support and
+  final physical prerequisites have not been freshly attested.
+- Fixed 0 and wrist 1 are live; built-in 2 is excluded. Their current framing
+  needs adjustment: the wrist points toward the operator, and the fixed view
+  omits the arm working area. The previous camera-identity/framing successes
+  remain historical results. No concurrent capture measurement or new
+  no-motion RPC loop ran after this physical preflight finding.
+- All nine controller readbacks retain the earlier unapproved settings,
+  including acceleration/maximum acceleration 254. No approved profile was
+  supplied. Neither motion stage ran; the leader was never opened and no
+  actuator or torque write occurred.
+- The stats-active checkpoint remains valid and hash-identical. All 696 vendor
+  tracked files and 32 operator-wrapper files are unchanged. Private evidence
+  is retained under `.cache/hardware/session-20260904T141839Z-b560dkhe/`.
+  Source/runtime and the passing software baseline are unchanged. Public
+  release readiness, tagging, and publication remain gated on hardware work.

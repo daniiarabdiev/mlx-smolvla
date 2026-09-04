@@ -3312,3 +3312,45 @@
   The runtime, tests, build configuration, and lock remain identical to the
   artifact source checkpoint. The remote still matched the starting HEAD
   immediately before the documentation checkpoint; no release tag existed.
+
+## 2026-09-04 — live authorization and read-only reconnection preflight
+
+- The operator connected the hardware and supplied fresh live `ARM SESSION
+  CONFIRMED`. Starting source was clean pushed `c228095285b33121c52c624d80127d238a4bb584`.
+- Resolved the operator command/configuration directory to its separate vendor
+  source checkout through the existing activation script. The vendor remains
+  at `a24998f`; its 696 tracked files and 32 operator-wrapper files were hashed
+  before and after and stayed byte-identical. No vendor environment was
+  activated, installed into, or modified; bytecode writes were disabled.
+- Fresh USB enumeration matched only the configured follower for access. The
+  leader was detected but never opened. At `2026-09-04T14:22:04Z`, existing
+  calibration matched, all six torque bits stayed zero, and all joints passed
+  the numeric inset envelope. Lift/elbow measured -73.143/39.868 degrees. The
+  follower port closed normally, with zero actuator or torque writes.
+- All nine controller registers retain the earlier unapproved settings;
+  acceleration and maximum acceleration read 254 on every joint. Requested
+  the operator-approved low-limit profile or known-good procedure; none has
+  been supplied. Mechanical support and final physical attestation remain open.
+- Camera finder from the existing client environment produced fresh labeled
+  images for fixed 0, wrist 1, and excluded built-in 2. The current wrist points
+  toward the operator; the fixed view omits the arm working area. Framing needs
+  correction for this session, without reclassifying the earlier camera fixes.
+  Candidate 3 produced no usable frame and is excluded, without a retry.
+- Stopped at the physical preflight gate. No concurrent camera-rate test,
+  fresh no-motion loop, single action, continuous motion, tag, or publication
+  ran. The existing stats-active checkpoint passes six-axis validation and
+  retains its recorded SHA-256. Runtime, safety guards, and limits are unchanged.
+- Fresh private evidence: `.cache/hardware/session-20260904T141839Z-b560dkhe/`.
+  Follower JSON SHA-256:
+  `d90877883566e557aa86552f133a8ca15d02923fbcefff517f2d663f1a8bd550`.
+  Camera-discovery log SHA-256:
+  `643a5b8f0dc4bb5a384ebdfa6289375bbef28ff765551aa8328d5efee1f912d4`.
+  Raw images, serial identifiers, controller readbacks, and setup paths remain
+  ignored and untracked; public hardware reports contain only redacted results.
+- Independent read-only review found no material issue in this preflight
+  evidence checkpoint. Hardware-readiness, public-release documentation, and
+  repository-hygiene checks passed **17/17 in 2.77 seconds**. Log SHA-256:
+  `d655f53885d8f7a25280451fca667aefc919060e015056e1d5f9eb1cde092c51`.
+  Diff whitespace and private-path/serial checks passed. These are document
+  checks; the unchanged runtime's full-suite baseline remains the earlier
+  790-test result, not a new hardware validation or release clearance.

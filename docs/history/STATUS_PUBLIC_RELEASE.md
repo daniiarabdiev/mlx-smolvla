@@ -7,9 +7,10 @@ GitHub repository. The connected-follower read path and four bounded no-motion
 RPC loops passed. Camera identity/framing and the mechanically supported inset
 pose were subsequently verified; they are not unresolved failures. Physical
 motion has not run because the exact low-controller-limit profile and final
-physical attestation remain open. In the current continuation the operator
-confirmed the hardware is not connected; the handoff reported it powered off.
-The next session must freshly authorize device access and verify the setup.
+physical attestation remain open. The operator subsequently reconnected the
+hardware and supplied fresh live authorization. The new read-only follower,
+calibration, torque-off, and numeric pose checks passed; the current camera
+framing needs adjustment and the approved controller profile is still missing.
 The version tag, uploads, visibility change, release creation, announcement,
 and hardware-motion claim remain withheld.
 
@@ -17,12 +18,21 @@ and hardware-motion claim remain withheld.
 
 | Stage | Outcome | Evidence |
 | --- | --- | --- |
-| A — real SO-101 | **Partial: no-motion complete; motion deferred** | Four 60-second native-MLX no-motion loops completed with all six torque bits off and zero motor writes. The corrected fixed/wrist camera mapping and supported inset pose passed in the last connected session. The low-controller-limit profile, final physical attestation, single action, and bounded-continuous result remain open. Recheck camera identity and pose after reconnecting; prior confirmation is not current motion clearance. See [`FIRST_CONTACT.md`](../../hardware/FIRST_CONTACT.md) and [`HUMAN_TASKS.md`](HUMAN_TASKS.md). |
+| A — real SO-101 | **Partial: historical no-motion complete; motion deferred** | Four 60-second native-MLX no-motion loops completed with torque off and zero motor writes. Fresh 2026-09-04 follower/calibration/torque-off, camera identity, and numeric pose checks pass. Current camera framing needs correction; the approved low-controller-limit profile, final physical attestation, fresh no-motion run, single action, and bounded-continuous result remain open. See [`FIRST_CONTACT.md`](../../hardware/FIRST_CONTACT.md) and [`HUMAN_TASKS.md`](HUMAN_TASKS.md). |
 | B — macOS / MLX floor | **Complete** | Official macOS 14 arm64 wheels for MLX 0.32.0, 0.32.1, and 0.32.2 were hash- and Mach-O-verified, then passed the unchanged correctness and installed-runtime gates. See [`MLX_COMPATIBILITY.md`](../evidence/MLX_COMPATIBILITY.md). |
 | C — public-release preparation | **Complete** | Canonical distribution/import/CLI/cache/GitHub identities, prior-project acknowledgment, community metadata, hobbyist-first README, agent guide, and root hygiene are committed. Hardware wording is restricted to the observed no-motion result. |
 | D — software verification | **Complete; publication held** | The offline continuation's full suite passed 790/790 in 723.49 test seconds / 726.60 seconds wall; its fast lane passed 489/489 in 101.38 test seconds / 106.30 seconds wall, below two minutes. The reference repair passed all 56 trained-checkpoint fixed gates. The existing sdist and three wheels from `8bb5c7e` retain their recorded hashes and prior seven-environment smoke evidence. Fresh tag-built artifacts and repeated installed checks remain gated on hardware completion. See [`TRAINED_PARITY_REPAIR.md`](../evidence/TRAINED_PARITY_REPAIR.md) and [`DIST_MANIFEST.md`](../evidence/DIST_MANIFEST.md). |
 
 ## Hardware continuation evidence
+
+Current update — 2026-09-04: fresh authorized read-only preflight passed follower
+identity/calibration, all-six torque-off readbacks, and the numeric inset pose
+(lift/elbow -73.143/39.868 degrees). Fixed 0 and wrist 1 return images, but the
+current views do not frame the arm's task area for motion. The controllers still
+read the earlier unapproved settings; no low-limit profile or final physical
+attestation was supplied. No new no-motion loop or physical actuation ran.
+The four earlier results below remain historical evidence. See the latest
+[`PREFLIGHT.md`](../../hardware/PREFLIGHT.md) entry.
 
 - The raw-base no-motion run processed 295 observations/chunks in 60.027 s at
   4.914 sampled camera FPS. Observation-to-chunk latency was 149.313 ms median
@@ -197,7 +207,7 @@ and hardware-motion claim remain withheld.
 
 | Blocker | Status | Reason |
 | --- | --- | --- |
-| Serve untested on hardware | **Partial / motion deferred** | The four no-motion runs, corrected camera roles/framing, and supported inset pose passed in the recorded sessions. The exact low-controller-limit profile and physical checklist are still missing, and neither motion stage has run. Fresh camera/pose checks are required after reconnection, not because the earlier fixes failed. |
+| Serve untested on hardware | **Partial / motion deferred** | Four historical no-motion runs passed. Fresh 2026-09-04 follower/calibration/torque-off and numeric pose checks pass; current camera framing needs physical correction. The approved low-controller-limit profile and final physical checklist are still missing, and neither motion stage has run. The earlier camera fixes remain valid historical results. |
 | macOS / MLX floor | **Clear** | MLX 0.32.0–0.32.2 and their official macOS 14 wheel family passed the fixed software gates. |
 | Claims exceed evidence | **Clear** | Public language distinguishes live no-motion RPC evidence from unperformed physical motion; no claim says the model drives the arm. |
 | Operator material in tree | **Clear** | The current tracked tree contains no exact device serial or private path. Telemetry, camera frames, and the bystander-containing image remain ignored and untracked; public evidence is redacted. |
@@ -208,8 +218,8 @@ and hardware-motion claim remain withheld.
 The physical prerequisites and exact new statement are maintained in
 [`HUMAN_TASKS.md`](HUMAN_TASKS.md), with the remaining sequence in the
 [continuation plan](PLAN_HARDWARE_RELEASE_CONTINUATION.md). The physically
-present operator must reconnect the hardware and supply `ARM SESSION CONFIRMED`
-in the live session before any device access or vendor-checkout read/execute.
+present operator supplied `ARM SESSION CONFIRMED` for the 2026-09-04 read-only
+session; a later session still requires its own live confirmation.
 Visually re-identify the fixed and wrist cameras and freshly verify the
 supported inset pose; the previous
 passes remain valid historical evidence, not a persistent clearance. Power

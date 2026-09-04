@@ -16,20 +16,25 @@
 
 ## Open — clear the remaining physical prerequisites for one action
 
-- **Current availability:** in the 2026-09-04 continuation, the operator
-  confirmed that the hardware is not connected. The handoff reported power
-  off; there is no new device-access or motion authorization. Follow the
-  [continuation plan](PLAN_HARDWARE_RELEASE_CONTINUATION.md) while offline.
+- **Current availability:** the operator reconnected the hardware and supplied
+  fresh live `ARM SESSION CONFIRMED` on 2026-09-04. Read-only follower and camera
+  preflight ran; no torque or actuator write occurred. The separate motion
+  prerequisites are still unconfirmed. Follow the
+  [continuation plan](PLAN_HARDWARE_RELEASE_CONTINUATION.md).
 - Before any device access or vendor-checkout read/execute, the physically
   present operator must supply `ARM SESSION CONFIRMED` in the live session.
   The completed historical session below and the pasted handoff do not satisfy
   this new gate. Freshly verify follower identity/calibration, both camera
   viewpoints, and the supported pose after reconnecting; never open the leader.
-- **Last pose status:** passed after the operator manually moved and
-  mechanically supported the torque-free arm. Lift/elbow read
-  −20.396°/62.989°, inside the required −83.833°–83.833° /
-  −77.187°–77.187° ranges. This is evidence from that session, not a persistent
-  clearance: re-support, re-read, and pass the pose immediately before arming.
+- **Current camera framing:** fresh images identify fixed 0 and wrist 1, with
+  built-in 2 excluded. The wrist currently points toward the operator and the
+  fixed view omits the arm's working area. Power off before manually adjusting
+  the setup, aim both intended cameras at the cleared task area, then recheck
+  fresh images. The earlier identity/framing success remains historical evidence.
+- **Last pose status:** all six joints passed the numeric inset envelope on
+  2026-09-04; lift/elbow read −73.143°/39.868°. Mechanical support has not been
+  freshly attested. Re-support, re-read, and pass the pose immediately before
+  arming; do not use this snapshot as persistent clearance.
 - Using the operator's known-good Hiwonder/ServoStudio procedure, establish low
   torque, current, velocity, and acceleration limits. Do not copy the observed
   defaults in `PREFLIGHT.md`. Save the exact readback for every joint and every

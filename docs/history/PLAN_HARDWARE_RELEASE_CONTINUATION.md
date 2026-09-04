@@ -9,9 +9,11 @@ serving, packaging, and trained-checkpoint reference repair are complete.
 Training stays a research preview; broader studies, strict Metal improvements,
 and active CI are outside this continuation.
 
-The operator reports that the hardware is not connected. This blocks fresh
-hardware validation and the final release gates, while software preparation
-can proceed. No live device or motion authorization has been supplied.
+The continuation began offline. The operator later connected the hardware and
+supplied fresh live `ARM SESSION CONFIRMED` on 2026-09-04. Read-only follower
+identity/calibration and numeric pose checks pass; current camera framing and
+the approved low-controller-limit profile remain open. No motion-prerequisite
+confirmation, new no-motion loop, or physical motion has occurred.
 
 ## 1. Software baseline and checkpoint
 
@@ -30,13 +32,13 @@ can proceed. No live device or motion authorization has been supplied.
 
 ## 2. Fresh connected preflight — operator required
 
-- [ ] Obtain `ARM SESSION CONFIRMED` in the live session before device access
+- [x] Obtain `ARM SESSION CONFIRMED` in the live session before device access
   or reading/executing the vendor checkout. Historical or pasted confirmations
   do not authorize a new session.
-- [ ] Preserve a before/after hash of the vendor's tracked files. Use the
+- [x] Preserve a before/after hash of the vendor's tracked files. Use the
   existing separate `.cache/hardware/server-venv` and `client-venv`; never edit,
   install into, upgrade, or otherwise change the vendor checkout/environment.
-- [ ] Identify only the follower; verify its existing calibration and six
+- [x] Identify only the follower; verify its existing calibration and six
   torque-off readbacks. Never open the leader or recalibrate during this work.
 - [ ] Visually identify both intended UVC cameras from fresh labeled frames,
   exclude the built-in/Continuity cameras, check concurrent capture, and re-read

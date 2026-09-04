@@ -104,10 +104,38 @@ environment contained no PyAV and its loopback-only startup/shutdown emitted
 no duplicate AVFoundation-class warning. Motion work must continue to use that
 separate environment rather than the all-extras development environment.
 
-## Verdict
+## 2026-09-04 reconnection preflight
+
+The operator supplied fresh live `ARM SESSION CONFIRMED` at source
+`c228095285b33121c52c624d80127d238a4bb584`. The follower identity and existing
+calibration matched. At `2026-09-04T14:22:04Z`, all six torque bits were zero
+before and after read-only access, every joint was inside the 10%-inset
+envelope, and lift/elbow measured -73.143/39.868 degrees. Mechanical support
+and the final physical checklist still require operator attestation.
+
+Fresh camera discovery identifies fixed index 0 and wrist index 1; index 2 is
+the built-in camera and is excluded. Both intended cameras returned images,
+but the current wrist view points toward the operator and the fixed view does
+not show the arm's working area. This session's framing needs adjustment; the
+earlier camera-identity and framing successes remain historical facts. A fourth
+camera candidate returned no usable frame and is excluded without a retry.
+
+The controller readbacks still match the earlier unapproved settings, including
+`Acceleration=254` and `Maximum_Acceleration=254` on every motor. No approved
+low-limit profile was supplied. No concurrent capture measurement, fresh
+60-second no-motion loop, torque-enable, or physical action ran in this session.
+The four earlier no-motion results are unchanged.
+
+All 696 vendor tracked files and 32 operator-wrapper files remained byte
+identical. The reviewed stats-active checkpoint passes its six-axis check and
+retains its recorded model hash. Private frames, serials, and raw readbacks
+remain under ignored `.cache/hardware/session-20260904T141839Z-b560dkhe/`.
+
+## Current verdict
 
 The claim “exchanges live camera/state observations and MLX action chunks with
 a connected SO-101 on a MacBook, with motor writes suppressed” is evidenced.
 The broader claim “drives a real SO-101 from a MacBook” is **not** evidenced and
 must not be published. Resume only with the single-action gate after every
-blocker above is cleared; bounded continuous remains gated on that result.
+blocker above is cleared and a fresh no-motion check passes; bounded continuous
+remains gated on the reviewed single-action result.

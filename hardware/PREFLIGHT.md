@@ -1,6 +1,6 @@
 # Hiwonder SO-101 preflight evidence
 
-Date: 2026-09-02; follow-up: 2026-09-03
+Date: 2026-09-02; follow-ups: 2026-09-03 and 2026-09-04
 
 Host: Apple M5 Pro MacBook Pro (`Mac17,8`), 48 GB, macOS 26.6.2
 
@@ -292,3 +292,47 @@ was identical before and after access:
    safety-profile JSON file.
 3. Clear the motion envelope, secure the base, and keep a hand on the physical
    power switch for the entire single-action attempt.
+
+## 2026-09-04 authorized reconnection read
+
+Fresh live `ARM SESSION CONFIRMED` authorized this session's read-only
+preflight at source `c228095285b33121c52c624d80127d238a4bb584`.
+
+- USB identity matched the configured follower; the leader was detected only
+  through enumeration and never opened. Existing follower calibration matches
+  controller readback. All six torque bits were zero before and after reads;
+  no actuator or torque write occurred, and the serial port closed normally.
+- At `2026-09-04T14:22:04Z`, every joint passed the numeric 10%-inset envelope.
+  Lift/elbow measured -73.143/39.868 degrees. This does not attest mechanical
+  support, workspace clearance, base security, or the physical power cut.
+- Exact nine-register readbacks still match the previously observed unapproved
+  settings, including acceleration and maximum acceleration 254 on all six
+  controllers. An operator-approved low-limit profile has not been supplied.
+- Fresh labeled camera discovery produced images for fixed 0, wrist 1, and
+  excluded built-in 2. The current wrist image points toward the operator;
+  the fixed image shows the computer desk without the arm's working area.
+  Framing needs physical correction in this session. The prior identity fix
+  and prior framing pass are not reclassified as failures. Candidate 3 yielded
+  no usable image and is excluded; it was not retried.
+- Concurrent camera-rate measurement and a new 60-second no-motion run were
+  deferred at the physical preflight gate. Neither motion stage has run.
+- The setup scripts resolve the operator command/configuration directory to a
+  separate vendor Git checkout at the already recorded `a24998f` revision.
+  Its 696 tracked files and all 32 operator-wrapper files were unchanged after
+  access. No vendor environment was activated, installed into, or modified.
+- The reviewed stats-active checkpoint still passes six-axis validation and
+  its model retains SHA-256
+  `7cd549ac2351fb069c0ddb3c34ad2d09cfc92b56a15dccdfc2e41467aaca01eb`.
+
+Private session evidence is under
+`.cache/hardware/session-20260904T141839Z-b560dkhe/`. The readback JSON hashes
+to `d90877883566e557aa86552f133a8ca15d02923fbcefff517f2d663f1a8bd550`;
+the camera-discovery log hashes to
+`643a5b8f0dc4bb5a384ebdfa6289375bbef28ff765551aa8328d5efee1f912d4`.
+Frames and identifiers remain ignored and untracked.
+
+Before continuing, power off for any manual adjustment, frame both cameras on
+the cleared task area, establish the approved low-controller-limit profile,
+and complete the physical checklist. Re-read the supported pose and limits,
+then follow the runbook's fresh no-motion and separately confirmed motion
+sequence. No failed gate is bypassed by reducing software step size.
