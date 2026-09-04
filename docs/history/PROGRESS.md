@@ -3100,3 +3100,53 @@
   attempted. Physical motion awaits a new supervised session with the
   low-limit profile, checklist, and exact motion statement.
 - No upload, tag, release, visibility change, or announcement occurred.
+
+## 2026-09-04 — software-only training parity repair kickoff
+
+- Operator authorized finishing the training parity gap with hardware powered
+  off. Work remains in `/Users/dan/Desktop/workshop/robotics-mlx-contrib`;
+  no device, camera, serial port, or vendor-tree access is permitted this run.
+- Starting commit `f41594a`; `make test` passed **773/773 in 746.12 seconds**,
+  with no skip or xfail. This is correctness evidence, not a timing benchmark;
+  read-only diagnostics overlapped part of the suite. Free disk was 474 GiB.
+- Saved restartable plan in
+  `docs/superpowers/plans/2026-09-04-trained-parity-repair.md`.
+- The unchanged original floor
+  `28d83926a70e507671bfd694e032f81b71093d475075aad627b3c24c5b334efc`
+  reconstructs from all nine workers; bundle hash
+  `31ce3db6619294432742b38214132267cfecf735dc0ce1d98199bbd223e8a889`.
+  Its embedded timestamp `1788309480730626000` and actual mtime
+  `1788309480735640183` ns precede the new diagnostic marker
+  `1788502483023418000` ns (SHA-256
+  `60c847eb8590186d540a1494db5f697771c684fb86993aaecd5866b33d7afbe5`).
+- Reverified all 337 floor-bound input files; four changed historical support
+  files were recovered byte-exactly from `54a4e0b` into ignored snapshots.
+  Both original failure records remain byte-identical.
+- Reproduced the exact worst-case normalized maximum
+  **0.013038858771324158**. Exact Torch prefix K/V injection does not remove
+  this case's error (**0.013046815991401672**).
+- Localized a reference-loader bug: LeRobot initializes the expert in bf16,
+  strict state loading copies the fp32 export into those parameters, and the
+  adapter widens to fp32 only afterward. On the same true reference input,
+  Torch linear using original fp32 weights differs by **0.0045614540576934814**;
+  using bf16-rounded-and-widened weights matches the reference output exactly.
+- A real-checkpoint regression with four independent fp32-only values fails
+  before the fix, as intended (maximum weight error **0.0006510317325592041**).
+  It checks parameter identity without held-out inference. Repair evidence:
+  `docs/evidence/TRAINED_PARITY_REPAIR.md`. No tolerance, trained weight,
+  historical verdict, runtime algorithm, or training budget has changed.
+- Corrected the reference loader to establish destination dtype before strict
+  state loading. All 500 tensors / 450,046,176 scalars in the actual T3B export
+  now load exactly. Previously, 112 adapted tensors contained 98,220,177 scalars
+  that changed through bf16 storage. CPU fp32, CPU fp64, and MPS fp32 parameter
+  identity regressions pass, and incomplete state still fails strictly.
+- Focused verification: **123 passed in 65.23 seconds**; dependency-light lane:
+  **482 passed, 294 deselected in 144.09 seconds** (before the fourth new test).
+  An initial focused invocation imposed `HF_HUB_OFFLINE=1` on an empty temporary
+  tokenizer cache and failed one download-dependent fixture; rerunning with the
+  normal Makefile environment passed all tests without a skip or code workaround.
+- Independent review confirmed the bounded fix and caught a reporting issue:
+  a new floor for an already-compared checkpoint cannot be its original
+  prospective floor. The new nine-worker envelope will be informational only;
+  separate repair validation retains every original fixed limit. Both historical
+  failure records and the original trained-parity evaluator remain unchanged.

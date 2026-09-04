@@ -7,6 +7,7 @@ from pathlib import Path
 
 import torch
 from huggingface_hub import snapshot_download
+from safetensors.torch import load_model
 from lerobot.policies.factory import make_pre_post_processors
 from lerobot.policies.smolvla.configuration_smolvla import SmolVLAConfig
 from lerobot.policies.smolvla.modeling_smolvla import SmolVLAPolicy
@@ -74,10 +75,17 @@ class TorchExportPolicy:
         config.load_vlm_weights = False
         config.push_to_hub = False
         config.vlm_model_name = str(tokenizer_snapshot)
-        policy = SmolVLAPolicy.from_pretrained(
-            checkpoint_dir,
-            config=config,
+        # The nested expert inherits bf16 from the backbone config. Loading
+        # first would round fp32 trained weights, even with strict=True; casting
+        # afterward cannot restore them. Establish the destination dtype before
+        # copying any saved values, then transfer the exact model to its device.
+        policy = SmolVLAPolicy(config)
+        policy.to(device="cpu", dtype=dtype)
+        load_model(
+            policy,
+            str(checkpoint_dir / "model.safetensors"),
             strict=True,
+            device="cpu",
         )
         policy.to(device=device, dtype=dtype)
         policy.eval()
