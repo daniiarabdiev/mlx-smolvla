@@ -154,6 +154,25 @@ files remain unchanged.
 
 Private fresh evidence and hashes are recorded in [PREFLIGHT.md](PREFLIGHT.md).
 
+## 2026-09-04 fixed-camera framing and concurrent capture
+
+After the operator adjusted the fixed camera using a live QuickTime preview,
+new camera-only captures at source `cad455604299b36eb8c9a2883c5598bb58aa46a6`
+show the follower arm and yellow-ball tabletop area in improved focus. The
+wrist view shows the gripper and nearby ball. Current visual framing is
+resolved. A loose cable crosses the tabletop and a mouse remains in the working
+area; this does not attest physical workspace clearance.
+
+Both cameras streamed together at 640x480 without timeouts. Independent
+consumers measured fixed 20.10 FPS and wrist 6.34 FPS over approximately eight
+seconds, with maximum read gaps of 66.98/165.93 ms. Both exceeded the intended
+5 FPS control rate in this short camera-only probe, but neither achieved the
+requested 30 FPS. The fresh 60-second robot/server no-motion loop remains
+pending. Both camera handles closed; neither robot nor vendor checkout was
+accessed, and no motor command ran. Approved low limits and physical
+attestation remain open. Details and evidence hashes are in
+[PREFLIGHT.md](PREFLIGHT.md).
+
 ## Current verdict
 
 The claim “exchanges live camera/state observations and MLX action chunks with

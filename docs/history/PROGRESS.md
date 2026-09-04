@@ -3399,3 +3399,41 @@
 - Independent read-only review found no material factual, privacy, historical,
   or safety-claim issue in the six-document checkpoint. Fixed-camera framing,
   physical clearance, approved limits, and all remaining motion gates stay open.
+
+## 2026-09-04 — fixed-camera framing and concurrent capture
+
+- At the operator's request, opened QuickTime's live preview and selected the
+  fixed external camera. No recording started. After the operator adjusted it
+  and closed the preview, continued camera-only checks from clean pushed
+  `cad455604299b36eb8c9a2883c5598bb58aa46a6` in the same authorized session.
+- Fresh fixed 0/wrist 1 images at 15:17 UTC resolve current framing: the
+  follower/tabletop task area is visible in improved focus, and the wrist shows
+  the gripper and nearby ball. A loose cable and mouse remain in the working
+  area; requested their removal before motion, without claiming clearance.
+- Paired consumption delivered 51 frames each in 8.105 seconds (6.29 FPS) with
+  zero timeouts. A separate concurrent measurement used independent consumers
+  to distinguish per-camera rates: fixed 161 frames/8.009 s (20.10 FPS), wrist
+  51 frames/8.046 s (6.34 FPS), with maximum read gaps 66.98/165.93 ms and zero
+  timeouts. Every consumed frame had a distinct pixel hash. Both short-probe
+  rates exceeded the planned 5 FPS loop, but neither achieved requested 30 FPS.
+  No cause is asserted and no configured rate, guard, or acceptance gate changed.
+- The checks used only the existing camera client environment. Camera handles
+  closed; no robot/serial/vendor access, motor write, fresh pose/limit read,
+  policy inference, new no-motion loop, or release action occurred. Current
+  framing is resolved; the low-limit profile and physical checklist stay open.
+- Private evidence:
+  `.cache/hardware/fixed-adjustment-20260904T151528Z-45fdealv/`.
+  Paired summary SHA-256:
+  `ec3b804f48d8cb8823952ba66c3c666004074eeebc8002b4bc25cb897f88c91e`.
+  Independent summary SHA-256:
+  `556c7d1c3a125342f38a93a5a540e2e93df1ab7c8981db63be6f99f2a2cb1a4d`.
+  Image hashes are recorded in `hardware/PREFLIGHT.md`; raw frames and capture
+  records remain ignored. Runtime and all previous software evidence are unchanged.
+- Hardware-readiness, public-release documentation, and repository-hygiene
+  checks passed **17/17 in 2.77 seconds**, without skips or expected failures.
+  Log SHA-256:
+  `d655f53885d8f7a25280451fca667aefc919060e015056e1d5f9eb1cde092c51`.
+  Diff whitespace and privacy checks pass. Independent read-only review found
+  no material issue and confirmed that framing resolution does not close the
+  physical or motion gates. Before checkpointing, remote HEAD matched the
+  starting source, GitHub remained private, and no `v0.1.0` tag existed.

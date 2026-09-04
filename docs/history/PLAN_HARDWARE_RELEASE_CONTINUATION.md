@@ -11,9 +11,12 @@ and active CI are outside this continuation.
 
 The continuation began offline. The operator later connected the hardware and
 supplied fresh live `ARM SESSION CONFIRMED` on 2026-09-04. Read-only follower
-identity/calibration and numeric pose checks pass; current camera framing and
-the approved low-controller-limit profile remain open. No motion-prerequisite
-confirmation, new no-motion loop, or physical motion has occurred.
+identity/calibration and numeric pose checks passed. Subsequent adjustment
+resolved current camera framing; short concurrent capture measured fixed
+20.10/wrist 6.34 FPS at 640x480 without timeouts (30 FPS requested, not achieved).
+The approved low-controller-limit profile and physical checklist remain open.
+No motion-prerequisite confirmation, new no-motion loop, or physical motion
+has occurred.
 
 ## 1. Software baseline and checkpoint
 
@@ -40,9 +43,12 @@ confirmation, new no-motion loop, or physical motion has occurred.
   install into, upgrade, or otherwise change the vendor checkout/environment.
 - [x] Identify only the follower; verify its existing calibration and six
   torque-off readbacks. Never open the leader or recalibrate during this work.
-- [ ] Visually identify both intended UVC cameras from fresh labeled frames,
-  exclude the built-in/Continuity cameras, check concurrent capture, and re-read
-  the mechanically supported pose against the unchanged 10%-inset envelope.
+- [x] Visually identify both intended UVC cameras from fresh labeled frames,
+  exclude unrelated cameras, correct their framing, and check concurrent
+  capture. The short probe measured 20.10/6.34 FPS without timeouts; it does not
+  demonstrate actual 30 FPS or replace the no-motion policy loop.
+- [ ] Re-read the mechanically supported pose against the unchanged 10%-inset
+  envelope immediately before proceeding to arming.
 - [ ] Have the operator establish the exact approved low-controller-limit
   profile through their known-good procedure; capture all nine registers for
   all six joints and validate exact readbacks. Observed defaults, software

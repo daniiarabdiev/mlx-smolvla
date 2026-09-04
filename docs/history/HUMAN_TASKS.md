@@ -27,13 +27,13 @@
   this new gate. Freshly verify follower identity/calibration, both camera
   viewpoints, and the supported pose after reconnecting; never open the leader.
 - **Current camera framing:** fresh images identify fixed 0 and wrist 1, with
-  built-in 2 excluded. After further adjustment, the 14:52 UTC wrist image
-  shows the gripper, yellow ball, and tabletop; its task-surface framing is
-  corrected. Fixed 0 now includes part of the arm and desk, but remains blurred
-  without a verified complete workspace. With motor power off, raise/back up
-  the fixed camera and tilt it toward the task surface until the complete arm
-  and reachable table area fit in one sharp view. Secure the camera and recheck.
-  Clear the operator's hand from the gripper area before any motion.
+  built-in 2 excluded. **Resolved at 15:17 UTC:** the adjusted fixed view shows
+  the follower and task area in improved focus; the wrist shows the gripper and
+  ball. Concurrent independent capture measured fixed 20.10/wrist 6.34 FPS,
+  without timeouts, at 640x480. The requested 30 FPS was not achieved. The
+  short camera-only check does not replace the fresh no-motion loop. Clear the
+  loose cable and mouse from the arm's working area and keep hands clear before
+  motion; complete the physical checklist below.
 - **Last pose status:** all six joints passed the numeric inset envelope on
   2026-09-04 at 14:48 UTC; lift/elbow read −73.055°/39.868°. Existing calibration
   again matches the arm. Mechanical support has not been

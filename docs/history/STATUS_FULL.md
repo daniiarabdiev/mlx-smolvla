@@ -796,3 +796,21 @@ retained to show how the error was found and corrected.
 - Private evidence is retained under
   `.cache/hardware/camera-adjustment-20260904T144524Z-utqorp1q/` with hashes in
   `hardware/PREFLIGHT.md`. Existing software/release gates remain unchanged.
+
+## 2026-09-04 — fixed-camera framing and concurrent capture
+
+- After live-preview adjustment, fresh 15:17 UTC images show the follower and
+  tabletop task area in improved focus; the wrist shows the gripper and nearby
+  ball. Current framing is resolved. A loose cable and mouse remain in the
+  working area, so physical workspace clearance is still open.
+- Both cameras streamed concurrently at 640x480 with zero timeouts. Independent
+  consumers measured fixed 20.10/wrist 6.34 FPS over approximately eight seconds,
+  with 66.98/165.93 ms maximum read gaps. The requested 30 FPS was not achieved;
+  this short camera-only probe does not replace the required fresh 60-second
+  robot/server no-motion loop.
+- Camera handles closed. Neither robot nor vendor checkout was accessed; no
+  new pose/limit read or motor command ran. Approved low limits, the physical
+  checklist, no-motion loop, and both motion stages remain open. Private images
+  and capture records are retained under
+  `.cache/hardware/fixed-adjustment-20260904T151528Z-45fdealv/` with hashes in
+  `hardware/PREFLIGHT.md`. Runtime, tests, limits, and release gates are unchanged.

@@ -382,3 +382,43 @@ Camera-discovery log SHA-256:
 The corrected wrist image is preserved under `wrist-after-second-adjustment/`,
 SHA-256 `aa244b858cd808fde458404d0c700ed9f9b5a3fa4014433e38e11eb8ac8cd9ac`.
 Raw images, device identifiers, calibration hash, and readbacks stay private.
+
+## 2026-09-04 fixed-camera framing resolved; concurrent capture measured
+
+The operator used QuickTime's live preview to adjust the fixed camera, closed
+the preview, and requested a recheck in the same authorized live session.
+Camera-only checks at source `cad455604299b36eb8c9a2883c5598bb58aa46a6` used
+the existing client environment and session-local fixed 0/wrist 1. New images
+show the follower and tabletop task area in improved focus, and the wrist's
+gripper/nearby yellow-ball view. The current framing issue is resolved. The
+loose cable across the table and mouse in the working area must be cleared;
+visual framing does not attest workspace/base/power-cut or supported-pose safety.
+
+The first paired-consumer measurement at 15:16 UTC delivered 51 frames per
+camera in 8.105 seconds (6.29 paired FPS), with no timeouts. To distinguish the
+individual camera rates, a second measurement at 15:17 UTC consumed the two
+streams independently while both remained open. Both requested 640x480/30:
+
+| Camera | Frames | Measured duration | Consumed FPS | Maximum read gap | Timeouts |
+| --- | --- | --- | --- | --- | --- |
+| Fixed 0 | 161 | 8.009 s | 20.10 | 66.98 ms | 0 |
+| Wrist 1 | 51 | 8.046 s | 6.34 | 165.93 ms | 0 |
+
+Each consumed frame had a distinct pixel hash. Both rates exceeded the planned
+5 FPS control cadence in this short probe, but **actual 30 FPS was not
+demonstrated**. No cause for the reduced rates is asserted. This camera-only
+measurement does not replace the required 60-second no-motion robot/server
+loop. All camera handles closed; neither robot, serial port, nor vendor
+checkout was accessed. No motor write, fresh pose/calibration/limit read,
+policy inference, or physical action occurred. The low-limit profile and
+physical attestation remain open; no guard or configured limit changed.
+
+Private evidence: `.cache/hardware/fixed-adjustment-20260904T151528Z-45fdealv/`.
+Paired capture summary SHA-256:
+`ec3b804f48d8cb8823952ba66c3c666004074eeebc8002b4bc25cb897f88c91e`.
+Independent cadence summary SHA-256:
+`556c7d1c3a125342f38a93a5a540e2e93df1ab7c8981db63be6f99f2a2cb1a4d`.
+Final fixed/wrist image SHA-256 values:
+`4e0563f2c4b0cdef21027105d18c1938bacf9202a99eb81101d29ae38fe3a304` /
+`4c07f586ffe7d5357e894cdd1457502a5c4489d8749e9b40513a596e35eb79de`.
+Images and raw capture records remain ignored and untracked.
