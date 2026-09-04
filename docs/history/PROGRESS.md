@@ -3056,3 +3056,29 @@
   blocked on an exact operator-attested low-controller profile, the physical
   workspace/base/power checklist, and the exact in-session statement. The new
   path has not enabled torque or moved hardware.
+
+## 2026-09-04 — safety-hardened package refresh
+
+- Pushed documentation checkpoint
+  `0f9488c1420477c28a94b691d7b6dc2a29bc9518`, then built the 0.1.0 sdist
+  and CPython 3.11-3.13 Apple Silicon wheels from a clean detached worktree at
+  that exact commit.
+- All four artifacts pass Twine and canonical archive inspection; the sdist
+  has 148 entries, each wheel has 73, and every packaged native extension
+  reports macOS `minos 14.0`. Packaged-source checks confirm both the raw
+  torque-off present-to-goal preload/readback guard and gradual bounded return.
+- Four fresh base installs pass dependency integrity, canonical installed
+  origin, excluded-bridge isolation, `native-reference`, verified `doctor`,
+  and a finite six-component offline prediction. Separate serve and hardware
+  installs pass dependency integrity without PyAV.
+- The serve install matches the pinned protocol descriptor, completes a
+  loopback `Ready` RPC, exposes all required CLI controls, and emits finite
+  `vlm-8bit` and `vlm-4bit` offline predictions. The hardware install validates
+  the six-axis checkpoint, camera map, packaged safety guards, and all three
+  graduated modes without opening a device.
+- The CPython 3.12 wheel passes legacy-only, current-over-legacy, and explicit-
+  over-legacy cache-shim warning/precedence checks. Verified artifacts were
+  promoted byte-for-byte into ignored `dist/`; their predecessors are intact
+  at `.cache/dist-pre-stale-goal-20260904`.
+- No training, timing benchmark, hardware, camera, serial port, vendor tree,
+  upload, tag, release, or visibility change occurred during this refresh.

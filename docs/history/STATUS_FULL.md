@@ -612,3 +612,24 @@ retained to show how the error was found and corrected.
 - The pose blocker is clear at the recorded supported pose. The exact low-limit
   profile, physical checklist, and exact live motion statement remain open;
   no physical motion has run. `PUBLIC RELEASE READY` remains unreached.
+
+## 2026-09-04 safety-hardened distribution checkpoint
+
+- Clean pushed source `0f9488c1420477c28a94b691d7b6dc2a29bc9518`
+  produced a fresh 0.1.0 sdist and CPython 3.11/3.12/3.13 Apple Silicon wheel
+  set. Twine, archive topology, canonical identity, 148/73 entry counts,
+  packaged safety-content checks, and project-extension `minos 14.0` pass.
+- Four isolated base installs pass dependency integrity, installed origin,
+  dependency-light import, `native-reference`, verified `doctor`, and finite
+  offline prediction. Separate serve and hardware installs pass descriptor/
+  `Ready`, quantized prediction, checkpoint/mapping/safety-source, CLI, and
+  dependency checks without PyAV or device access.
+- The cache compatibility shim passes all three precedence/warning cases.
+  Ignored `dist/` contains exactly the four clean-build bytes; the prior set is
+  preserved at `.cache/dist-pre-stale-goal-20260904`. Exact hashes and sizes
+  are bound in `docs/evidence/DIST_MANIFEST.md`.
+- `NO-MOTION PROTOCOL COMPLETE` and `FINAL VERIFICATION COMPLETE` remain
+  reached. `PUBLIC RELEASE READY` remains unreached pending the low-limit
+  profile, physical checklist, exact motion statement, one-action review, and
+  bounded-continuous result. Nothing was uploaded, tagged, released, or made
+  public.

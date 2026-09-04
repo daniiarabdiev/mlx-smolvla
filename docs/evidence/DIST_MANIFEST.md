@@ -2,7 +2,7 @@
 
 This manifest records the `mlx-smolvla` 0.1.0 release-candidate artifacts
 built locally from clean, pushed source commit
-`85b97fe3ad2c8ef9d4bcffdc9c0a1a51af87939e` on 2026-09-03. Nothing was
+`0f9488c1420477c28a94b691d7b6dc2a29bc9518` on 2026-09-04. Nothing was
 uploaded. The hardware gate remains open, so no release tag was created.
 
 ## Build environment
@@ -13,13 +13,13 @@ uploaded. The hardware gate remains open, so no release tag was created.
 - Deployment target: `MACOSX_DEPLOYMENT_TARGET=14.0`.
 - Interpreters: repository-local CPython 3.11.15, 3.12.13, and 3.13.14.
 - Build/download cache: repository-local `.cache/uv`.
-- Source: clean detached worktree `.cache/release-mlx-smolvla-85b97fe` at
+- Source: clean detached worktree `.cache/release-mlx-smolvla-0f9488c` at
   the commit above.
 - Output: ignored directory
-  `.cache/release-mlx-smolvla-85b97fe-artifacts`.
+  `.cache/release-mlx-smolvla-0f9488c-artifacts`.
 - The four verified bytes were mirrored into ignored `dist/` for local use.
   The preceding 0.1.0 candidate bytes were moved intact to
-  `.cache/dist-pre-camera-identity-20260903` rather than deleted.
+  `.cache/dist-pre-stale-goal-20260904` rather than deleted.
 
 The sdist was built with `uv build --sdist`; each native wheel used
 `uv build --wheel --python <repository-local-interpreter>`. All four commands
@@ -33,10 +33,10 @@ hardware safety/client modules, and tests; it contains no prebuilt `.so` or
 
 | Artifact | Bytes | SHA-256 | Wheel tag / contents | Project extension `minos` |
 | --- | ---: | --- | --- | ---: |
-| `mlx_smolvla-0.1.0.tar.gz` | 437,956 | `437028ef81ad2165d21ba0cf2f2f93fce762d0257e5a748918b723fa80a86e4f` | Source distribution; native extension built during installation | 14.0 in the installation smoke |
-| `mlx_smolvla-0.1.0-cp311-cp311-macosx_14_0_arm64.whl` | 378,202 | `2dfb65007af46d66d5e39b699514a7031e4d9532fe30551e07dcefa79c6a3287` | `cp311-cp311-macosx_14_0_arm64`; 73 entries | 14.0 |
-| `mlx_smolvla-0.1.0-cp312-cp312-macosx_14_0_arm64.whl` | 377,206 | `1d9c93448c045fa2a02dc57b69a2bf3006998b856ced80c711bcd1608c40161e` | `cp312-cp312-macosx_14_0_arm64`; 73 entries | 14.0 |
-| `mlx_smolvla-0.1.0-cp313-cp313-macosx_14_0_arm64.whl` | 377,242 | `c8691e33c0fb4b58b89463b50b532d07b4f6621a15744b69c2b59d587b2093f8` | `cp313-cp313-macosx_14_0_arm64`; 73 entries | 14.0 |
+| `mlx_smolvla-0.1.0.tar.gz` | 439,269 | `66058ab965571c09fc95eda7ebc6647d3825d87c7cca0a283d7b7a3d773936be` | Source distribution; native extension built during installation | 14.0 in the installation smoke |
+| `mlx_smolvla-0.1.0-cp311-cp311-macosx_14_0_arm64.whl` | 378,752 | `accc36e5aa38de1714ad3d484e0e65a868683ce27749a08b364f1c2ad70ac086` | `cp311-cp311-macosx_14_0_arm64`; 73 entries | 14.0 |
+| `mlx_smolvla-0.1.0-cp312-cp312-macosx_14_0_arm64.whl` | 377,753 | `f52ebee81089442dc0728a20aa5650bb9841e723d5d6219a3090d876a6215166` | `cp312-cp312-macosx_14_0_arm64`; 73 entries | 14.0 |
+| `mlx_smolvla-0.1.0-cp313-cp313-macosx_14_0_arm64.whl` | 377,792 | `44cd428c1de43ba0347bf62c4cc6ff1cf52ff29904f353ba0c3165580e29ed1e` | `cp313-cp313-macosx_14_0_arm64`; 73 entries | 14.0 |
 
 Archive inspection found only the canonical `mlx_smolvla/` package path.
 Each wheel declares distribution `mlx-smolvla`, version `0.1.0`,
@@ -46,21 +46,22 @@ hardware-safety/client, and native-extension surfaces are present. Every wheel
 declares the Python-3.12+ pinned `hardware` extra. No wheel contains the retired
 `smolvla_mlx/` package path. `vtool -show-build` independently reports
 `platform MACOS` and `minos 14.0` for every packaged native extension.
-Archive inspection also confirms that packaged hardware clients retain an
-explicit fixed-before-wrist connection order while documenting that numeric
-camera indices are session-local and must be assigned by visual preflight.
-Public camera keys and checkpoint mapping remain unchanged. Both startup
-orders passed with the two intended UVC cameras; the earlier apparent order
-failure involved the built-in Mac camera under the wrong role. These bytes
-remain a local, untagged candidate and are not hardware-motion release
-artifacts.
+Archive inspection also confirms that packaged hardware clients preload raw
+present positions as goals while torque is off, require exact goal/fresh-
+present equality before enable, and return through bounded one-public-unit
+steps. Numeric camera indices remain session-local and must be assigned by
+visual preflight; public camera keys and checkpoint mapping are unchanged.
+Both startup orders passed with the two intended UVC cameras, and the earlier
+apparent order failure involved the built-in Mac camera under the wrong role.
+These bytes remain a local, untagged candidate and are not hardware-motion
+release artifacts.
 
 `twine check` passed the sdist and all three wheels without warnings.
 
 ## Fresh-environment smoke matrix
 
 Each artifact was installed with dependencies into a new virtual environment.
-Every probe ran from `/private/tmp/mlx-smolvla-smoke-85b97fe`, outside both the
+Every probe ran from `/private/tmp/mlx-smolvla-smoke-0f9488c`, outside both the
 main checkout and detached build worktree, and asserted that the imported
 module path was inside the virtual environment. Hub and dataset access were
 forced offline for prediction.
@@ -99,9 +100,11 @@ A sixth clean CPython 3.12 environment installed the cp312 wheel with its
 camera modules were present while PyAV remained absent. The installed
 `hardware_safety` and `hiwonder_client` modules imported from that environment,
 validated the stats-active six-axis checkpoint, and exposed the expected
-two-camera mapping. The repository example rendered all three graduated modes
-and the hardware-profile option with this installed interpreter. It did not
-open a device, camera, vendor checkout, or network connection.
+two-camera mapping. Packaged-source inspection found the exact torque-off
+stale-goal preload/readback guard and gradual bounded-return implementation.
+The repository example rendered all three graduated modes and the hardware-
+profile option with this installed interpreter. It did not open a device,
+camera, vendor checkout, or network connection.
 
 The installed cp312 wheel also verified the one-release cache compatibility
 shim: `SMOLVLA_MLX_CACHE` alone is used with a `FutureWarning`;
