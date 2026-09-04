@@ -3150,3 +3150,16 @@
   prospective floor. The new nine-worker envelope will be informational only;
   separate repair validation retains every original fixed limit. Both historical
   failure records and the original trained-parity evaluator remain unchanged.
+- Repair code checkpoint committed and pushed as `5180912`. Before starting the
+  corrected-loader informational envelope, a process inspection found no test,
+  training, floor, or benchmark worker active. Existing unrelated local servers
+  were effectively idle; they were not stopped or changed. Free disk: 465 GiB.
+  No timing measurements will be taken during the nine-worker computation.
+- Corrected-loader informational envelope completed all nine fresh workers
+  on all 56 cases. `F = 0.000025600194931030273`,
+  `F64 = 0.000023670888653737343`; report SHA-256
+  `06e48641f235e74c2c4ddf8fc8e885867499fdaf1cb206fa50ba5b82c26af06f`.
+  Created at `1788504562305003000` ns and written at
+  `1788504562311518199` ns, before repaired cross-framework inference.
+  This is retrospective diagnostic evidence only; the v3 envelope's legacy
+  T3 context fields do not describe a new observation or acceptance milestone.
