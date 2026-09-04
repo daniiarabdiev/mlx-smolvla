@@ -422,3 +422,138 @@ Final fixed/wrist image SHA-256 values:
 `4e0563f2c4b0cdef21027105d18c1938bacf9202a99eb81101d29ae38fe3a304` /
 `4c07f586ffe7d5357e894cdd1457502a5c4489d8749e9b40513a596e35eb79de`.
 Images and raw capture records remain ignored and untracked.
+
+## 2026-09-04 delegated commissioning; reduced settings verified
+
+The operator explicitly amended the runbook and delegated controller setup and
+client execution. The existing live session authorization remains valid; the
+old operator-only command requirement and prescribed motion phrase are not
+current blockers. Physical readiness must still be established.
+
+Two fresh 60-second stats-active no-motion runs used fixed 0/wrist 1, 5 Hz,
+the unchanged 500 ms watchdog, and the separate environments. The first reached
+the duration cap in 60.031 s with 292 observations/291 processed chunks,
+161.235/163.926 ms client median/p95, one timeout/hold, 415 clipped joint values,
+1,330 rate-limited values, and zero rejected chunks. The server's first logged
+timestep was 1: the first request missed its deadline. This attempt fails the
+zero-timeout acceptance requirement and is retained.
+
+The warm repeat passed in 60.088 s with 295 observations/294 processed chunks,
+4.909 sampled FPS, 165.462/168.631 ms client median/p95, zero timeouts, zero
+holds/rejections, 437 clipped joint values, and 1,358 rate-limited values. The
+server logged all 295 chunks; the client discarded the final one at the
+duration boundary. Server receive-to-chunk median/p95 was 163.196/166.264 ms;
+inference was 162.828/165.845 ms. Neither run wrote actuator or torque registers.
+An earlier launcher used the resolved base-interpreter symlink and failed its
+package import before device access; the corrected launcher preserves the
+client-venv executable path. No environment was installed or modified.
+
+The 16:52 UTC read matched the existing calibration and found all six HX-30HM
+model numbers 777, firmware 3.13, position modes 0, startup-force values 32,
+status alarms 0, and torque bits 0. Lift/elbow were -73.670/86.110 degrees;
+the elbow exceeds its 77.187-degree inset upper bound. The subsequent fixed
+view shows the folded follower near the monitor and a cable across the table;
+the wrist sees the gripper, ball, and nearby cable. Physical support and
+clearance remain unverified, so the client must not arm in this pose.
+
+The register definitions are manufacturer-published, not inferred from a
+third-party motor: the pinned
+[Hiwonder HX-30HM table](https://github.com/Hiwonder-official/hiwonder-SoArm-101/blob/a24998f7ba3c77ea445b48c92ad15c14a50e492a/src/lerobot/motors/hiwonder/tables.py)
+adopts the
+[STS/SMS register layout](https://github.com/Hiwonder-official/hiwonder-SoArm-101/blob/a24998f7ba3c77ea445b48c92ad15c14a50e492a/src/lerobot/motors/feetech/tables.py).
+The
+[BusLinker manual](https://docs.hiwonder.com/projects/BusLinker/en/latest/docs/1_BusLinker_V3.0_Servo_Debugging_Board_User_Manual.html)
+documents the speed/acceleration units, maximum-output torque scale, and
+ignored position-mode Time control. This supports temporary SRAM setup without
+changing EEPROM or factory limits.
+
+| Temporary register | Address / bytes | All-six staged value | Documented interpretation |
+| --- | --- | ---: | --- |
+| Acceleration | 41 / 1 | 1 | 100 encoder steps/s² |
+| Goal_Velocity | 46 / 2 | 56 | 56 encoder steps/s, about 4.9°/s at the shaft |
+| Torque_Limit | 48 / 2 | 100 | 10% of the 1000-point output-torque scale |
+
+Each write ran with six verified torque-off bits, matched identity/calibration
+and firmware, and exact readback. Startup force 32 and mode 0 stayed unchanged;
+the cap exceeds startup force and is below the existing persistent maxima.
+The remaining profile registers, raw present positions, and retained goals
+were unchanged. No goal-position or torque-enable command was sent. Every
+handle closed. The profile loader accepts the exact private nine-register
+profile and its serial; its procedure explicitly records delegated setup and
+the absence of a validated holding/motion result. No automatic torque increase
+or restoration is permitted. SRAM values must be freshly verified after any
+power cycle or other robot configuration.
+
+The reviewed client change now rechecks the entire profile after raw-goal
+preload and validates integer position mode plus startup force before and after
+that write. The startup force must fit the smaller torque cap and stay
+unchanged across preload. All existing inset, raw-goal equality, rate, watchdog,
+duration, return, and torque-off checks remain. This code is unit-tested but
+has not yet been exercised with torque enabled.
+
+Private evidence: `.cache/hardware/commissioning-20260904T163953Z-wg7zy750/`.
+
+| Record | SHA-256 |
+| --- | --- |
+| Cold no-motion client | `72b660f630d9a3768c5f50ade7330dcd06789f87d50b689730f64572513f07f4` |
+| Warm no-motion client | `cdef2730eced0408176af34ebacb87523860b12da87ab1f69a5ee7246af1b6cc` |
+| Combined server latency | `cd7594b1b4f448e4dadf7dba44d7830e01a3e719d0306d242bc0870531db3fc4` |
+| Read-only controller/pose | `3d1c915f1c352cbb2ac639c25c477c16b7e71ebdfe0b2106a1254652ea9938d2` |
+| Kinematics staging | `475777534c16e0494af0d32af4557d389c3a036ea86d64abb5cf63686ff2ec9a` |
+| Torque staging | `498c638f24c67674e6471b12d08976f8bb591baec160cae44f0a7c71815790d5` |
+| Session profile | `594f9d81d5b16347736241c74a5b8f60e818456a6706b3f1077907204a2dd036` |
+| Fixed image | `2b6a8cf1320799fb35cd522a9d5f11eab6fdcd0de859434e40a852eac46e61f3` |
+| Wrist image | `1d075eac71f3e1aca31672b5648e8a5a24dea89d1b1c7c50bfe153dd232a6c23` |
+
+Raw identifiers, frames, controller records, and the profile remain ignored.
+
+The final controller-guard source passes 104 focused checks in 3.59 seconds,
+497 fast tests (301 slow tests deselected) in 96.91 test seconds / 99.57 wall
+seconds, and all 798 full-suite tests in 723.25 test seconds / 726.60 wall
+seconds. No skips, expected failures, selection changes, or tolerance changes
+were introduced. Both final lanes used the same runtime/test source hashes,
+with no competing project compute or inherited test overrides at preflight.
+The fast lane remains below the unchanged 120-second wall-time gate. These
+are software results; they do not establish physical actuation or holding.
+
+| Verification record | SHA-256 |
+| --- | --- |
+| Final focused log | `d9a19b3c2bf2801aba340a3f14828a2cb1146f0bbdba65b8525facaf3c7d8b54` |
+| Final fast log | `a835531a8ff8c37c8ad65bcddb4df26d6a40a2600661aaa7f3d6d8fd03110220` |
+| Final fast wall-time result | `d38fc51fd5fedcc772388433d039e42e5085a69c76cc538ef43aaf85953099d3` |
+| Full-suite log | `0125036e0092868e2bc582abc138780090daa312eecdbe44ee7a5327567acef7` |
+| Full-suite wall-time result | `53327a526de9528445651a21edd0ee74d277171932680b9e44decd050e06466f` |
+| Final documentation/hygiene/distribution/readiness log | `fbeae43a2d744c9ea15df7c3de101a4d02ca614a43c4a0c8c13cb39a15d63606` |
+
+After the final status and live-pose updates, all 28 documentation, repository
+hygiene/link, distribution, and hardware-readiness checks passed in 19.58
+test seconds / 25.25 wall seconds. Runtime/test hashes still match the full
+suite, and all 696 vendor tracked files and 32 operator-wrapper files remain
+byte-identical. Changed-document links resolve and private identifiers remain
+absent from the diff.
+
+## 2026-09-04 17:31 UTC adjusted-pose recheck
+
+The operator adjusted the arm and requested a new live check. Exact follower
+identity/calibration and all nine profile readbacks match. All six positions
+pass the unchanged inset envelope: lift/elbow are -54.330/33.187 degrees, with
+zero measured drift over two seconds. This resolves the 16:52 pose failure.
+All controllers report model 777, firmware 3.13, mode 0, startup force 32,
+status 0, and torque off. Temperatures are 41–45°C, measured voltage 12.2–12.6 V,
+and current/velocity read zero. These readbacks do not prove a holding trial.
+
+Both cameras returned concurrent 640x480 frames. The fixed view contains the
+raised follower and tabletop; the wrist now points at the operator/ceiling.
+Requested a power-off mount adjustment toward the gripper/task surface while
+retaining the passing joint pose. Final physical readiness and no-motion
+checks still precede any arming. All writes were blocked by the read-only
+probe, none was attempted, and all serial/camera handles closed.
+
+Private evidence: `.cache/hardware/pose-recheck-20260904T173059Z-xj1676sr/`.
+
+| Record | SHA-256 |
+| --- | --- |
+| Read-only pose | `83b357e8a596eec1d4a5f9e50e2dfd0762d3d2c268925c00996ac154755b8290` |
+| Combined check summary | `9063d2cf1a5f4a42791c7f0fc8361213faac988d34b18c9a4cb5a2a7233cfe65` |
+| Fixed image | `30aa1aff92da02a4f022f4474a8c492f61c40d447a7175351360b5955416d984` |
+| Wrist image | `3b4491e95037d54c338e2b92298554ba893bddf8b3b72f0901ff354222c358c9` |

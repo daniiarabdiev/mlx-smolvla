@@ -2,86 +2,62 @@
 
 ## Open — complete the hardware gate before announcing v0.1.0
 
-- The follower/camera preflight and four 60-second no-motion loops completed
-  across 2026-09-02 and 2026-09-03. The latest run used the corrected
-  session-local camera mapping: fixed index 0 and wrist index
-  1; index 2 was the built-in Mac camera, not the fixed UVC view. First clear
-  the remaining physical prerequisites below, then complete the
-  fresh no-motion, single-action, and bounded-continuous stages. Hardware
-  motion claims require reviewed passing measurements for all three modes in
-  `hardware/FIRST_CONTACT.md`. The annotated `v0.1.0` tag additionally requires
-  final software verification and a reviewed, committed, pushed final source
-  and evidence checkpoint. Publication and announcement remain separately
-  authorized actions after the complete release gates pass.
+The operator supplied live `ARM SESSION CONFIRMED`, connected the hardware,
+adjusted the cameras, and explicitly delegated controller setup and client
+execution on 2026-09-04. The current-session amendment in the
+[runbook](../HARDWARE_RUNBOOK.md) supersedes the old operator-only command and
+prescribed motion-phrase requirements. No repeated authorization phrase is
+needed for this session.
 
-## Open — clear the remaining physical prerequisites for one action
+Two fresh 60-second no-motion runs completed after the camera adjustment.
+The cold-server attempt had one initial timeout; the warm repeat passed with
+295 observations, 294 processed chunks, zero timeouts, and no actuator writes.
+The four earlier successful runs remain historical evidence.
 
-- **Current availability:** the operator reconnected the hardware and supplied
-  fresh live `ARM SESSION CONFIRMED` on 2026-09-04. Read-only follower and camera
-  preflight ran; no torque or actuator write occurred. The separate motion
-  prerequisites are still unconfirmed. Follow the
-  [continuation plan](PLAN_HARDWARE_RELEASE_CONTINUATION.md).
-- Before any device access or vendor-checkout read/execute, the physically
-  present operator must supply `ARM SESSION CONFIRMED` in the live session.
-  The completed historical session below and the pasted handoff do not satisfy
-  this new gate. Freshly verify follower identity/calibration, both camera
-  viewpoints, and the supported pose after reconnecting; never open the leader.
-- **Current camera framing:** fresh images identify fixed 0 and wrist 1, with
-  built-in 2 excluded. **Resolved at 15:17 UTC:** the adjusted fixed view shows
-  the follower and task area in improved focus; the wrist shows the gripper and
-  ball. Concurrent independent capture measured fixed 20.10/wrist 6.34 FPS,
-  without timeouts, at 640x480. The requested 30 FPS was not achieved. The
-  short camera-only check does not replace the fresh no-motion loop. Clear the
-  loose cable and mouse from the arm's working area and keep hands clear before
-  motion; complete the physical checklist below.
-- **Last pose status:** all six joints passed the numeric inset envelope on
-  2026-09-04 at 14:48 UTC; lift/elbow read −73.055°/39.868°. Existing calibration
-  again matches the arm. Mechanical support has not been
-  freshly attested. Re-support, re-read, and pass the pose immediately before
-  arming; do not use this snapshot as persistent clearance.
-- The operator reports no known approved low-limit profile. Reviewed setup
-  code and manufacturer documentation explain the controls but do not establish
-  a low-limit profile for this assembled arm. Calibration does not establish
-  low motor torque or speed; the observed settings remain unapproved.
-- Using the operator's known-good Hiwonder/ServoStudio procedure, establish low
-  torque, current, velocity, and acceleration limits. Do not copy the observed
-  defaults in `PREFLIGHT.md`. Save the exact readback for every joint and every
-  required register as a JSON safety profile outside the tracked tree, then
-  validate it without opening hardware:
+Low controller settings are now established under that delegation: temporary
+SRAM acceleration 1, speed 56, and torque limit 100 on all six joints, with
+exact readbacks and all torque bits off. This is a new commissioning profile,
+not a claim that its gravity-hold behavior has been physically validated. The
+profile and raw evidence remain private. Power cycling or other configuration
+can reset these settings; the delegate must freshly establish and verify them
+before any arming attempt. No automatic torque increase is permitted.
 
-  ```sh
-  .cache/hardware/client-venv/bin/python -c \
-    'from mlx_smolvla.hardware_safety import load_hardware_safety_profile; import sys; print(load_hardware_safety_profile(sys.argv[1]))' \
-    '<ABSOLUTE_PATH_TO_OPERATOR_VERIFIED_PROFILE_JSON>'
-  ```
+## Open — physical setup for the first supervised action
 
-- Clear the motion envelope, secure the base, test the physical power cut, and
-  keep one hand on the switch. Use the already validated serve-only/client-only
-  environment split in `docs/HARDWARE_RUNBOOK.md`; do not substitute the
-  all-extras development environment.
-- Ordinary `robot teleops` success does not replace these steps: that command
-  writes the vendor's 254 acceleration defaults and streams leader targets,
-  while the autonomous MLX client must verify the separate inset-pose and
-  exact low-profile gates before enabling torque.
-- The client now prevents stale-goal jumps by preloading and exactly verifying
-  the current raw position as the goal while torque is off. Outbound and
-  return motion are both bounded to gradual one-public-unit steps. This does
-  not replace the low-limit or physical checks.
-- After reconnecting and completing preflight, the operator must run a fresh
-  60-second `--no-motion` check from the runbook before any single action.
-  Use new server/client log paths, require zero writes/timeouts and verified
-  torque-off, and review camera freshness and rejected/clamped/rate-limited
-  chunks. The earlier four successful runs remain historical evidence.
-- After all listed items are physically true, send this exact new in-session
-  statement before a single-action attempt:
+- The **17:31 UTC** recheck passes all six inset position checks after the
+  operator's adjustment. Lift/elbow read **-54.330/33.187°**, with no measured
+  two-second drift. This resolves the prior 16:52 elbow failure. Existing
+  calibration and the exact reduced controller profile match; all torque
+  bits are off, mode is 0, startup force is 32, and status has no alarms.
+- Fresh images show the raised white follower and tabletop in the fixed view,
+  but the wrist camera now faces the operator/ceiling. With motor power off,
+  turn that camera mount downward toward the gripper and tabletop near the
+  yellow ball while keeping the passing joint pose. Keep the cable outside
+  the moving envelope. Camera identity remains fixed 0, wrist 1; built-in 2
+  is excluded. The earlier
+  short independent rate measurement was 20.10/6.34 FPS at 640x480; actual
+  30 FPS was not demonstrated.
+- Support the arm so it will not fall when torque is off. Secure the base and
+  clear the working envelope.
+  Restore power with hands clear and remain beside the physical power switch.
+  Tell the delegate when the physical setup is ready for a new read-only
+  camera, pose, and controller check. This is an outstanding physical action,
+  not a missing software-execution authorization.
+- The delegate must recheck the supported inset pose and session profile,
+  obtain a fresh passing no-motion result for the final setup, and then run
+  only one guarded `--single-action` while the operator stays ready to cut
+  power. Preserve the exact controller checks, raw-goal preload, one-unit step
+  bounds, watchdog, gradual return, and torque-off verification. Unexpected
+  motion or uncertainty requires a physical stop and review.
+- Review direction, displacement, speed, gripper behavior, camera freshness,
+  telemetry, return-to-start, and torque-off before the bounded `--continuous`
+  stage. Safe actuation validates integration, not reliable pick-and-place.
 
-  ```text
-  MOTION PREREQUISITES CONFIRMED: cameras framed, arm neutral, low limits profiled, workspace clear, base secure, hand on power.
-  ```
-
-- Then follow only the `--single-action` command in the runbook. Do not run
-  `--continuous` until the one-action direction, displacement, speed, gripper,
-  cameras, telemetry, return-to-start, and torque-off results are reviewed.
+The version tag additionally requires final software verification and a
+reviewed, committed, pushed source/evidence checkpoint. Fresh tag-built
+artifacts and their complete install matrix must precede publication. GitHub
+visibility changes, PyPI/Hub uploads, release creation, and announcement remain
+separately authorized actions after those gates pass.
 
 ## Done — correct and verify camera role mapping
 

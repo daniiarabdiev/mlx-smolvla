@@ -59,17 +59,21 @@ Motion modes additionally require:
 
 - a local checkpoint with finite, positive six-axis `observation.state` and
   `action` mean/std tensors;
-- an operator-attested JSON safety profile whose serial matches the selected
+- a current-session verified JSON safety profile whose serial matches the selected
   follower port;
 - exact readback equality for nine controller safety registers while torque is
   still off;
+- integer position mode (0) on every joint, and an integer startup-force value
+  no greater than the smaller of its persistent and temporary torque caps;
 - a start pose already inside the 10%-inset calibrated range.
 
 Only after those checks does the adapter read each raw present position, write
 those exact raw values to `Goal_Position` while torque is still off, and
-require goal and fresh-present readback equality. It rechecks all six torque
-bits as zero immediately before enabling torque, then enables and verifies all
-six enabled bits. This prevents arming against a stale goal retained from an
+require goal and fresh-present readback equality. It rereads all nine safety
+registers, position mode, startup force, and torque after that write. Startup
+force must remain unchanged across preload. It rechecks all six torque bits as
+zero immediately before enabling torque, then enables and verifies all six
+enabled bits. This prevents arming against a stale goal retained from an
 earlier session. Every action must be shape `(1, 6)`, finite, and inside the
 vendor driver's full public domain (body joints −180°–180°, gripper 0–100). Valid
 values are clipped to the 10%-inset calibration and rate-limited from current
@@ -89,7 +93,7 @@ exact readback before arming; later writes require the armed state. The
 Hiwonder manual states that the position-mode `Time` field is not applicable,
 so the client does not pretend `Goal_Time` controls speed. It enforces a
 minimum 200 ms command/dwell interval while independently requiring
-operator-established low hardware limits.
+verified low hardware limits established under the operator's authorization.
 
 On a normal cap, watchdog stop, exception, SIGINT, or SIGTERM, a motion session
 attempts—in order—to hold current position, return to the recorded start pose

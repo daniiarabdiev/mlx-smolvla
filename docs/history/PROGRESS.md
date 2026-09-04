@@ -3437,3 +3437,101 @@
   no material issue and confirmed that framing resolution does not close the
   physical or motion gates. Before checkpointing, remote HEAD matched the
   starting source, GitHub remained private, and no `v0.1.0` tag existed.
+
+## 2026-09-04 — delegated controller setup and arming-state verification
+
+- Continued from clean pushed `06d366ff9f2336e3be1d2858d528237b38b8f3ac`.
+  The operator explicitly amended their runbook and delegated setup and client
+  execution. Recorded that amendment without treating old authority wording
+  as a blocker or treating delegation as physical clearance.
+- Fresh stats-active no-motion checks used the separate environments and
+  current fixed 0/wrist 1 camera mapping. The initial launcher incorrectly
+  resolved the client-venv interpreter symlink to its base executable and
+  failed package import before any hardware access. Corrected the launcher
+  path; no environment changed. The cold-server 60.031-second run recorded
+  292 observations/291 processed chunks, one initial timeout/hold, zero
+  rejected chunks, 415 clipped and 1,330 rate-limited joint values, and
+  161.235/163.926 ms client median/p95. Its failed zero-timeout gate is retained.
+- A warm repeat of the unchanged client passed the 60-second check in
+  60.088 seconds: 295 observations, 294 processed chunks, 4.909 sampled FPS,
+  zero timeouts/holds/rejections, 437 clipped and 1,358 rate-limited values,
+  and 165.462/168.631 ms client median/p95. All 295 server chunks were logged;
+  the final client chunk was discarded at the duration boundary. Both runs
+  suppressed actuator writes. Server receive-to-chunk median/p95 was
+  163.196/166.264 ms and inference was 162.828/165.845 ms for the warm run.
+- At 16:52 UTC the exact follower matched existing calibration, model 777,
+  firmware 3.13, position mode 0, startup force 32, status 0, and torque 0 on
+  every motor. The new lift/elbow position was -73.670/86.110 degrees; elbow
+  exceeds its 77.187-degree upper inset start bound. Fresh camera images show
+  the folded follower near the monitor and a cable near the gripper. Requested
+  the necessary power-off manual unfold/support, cable clearance, secure base,
+  and readiness beside the power switch. No arming was attempted.
+- Verified that the local vendor pin is the public Hiwonder-official source:
+  `a24998f7ba3c77ea445b48c92ad15c14a50e492a`. Its HX-30HM alias and STS/SMS
+  tables are unchanged locally and establish the register map/storage regions.
+  The manufacturer's BusLinker manual supplies speed/acceleration units and
+  the normal output torque scale, distinct from overload recovery. This
+  resolved the earlier overly narrow source-provenance assessment.
+- Staged only temporary SRAM acceleration 1, speed 56, and torque limit 100
+  on all six controllers. The three writes were separated by torque-off and
+  exact readback checks; no retry, goal-position, torque-enable, EEPROM,
+  factory, calibration, or protection-setting write occurred. Startup force
+  32, mode 0, other profile controls, raw present/goal positions, and torque-off
+  remained unchanged. Saved the exact private session profile and original
+  values. The new profile describes delegated commissioning/readback, not a
+  prior known-good or demonstrated gravity-hold result. No automatic torque
+  increase/restoration is allowed; re-establish after a reset.
+- The client previously checked its exact profile only before raw-goal preload.
+  Added a second complete check afterward, plus position-mode and startup-force
+  gates. Six fault-injection tests first failed because the old code allowed
+  arming. Review then identified non-integer false mode values; two additional
+  tests failed before their type check. All 104 focused hardware/readiness
+  checks now pass in 3.59 seconds. Independent review found no remaining
+  material issue in the helper or delegation amendment.
+- Final idle fast lane: 497 passed, 301 slow tests deselected, 96.91 test
+  seconds / 99.57 complete-command wall seconds. No selections, tolerances,
+  skips, or expected failures were introduced. The preceding six-regression
+  candidate passed 495 tests in 104.79 wall seconds; final validation includes
+  the two subsequent malformed-mode cases.
+- The full suite passes all 798 tests in 723.25 test seconds / 726.60
+  complete-command wall seconds, without skips or expected failures. Both
+  final lanes exercised the same runtime/test source hashes. The full
+  preflight found no competing project jobs or inherited test overrides,
+  81.57% idle CPU, and no recorded thermal/performance warning. A one-second
+  read-only process sample during the slower filesystem inventory confirmed
+  progress; it did not overlap the fast lane. Source verification is complete.
+- All 696 vendor tracked files and 32 wrapper files remain byte-identical.
+  The existing client/server environments pass dependency checks (65/56
+  packages). The leader was never opened. Device handles and the owned
+  loopback server closed before software verification. All new private data
+  is ignored, with the session directory restricted to its owner.
+- Private evidence: `.cache/hardware/commissioning-20260904T163953Z-wg7zy750/`.
+  Hashes are recorded in `hardware/PREFLIGHT.md`. The physical setup, guarded
+  single action, bounded continuous stage, and final tag-built release gates
+  remain open. Existing untagged distributions predate this controller change.
+
+## 2026-09-04 17:31 UTC — user-adjusted pose passes
+
+- The operator repositioned the arm and requested a live recheck. Exact
+  follower/calibration/profile checks pass with mode 0, startup force 32,
+  status 0, and torque off on all six controllers. Every joint passes the
+  inset envelope; lift/elbow are -54.330/33.187 degrees with no measured drift
+  over two seconds. The earlier 16:52 pose failure is resolved.
+- Both intended cameras returned frames. The fixed view contains the raised
+  follower and table, but the wrist now points upward at the operator/ceiling.
+  Requested a power-off mount adjustment toward the gripper/task surface while
+  keeping the passing pose. Physical readiness and a fresh final no-motion
+  run still precede the first action. No write was attempted and every handle
+  closed. Private evidence is under
+  `.cache/hardware/pose-recheck-20260904T173059Z-xj1676sr/`, with hashes in
+  `hardware/PREFLIGHT.md`.
+- Final documentation review found stale authority wording and prior software
+  completion claims lower in the status files. Updated their current next
+  gate/blocker table to the delegated workflow and final 798/497-test evidence;
+  explicitly scoped the historical software release milestone.
+- Final documentation, hygiene/link, distribution, and hardware-readiness
+  checks pass 28/28 in 19.58 test seconds / 25.25 wall seconds. Runtime/tests
+  still match the full-suite source hashes; private identifiers are absent
+  from the diff and all changed-document local links resolve. A final hash
+  check confirms 696 vendor tracked files and 32 wrapper files are unchanged.
+  The focused log is preserved with its hash in `hardware/PREFLIGHT.md`.

@@ -1,6 +1,7 @@
 # SO-101 first-contact status
 
-**Status: no-motion protocol complete; physical motion blocked.**
+**Status: prior no-motion protocol checks pass; final-setup recheck and
+physical motion remain pending.**
 
 The operator supplied `ARM SESSION CONFIRMED` in the live task on 2026-09-02.
 The follower-only serial path, both cameras, native MLX server, and four
@@ -172,6 +173,64 @@ pending. Both camera handles closed; neither robot nor vendor checkout was
 accessed, and no motor command ran. Approved low limits and physical
 attestation remain open. Details and evidence hashes are in
 [PREFLIGHT.md](PREFLIGHT.md).
+
+## 2026-09-04 delegated commissioning and fresh no-motion checks
+
+The operator explicitly delegated setup and client execution, amending the
+old runbook authority wording. At source `06d366ff9f2336e3be1d2858d528237b38b8f3ac`,
+the unchanged client completed two more 60-second stats-active no-motion runs
+using fixed 0/wrist 1 and the separate server/client environments:
+
+| Attempt | Observations / processed chunks | Duration | Sampled FPS | Observation→chunk median / p95 | Timeouts |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Cold server | 292 / 291 | 60.031 s | 4.864 | 161.235 / 163.926 ms | 1 |
+| Warm repeat | 295 / 294 | 60.088 s | 4.909 | 165.462 / 168.631 ms | 0 |
+
+The cold attempt missed the first action deadline and does not pass the
+zero-timeout gate. The warm repeat passes it without changing the watchdog or
+client. Both runs rejected zero chunks; the warm repeat counted 437 clipped
+joint values and 1,358 rate-limited values. Its final server chunk arrived at
+the duration boundary and was not processed. All motor writes were suppressed.
+
+At 16:52 UTC, a fresh read matched calibration and found model 777, firmware
+3.13, position mode 0, no status alarms, and six torque bits off. The elbow
+now measured 86.110°, outside its 77.187° upper inset start margin. Fresh images
+show the follower folded near the monitor and a cable near the gripper. This
+is a new physical setup issue; it does not invalidate the earlier passing poses.
+
+Hiwonder's own pinned source confirms the HX-30HM register map. Under the
+delegated setup authority, three temporary SRAM controls were staged and
+exactly read back on all six motors: acceleration 1, speed 56, and torque limit
+100. These represent 100 encoder steps/s², about 4.9°/s at the motor shaft, and
+10% of the documented torque scale. Startup force 32, position mode 0, the
+remaining profile controls, and raw present/goal positions were unchanged.
+Torque stayed off; neither a goal-position nor torque-enable write occurred.
+These are commissioning settings, not a demonstrated gravity-hold result or a
+universal safe preset. The private profile must be re-established after a reset
+and must not be raised automatically.
+
+The client has also been hardened to reread the complete controller profile
+after raw-goal preload, require integer position mode 0, and reject startup
+force above the torque cap or changed across preload. Failure-first tests
+cover the previously unguarded cases; focused hardware/readiness checks pass
+104/104. Full software verification is recorded in the continuation progress.
+The supported inset pose, workspace/base/power checks, first action, and bounded
+continuous stage remain open. Device handles and the MLX server are closed.
+Detailed source links and private evidence hashes are in [PREFLIGHT.md](PREFLIGHT.md).
+
+## 2026-09-04 17:31 UTC — adjusted position verified
+
+At the operator's request, a fresh read-only check found every joint inside
+the inset envelope, with lift/elbow at -54.330/33.187 degrees and zero measured
+drift over two seconds. The 16:52 elbow failure is resolved. Existing
+calibration and the exact reduced controller profile still match; mode 0,
+startup force 32, no alarms, and six torque-off bits were verified.
+
+The fixed view contains the raised follower and tabletop. The wrist view now
+points upward at the operator/ceiling, so its mount needs to face the gripper
+and task surface before the final inference/motion checks. No motor write was
+attempted and all handles closed. A passing numeric pose does not establish
+workspace/base/power readiness. Evidence hashes are in [PREFLIGHT.md](PREFLIGHT.md).
 
 ## Current verdict
 

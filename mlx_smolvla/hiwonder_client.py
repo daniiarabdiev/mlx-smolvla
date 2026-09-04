@@ -748,26 +748,47 @@ class HiwonderSO101IO:
         if isinstance(move_time_ms, bool) or not isinstance(move_time_ms, int) or move_time_ms < 200:
             raise ValueError("move time must be at least 200 ms")
 
-        readback = {
-            register: {
-                name: int(value)
-                for name, value in self.robot.bus.sync_read(
-                    register,
-                    normalize=False,
-                ).items()
+        def verify_controller_state() -> dict[str, int]:
+            readback = {
+                register: {
+                    name: int(value)
+                    for name, value in self.robot.bus.sync_read(
+                        register,
+                        normalize=False,
+                    ).items()
+                }
+                for register in (*REQUIRED_SAFETY_REGISTERS, "Torque_Enable")
             }
-            for register in REQUIRED_SAFETY_REGISTERS
-        }
-        readback["Torque_Enable"] = {
-            name: int(value)
-            for name, value in self.robot.bus.sync_read(
-                "Torque_Enable",
-                normalize=False,
-            ).items()
-        }
-        verdict = self.safety_profile.verify_readback(self.joint_names, readback)
-        if not verdict.ok:
-            raise RuntimeError("hardware safety readback mismatch: " + "; ".join(verdict.mismatches))
+            verdict = self.safety_profile.verify_readback(self.joint_names, readback)
+            if not verdict.ok:
+                raise RuntimeError(
+                    "hardware safety readback mismatch: " + "; ".join(verdict.mismatches)
+                )
+            modes = self.robot.bus.sync_read("Operating_Mode", normalize=False)
+            startup = self.robot.bus.sync_read("Minimum_Startup_Force", normalize=False)
+            if set(modes) != set(self.joint_names) or any(
+                isinstance(value, bool)
+                or not isinstance(value, (int, np.integer))
+                or value != 0
+                for value in modes.values()
+            ):
+                raise RuntimeError("Operating_Mode must be position mode (0) on every joint")
+            if set(startup) != set(self.joint_names):
+                raise RuntimeError("Minimum_Startup_Force readback does not cover every joint")
+            for name in self.joint_names:
+                force = startup[name]
+                cap = min(readback["Max_Torque_Limit"][name], readback["Torque_Limit"][name])
+                if (
+                    isinstance(force, bool)
+                    or not isinstance(force, (int, np.integer))
+                    or not 0 <= force <= cap
+                ):
+                    raise RuntimeError(
+                        f"Minimum_Startup_Force.{name} must not exceed the verified torque cap"
+                    )
+            return {name: int(startup[name]) for name in self.joint_names}
+
+        startup_before = verify_controller_state()
 
         def read_raw_positions(register: str) -> dict[str, int]:
             values = self.robot.bus.sync_read(
@@ -806,6 +827,11 @@ class HiwonderSO101IO:
             raise RuntimeError(
                 "goal preload readback mismatch: " + ", ".join(preload_mismatches)
             )
+
+        # Verify the complete controller state again after the goal write: a
+        # reset or firmware side effect must not silently undo the low limits.
+        if verify_controller_state() != startup_before:
+            raise RuntimeError("Minimum_Startup_Force changed during goal preload")
 
         torque_before_enable = self.robot.bus.sync_read(
             "Torque_Enable",

@@ -12,11 +12,18 @@ and active CI are outside this continuation.
 The continuation began offline. The operator later connected the hardware and
 supplied fresh live `ARM SESSION CONFIRMED` on 2026-09-04. Read-only follower
 identity/calibration and numeric pose checks passed. Subsequent adjustment
-resolved current camera framing; short concurrent capture measured fixed
+resolved camera framing at that point; the 17:31 pose change later altered
+the wrist view. The prior short concurrent capture measured fixed
 20.10/wrist 6.34 FPS at 640x480 without timeouts (30 FPS requested, not achieved).
-The approved low-controller-limit profile and physical checklist remain open.
-No motion-prerequisite confirmation, new no-motion loop, or physical motion
-has occurred.
+The operator then explicitly delegated setup and client execution. Two new
+60-second no-motion runs completed: the cold-server attempt had one initial
+timeout; the warm repeat had zero timeouts and zero actuator writes. Temporary
+low speed, acceleration, and torque settings have now been staged and exactly
+read back with torque off. At 16:52 UTC the elbow was outside the inset start
+envelope. The 17:31 UTC read resolves that numeric pose failure: every joint
+passes, with no two-second drift and the exact low profile still matched.
+The wrist camera now faces upward after repositioning and needs its mount
+adjusted. Final camera/support/clearance checks remain open. No motion has run.
 
 ## 1. Software baseline and checkpoint
 
@@ -49,32 +56,36 @@ has occurred.
   demonstrate actual 30 FPS or replace the no-motion policy loop.
 - [ ] Re-read the mechanically supported pose against the unchanged 10%-inset
   envelope immediately before proceeding to arming.
-- [ ] Have the operator establish the exact approved low-controller-limit
-  profile through their known-good procedure; capture all nine registers for
-  all six joints and validate exact readbacks. Observed defaults, software
-  step caps, and dwell times are not approval or motor-speed limits.
+- [x] Under the operator's explicit delegation, establish and exactly read back
+  a manufacturer-documented temporary commissioning profile: SRAM acceleration
+  1, speed 56, torque limit 100 on all six controllers. Persistent/factory
+  settings, startup force 32, mode 0, present/goal positions, and torque-off
+  were checked. This establishes reduced settings, not gravity-hold ability
+  or physical safety; those require the supported supervised trial.
 - [ ] Confirm workspace clearance, secure base, physical power cut, and hand
   on power. Follow [HUMAN_TASKS.md](HUMAN_TASKS.md); keep private profile,
   serials, images, and telemetry under ignored local storage.
 
-## 3. Graduated validation — operator runs the client
+## 3. Graduated validation — delegated execution with operator present
 
-- [ ] Select the reviewed stats-active checkpoint matching the robot. Run a
+- [x] Select the reviewed stats-active checkpoint matching the robot. Run a
   fresh 60-second `--no-motion` check using new, non-overwriting server/client
   logs. Require the duration cap, fresh cameras, zero timeouts and writes,
   torque-off readback, and review of rejection/clamp/rate-limit counts.
-- [ ] Once every physical prerequisite actually holds, obtain the separate
-  live statement:
-
-  ```text
-  MOTION PREREQUISITES CONFIRMED: cameras framed, arm neutral, low limits profiled, workspace clear, base secure, hand on power.
-  ```
-
-- [ ] The operator runs one `--single-action` through the existing guarded
+- [x] Close the controller-state gap before arming: reread the entire profile
+  after raw-goal preload, require integer position mode 0, and reject excessive
+  or changed startup force. Failure-first fault injection demonstrates these
+  checks; the focused hardware/readiness suite passes 104 tests. The final
+  fast lane passes 497 tests in 99.57 wall seconds, and the full suite passes
+  all 798 tests in 726.60 wall seconds, without skips or expected failures.
+- [ ] Once every physical prerequisite actually holds, verify the fresh
+  supported pose and operator readiness. The current-session delegation
+  supersedes the old prescribed motion phrase; it does not supply those facts.
+- [ ] The authorized delegate runs one `--single-action` through the guarded
   client. Review direction, displacement, speed, gripper behavior, camera
   freshness, telemetry, gradual return, and torque-off. Preserve the existing
-  stale-goal preload/readback, clamps, caps, and watchdogs unchanged.
-- [ ] Only after the one-action result is accepted, the operator runs
+  stale-goal preload/readback, clamps, caps, and watchdogs.
+- [ ] Only after the one-action result is accepted, the authorized delegate runs
   `--continuous` with the existing 90-second/20-chunk cap, whichever comes
   first, and the same shutdown checks. Unexpected motion or uncertainty means
   the runbook's physical stop and review, never an automatic retry.

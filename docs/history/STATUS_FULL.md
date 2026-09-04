@@ -1,12 +1,14 @@
 # Full-Scope Status
 
-FULL-SCOPE SOFTWARE COMPLETE — FINAL AUDIT PASSED
+CURRENT CONTROLLER-STATE CHANGE VERIFIED — ALL 798 TESTS PASS
+
+PRIOR BASELINE: FULL-SCOPE SOFTWARE COMPLETE — FINAL AUDIT PASSED
 
 TRAINED CHECKPOINT STRICT-PARITY REPAIR VERIFIED — ALL 56 FIXED-LIMIT CASES PASS
 
-FINAL VERIFICATION COMPLETE — 790/790 TESTS PASS
+PRIOR BASELINE: FINAL VERIFICATION COMPLETE — 790/790 TESTS PASS
 
-HARDWARE NO-MOTION VALIDATION COMPLETE — PHYSICAL MOTION NOT RUN
+PRIOR HARDWARE NO-MOTION CHECKS PASS — FINAL-SETUP RECHECK AND PHYSICAL MOTION PENDING
 
 T3B-1 COMPLETE — SELF-CONSISTENCY FLOOR RECORDED
 
@@ -24,7 +26,7 @@ STAGE R P1-1 COMPLETE — DEFAULT PRODUCTION METAL EVIDENCE RECORDED
 
 STAGE R P1-4 COMPLETE — LEROBOT ASYNC SERVER VERIFIED IN LOOPBACK
 
-RELEASE READY
+PRIOR SOFTWARE RELEASE MILESTONE — HARDWARE AND PUBLICATION GATES REMAIN
 
 T4 COMPLETE — NATIVE TRAINING UX AND EXACT RESUME VERIFIED
 
@@ -326,8 +328,9 @@ with no skips. The machine had **517 GiB** free and repository caches occupied
 | Q — Quality extras | Complete | P2-1 comparison, P2-2 profile, P2-3 gated quantization, and P2-4 honestly disabled CI workflow are committed; every package closed with the full suite. |
 | H — Hardware readiness | Complete — documents/software only | Exact supervised runbook and no-clobber observation-to-chunk latency logger are committed and loopback-tested. Hardware validation is explicitly NOT RUN because the in-session gate was absent. |
 
-`TRAINING ALPHA (STATISTICAL)`, `RELEASE READY`, `T4 COMPLETE`, `T5 COMPLETE`,
-and `FINAL VERIFICATION COMPLETE` have been reached.
+The prior software milestones `TRAINING ALPHA (STATISTICAL)`, `T4 COMPLETE`,
+`T5 COMPLETE`, and `FINAL VERIFICATION COMPLETE` were reached. The historical
+software release milestone does not clear hardware or publication gates.
 
 ## Current local evidence
 
@@ -814,3 +817,56 @@ retained to show how the error was found and corrected.
   and capture records are retained under
   `.cache/hardware/fixed-adjustment-20260904T151528Z-45fdealv/` with hashes in
   `hardware/PREFLIGHT.md`. Runtime, tests, limits, and release gates are unchanged.
+
+## 2026-09-04 — delegated commissioning and controller-state hardening
+
+- The operator explicitly amended the runbook and delegated setup/client
+  execution. That authorization supersedes the old operator-only commands and
+  repeated motion phrase; actual physical readiness remains required.
+- Two new 60-second stats-active no-motion runs completed with the corrected
+  cameras. The cold-server run missed its first deadline (one timeout) and is
+  retained as a failed timing gate. The warm repeat passed with 295 live
+  observations, 294 processed chunks, 4.909 sampled FPS, 165.462/168.631 ms
+  client median/p95, zero timeouts/rejections, and no actuator writes.
+- The 16:52 UTC read matches calibration, model 777, firmware 3.13, position
+  mode 0, no alarms, and torque off. The elbow now reads 86.110 degrees, outside
+  the 77.187-degree inset upper margin. Fresh images show the folded arm near
+  the monitor and a cable near the gripper. Supported pose, clearance, secure
+  base, and operator readiness at the power switch remain open.
+- Manufacturer-published source and documentation support temporary SRAM
+  acceleration 1, speed 56, and torque limit 100. Under the delegated setup,
+  all six controllers now match these values; startup force 32, mode 0, other
+  safety controls, raw positions/goals, and torque-off stayed unchanged.
+  The private session profile validates. These are reduced commissioning
+  settings, not demonstrated holding ability or physical task success. A
+  reset requires re-establishing/readback-verifying them; no automatic torque
+  increase is allowed. No goal-position or torque-enable write has occurred.
+- The client now rereads all nine safety registers after goal preload, requires
+  integer position mode 0, and rejects startup force above the torque cap or
+  changed across preload. Eight failure-first regressions cover these cases,
+  including malformed mode values. Focused hardware/readiness checks pass
+  104/104 in 3.59 seconds; the final fast lane passes 497/497 with 301 slow
+  tests deselected in 96.91 test seconds / 99.57 complete-command wall seconds.
+  The full suite passes all 798 tests in 723.25 test seconds / 726.60 wall
+  seconds, with no skips or expected failures. The behavior change is verified;
+  physical actuation and final tag-built artifacts remain unvalidated.
+- All 696 vendor tracked files and 32 operator-wrapper files remain unchanged.
+  The existing server/client environments pass dependency checks for 56/65
+  packages. Private frames, serials, controller records, profile, and logs are
+  ignored under `.cache/hardware/commissioning-20260904T163953Z-wg7zy750/`;
+  evidence hashes are in `hardware/PREFLIGHT.md`. Existing candidate artifacts
+  predate the new controller guard and must not be published as current source.
+  Both physical motion stages and final tag-built release work remain pending.
+
+## 2026-09-04 17:31 UTC — adjusted pose passes; wrist mount needs correction
+
+- Fresh read-only follower checks match calibration and the exact reduced
+  controller profile. Every joint passes the inset envelope; lift/elbow are
+  -54.330/33.187 degrees, with zero measured drift over two seconds. The
+  earlier 16:52 elbow failure is resolved for this setup. Mode 0, startup force
+  32, status 0, and all six torque-off bits remain unchanged.
+- Fixed-camera framing contains the raised follower and tabletop. The wrist
+  view now faces the operator/ceiling after the arm adjustment; its mount
+  must face the gripper/task surface before final inference and motion checks.
+  No write was attempted; all device handles closed. Physical readiness and
+  the final no-motion, single-action, and continuous checks remain open.

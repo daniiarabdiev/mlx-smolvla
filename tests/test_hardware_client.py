@@ -88,6 +88,8 @@ class _FakeBus:
                 for name, value in zip(JOINTS, [90, -90, 90, -90, 90, 0], strict=True)
             },
             "Torque_Enable": {name: 0 for name in JOINTS},
+            "Operating_Mode": {name: 0 for name in JOINTS},
+            "Minimum_Startup_Force": {name: 5 for name in JOINTS},
         }
         self.sync_writes: list[tuple[str, dict[str, float]]] = []
         self.sync_write_options: list[tuple[str, bool, int]] = []
@@ -1036,6 +1038,64 @@ def test_vendor_adapter_aborts_unarmed_if_goal_preload_readback_mismatches() -> 
     assert robot.bus.enable_calls == 0
     assert robot.bus.registers["Torque_Enable"] == {name: 0 for name in JOINTS}
     assert adapter.armed is False
+
+
+@pytest.mark.parametrize(
+    ("register", "value"),
+    [("Goal_Velocity", 0), ("Torque_Limit", 1000),
+     ("Operating_Mode", 1), ("Minimum_Startup_Force", 6)],
+)
+def test_vendor_adapter_aborts_if_controller_changes_during_goal_preload(
+    register: str, value: int,
+) -> None:
+    safety = _hardware_safety()
+    client = _hiwonder_client()
+    profile, registers = _matching_profile(safety)
+    robot = _FakeVendorRobot()
+    robot.bus.registers.update(registers)
+    original_write = robot.bus.sync_write
+
+    def preload_changes_controller(name, values, **kwargs):
+        original_write(name, values, **kwargs)
+        robot.bus.registers[register]["elbow_flex"] = value
+
+    robot.bus.sync_write = preload_changes_controller
+    adapter = client.HiwonderSO101IO(
+        robot, joint_names=JOINTS, safety_profile=profile,
+        robot_serial="TEST-FOLLOWER-001",
+    )
+
+    with pytest.raises(RuntimeError, match=register):
+        adapter.prepare_motion(move_time_ms=200)
+
+    assert robot.bus.enable_calls == 0
+    assert adapter.armed is False
+
+
+@pytest.mark.parametrize(
+    ("register", "value"),
+    [("Operating_Mode", 1), ("Operating_Mode", False),
+     ("Operating_Mode", 0.0), ("Minimum_Startup_Force", 11)],
+)
+def test_vendor_adapter_rejects_incompatible_mode_or_startup_force_before_preload(
+    register: str, value: int | float,
+) -> None:
+    safety = _hardware_safety()
+    client = _hiwonder_client()
+    profile, registers = _matching_profile(safety)
+    robot = _FakeVendorRobot()
+    robot.bus.registers.update(registers)
+    robot.bus.registers[register]["elbow_flex"] = value
+    adapter = client.HiwonderSO101IO(
+        robot, joint_names=JOINTS, safety_profile=profile,
+        robot_serial="TEST-FOLLOWER-001",
+    )
+
+    with pytest.raises(RuntimeError, match=register):
+        adapter.prepare_motion(move_time_ms=200)
+
+    assert robot.bus.sync_writes == []
+    assert robot.bus.enable_calls == 0
 
 
 def test_vendor_adapter_rejects_position_write_until_armed() -> None:

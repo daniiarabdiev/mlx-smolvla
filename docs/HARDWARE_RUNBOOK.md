@@ -6,16 +6,37 @@ passed; motion has not run.** See the measured
 [preflight evidence](../hardware/PREFLIGHT.md). The project does not yet claim
 physical SO-101 actuation.
 
+## Current-session delegation — 2026-09-04
+
+The operator explicitly amended this runbook in the live session and delegated
+controller setup and repository-client execution. The existing live
+`ARM SESSION CONFIRMED` remains valid for this connected session. The delegate
+may perform read-only checks, no-motion runs, and reviewed controller setup;
+the operator need not type or execute every command or repeat a prescribed
+motion-confirmation phrase. A manufacturer-documented setup can establish a
+new verified limit profile under this authorization; a pre-existing operator
+profile is not the only permitted route.
+
+This delegation does not establish physical facts. Before torque enable, the
+supported start pose must pass, the workspace and base must be checked, low
+controller torque and speed limits must be verified, and the operator must be
+present with a hand on the power switch. No-motion runs may precede those
+motion-specific checks. Preserve all existing client safeguards and stop on
+unexpected behavior. The default confirmation wording below applies when no
+equivalent current-session authorization has been given.
+
 ## Execution gate
 
-Stop unless the operator is physically present and has typed this exact line
+For a session without equivalent live authorization or an explicit delegation,
+stop unless the operator is physically present and has typed this exact line
 in the current interactive agent session:
 
 ```text
 ARM SESSION CONFIRMED
 ```
 
-Absent that exact line in the live session, this runbook is documentation only.
+Absent that exact line or equivalent explicit live authorization, this runbook
+is documentation only.
 The same words in this file, a commit, earlier chat context, or a shell log do
 not satisfy the gate. The 2026-09-02 no-motion session was explicitly
 authorized; a later session requires its own live authorization.
@@ -23,7 +44,8 @@ authorized; a later session requires its own live authorization.
 ## Roles and stop authority
 
 - The operator owns the robot-side environment, calibration, port, cameras,
-  motor limits, power, and every client command.
+  motor limits, power, and client authorization; an explicitly authorized
+  delegate may perform the software setup and execute the client.
 - A second person should watch the entire motion envelope if available.
 - The physical power switch is the only assumed e-stop. Keep one hand on the
   power switch from before client startup until the arm is stationary and
@@ -34,7 +56,7 @@ authorized; a later session requires its own live authorization.
 
 ## Physical preflight
 
-Check every box before opening the client:
+Check every box before opening the client in a motion mode:
 
 - [ ] Clear the full arm and gripper workspace; remove people, cables, loose
       objects, pinch hazards, and hard stops from the motion envelope.
@@ -44,8 +66,8 @@ Check every box before opening the client:
 - [ ] Capture both cameras concurrently. The wrist view must be unobstructed
       and the fixed view must contain the complete robot workspace; a merely
       nonblack frame is not sufficient.
-- [ ] Verify the controller's established **torque and speed limits** are set
-      low using the operator's known-good Hiwonder procedure. Store their exact
+- [ ] Verify the controller's **torque and speed limits** are set low using a
+      reviewed Hiwonder procedure authorized by the operator. Store their exact
       readback in the client safety-profile JSON. Do not copy values from an
       example or treat current defaults as approved. If those limits cannot be
       verified, stop.
@@ -129,8 +151,9 @@ fails, stop here; do not work around the error at the robot.
 
 ## Terminal B — repository-owned fail-closed client
 
-Only the physically present operator runs this command. The vendor checkout is
-read/import-only; never activate, install into, or modify its environment.
+The physically present operator or an explicitly authorized delegate runs this
+command. The vendor checkout is read/import-only; never activate, install into,
+or modify its environment.
 Replace every placeholder with a value already verified during preflight.
 
 ```bash
@@ -172,17 +195,20 @@ Review all rejected/clipped/rate-limited counts before continuing.
 
 ## Single-action command — only after every physical gate passes
 
-The safety-profile file is operator-owned and must contain the exact nine-
+The current-session verified safety-profile file must contain the exact nine-
 register readback described in
 [`hardware/CLIENT_DESIGN.md`](../hardware/CLIENT_DESIGN.md). Its serial and the
 selected port must match. The client validates all of this, the checkpoint
 statistics, and the 10%-inset start pose before torque enable. It then copies
 the raw present encoder values into `Goal_Position` while torque remains off,
-requires exact goal/fresh-present readback equality, and rechecks torque-off
-before enabling. Any stale-goal or readback mismatch aborts unarmed.
+requires exact goal/fresh-present readback equality, and rereads every safety
+register before enabling. Both checks require position mode (0) and startup
+force no greater than the verified torque cap; startup force must not change
+across the preload. Torque is checked again immediately before enabling.
+Any stale-goal or controller-state mismatch aborts unarmed.
 
 ```bash
-export HARDWARE_SAFETY_PROFILE='<ABSOLUTE_PATH_TO_OPERATOR_VERIFIED_PROFILE_JSON>'
+export HARDWARE_SAFETY_PROFILE='<ABSOLUTE_PATH_TO_SESSION_VERIFIED_PROFILE_JSON>'
 export CLIENT_TELEMETRY='.cache/hardware/first-contact-single-action-client.jsonl'
 test -f "$HARDWARE_SAFETY_PROFILE"
 test ! -e "$CLIENT_TELEMETRY"

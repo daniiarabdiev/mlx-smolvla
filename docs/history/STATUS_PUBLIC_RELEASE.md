@@ -3,43 +3,68 @@
 Date: 2026-09-04
 
 `mlx-smolvla` is a 0.1.0 software release candidate on the canonical renamed
-GitHub repository. The connected-follower read path and four bounded no-motion
-RPC loops passed. Camera identity/framing and the mechanically supported inset
-pose were subsequently verified; they are not unresolved failures. Physical
-motion has not run because the exact low-controller-limit profile and final
-physical attestation remain open. The operator subsequently reconnected the
-hardware and supplied fresh live authorization. The new read-only follower,
-calibration, torque-off, and numeric pose checks passed. Current camera framing
-is now corrected, and both streams ran concurrently without timeouts at measured
-20.10/6.34 FPS. Physical clearance and the approved controller profile remain open.
-The version tag, uploads, visibility change, release creation, announcement,
-and hardware-motion claim remain withheld.
+GitHub repository. The connected follower, corrected cameras, and native MLX
+server complete bounded no-motion inference. The latest warm 60-second run
+passed with 295 observations, 294 processed chunks, and zero timeouts/writes;
+a preceding cold-server attempt's initial timeout is retained as a failed
+timing gate. Physical motion has not run.
+
+Under the operator's explicit delegation, temporary controller acceleration,
+speed, and torque settings were staged and exactly read back with torque off.
+The 17:31 UTC recheck resolves the elbow position: all six joints pass the
+inset envelope with zero measured drift over two seconds. The wrist camera
+now faces upward and needs its mount aimed at the task surface. Physical
+support, workspace clearance, base security, and readiness at the power switch
+still need to hold before motion. The new client rechecks all controller limits, position
+mode, and startup force after raw-goal preload. Its full suite passes all 798
+tests, and its fast lane passes within the unchanged two-minute limit. The version tag, uploads,
+visibility change, release creation, announcement, and hardware-motion claim
+remain withheld.
 
 ## Stage outcomes
 
 | Stage | Outcome | Evidence |
 | --- | --- | --- |
-| A — real SO-101 | **Partial: historical no-motion complete; motion deferred** | Four 60-second native-MLX no-motion loops completed with torque off and zero motor writes. Fresh 2026-09-04 follower/calibration/torque-off, camera identity, and numeric pose checks passed. Subsequent camera framing is corrected; short concurrent capture measured 20.10/6.34 FPS without timeouts, not the requested 30 FPS. The approved low-controller-limit profile, physical checklist, fresh no-motion run, single action, and bounded-continuous result remain open. See [`FIRST_CONTACT.md`](../../hardware/FIRST_CONTACT.md) and [`HUMAN_TASKS.md`](HUMAN_TASKS.md). |
+| A — real SO-101 | **Partial: no-motion passes; reduced settings and current numeric pose verified; physical motion pending** | The latest warm run passed 60 seconds with 295 observations/294 processed chunks and zero timeouts or actuator writes; a cold first-request timeout is preserved. At 17:31 UTC all joints pass the inset envelope and the temporary acceleration 1, speed 56, and torque limit 100 still match with torque off. The wrist view now points upward after the pose adjustment. Correct that mount, verify final physical readiness, and repeat no-motion before the first action and bounded continuous stage. See [`FIRST_CONTACT.md`](../../hardware/FIRST_CONTACT.md) and [`HUMAN_TASKS.md`](HUMAN_TASKS.md). |
 | B — macOS / MLX floor | **Complete** | Official macOS 14 arm64 wheels for MLX 0.32.0, 0.32.1, and 0.32.2 were hash- and Mach-O-verified, then passed the unchanged correctness and installed-runtime gates. See [`MLX_COMPATIBILITY.md`](../evidence/MLX_COMPATIBILITY.md). |
 | C — public-release preparation | **Complete** | Canonical distribution/import/CLI/cache/GitHub identities, prior-project acknowledgment, community metadata, hobbyist-first README, agent guide, and root hygiene are committed. Hardware wording is restricted to the observed no-motion result. |
-| D — software verification | **Complete; publication held** | The offline continuation's full suite passed 790/790 in 723.49 test seconds / 726.60 seconds wall; its fast lane passed 489/489 in 101.38 test seconds / 106.30 seconds wall, below two minutes. The reference repair passed all 56 trained-checkpoint fixed gates. The existing sdist and three wheels from `8bb5c7e` retain their recorded hashes and prior seven-environment smoke evidence. Fresh tag-built artifacts and repeated installed checks remain gated on hardware completion. See [`TRAINED_PARITY_REPAIR.md`](../evidence/TRAINED_PARITY_REPAIR.md) and [`DIST_MANIFEST.md`](../evidence/DIST_MANIFEST.md). |
+| D — software verification | **Current source complete; final tag-built artifacts pending** | The current source passes all 798 tests in 723.25 test seconds / 726.60 wall seconds, 104 focused hardware/readiness checks, and the final 497-test fast lane in 99.57 seconds wall. No skips or expected failures were introduced. The reference repair passed all 56 trained-checkpoint fixed gates. Existing distributions from `8bb5c7e` retain their prior hashes and seven-environment smoke evidence but predate this guard. Fresh tag-built artifacts and repeated installed checks remain gated on hardware completion. See [`TRAINED_PARITY_REPAIR.md`](../evidence/TRAINED_PARITY_REPAIR.md) and [`DIST_MANIFEST.md`](../evidence/DIST_MANIFEST.md). |
 
 ## Hardware continuation evidence
 
-Current update — 2026-09-04: fresh authorized read-only preflight passed follower
-identity/calibration, all-six torque-off readbacks, and the numeric inset pose.
-Follow-up at 14:48 UTC again passed those checks (lift/elbow -73.055/39.868
-degrees). Further adjustments corrected wrist and fixed task-area framing,
-verified by fresh images at 15:17 UTC. Independent concurrent camera-only
-capture at 640x480 measured fixed 20.10/wrist 6.34 FPS without timeouts; the
-requested 30 FPS was not achieved. The loose cable and mouse remain in the
-working area, and physical clearance is still open. The last controller
-readbacks retain the earlier unapproved settings; no low-limit profile or final physical
-attestation was supplied. The operator reports no known profile; the reviewed
-setup and manufacturer guidance did not establish one. No new no-motion loop
-or physical actuation ran.
-The four earlier results below remain historical evidence. See the latest
-[`PREFLIGHT.md`](../../hardware/PREFLIGHT.md) entry.
+Current update — 2026-09-04: the operator delegated setup and client execution,
+and the runbook now reflects that amendment. Two new 60-second runs used the
+reviewed stats-active checkpoint; the warm repeat met the zero-timeout gate.
+At 16:52 UTC, calibration matched and all six controllers reported model 777,
+firmware 3.13, position mode 0, no alarms, and torque off. The elbow read
+86.110 degrees, above its 77.187-degree upper inset margin. Fresh images show
+the folded follower near the monitor and a cable near the gripper; physical
+setup still needs correction.
+
+Hiwonder's own pinned register map and manual support the three temporary SRAM
+settings now staged: acceleration 1, speed 56 (about 4.9 degrees/s), and torque
+limit 100 (10% of its scale). Other profile values, startup force 32, mode 0,
+and raw present/goal positions were unchanged, and torque remained off. The
+private session profile matches the exact readbacks. These settings are not
+a universal safe preset or evidence of gravity-hold/task success. Re-establish
+and verify them after power cycling; never raise them automatically.
+
+The controller guard now rechecks all nine profile registers after goal preload,
+requires integer position mode, and rejects excessive or changed startup force.
+Focused hardware/readiness checks pass 104/104; the final fast lane passes
+497/497 in 96.91 test seconds / 99.57 seconds wall. The full suite passes all
+798 tests in 723.25 test seconds / 726.60 seconds wall. All 696 vendor tracked files and
+32 operator-wrapper files remain unchanged. No physical action has run. The
+four earlier successful results below remain historical evidence. See the
+latest [`PREFLIGHT.md`](../../hardware/PREFLIGHT.md) entry.
+
+At the operator's request, a later 17:31 UTC read-only recheck found lift/elbow
+at -54.330/33.187 degrees and every joint within the inset envelope, with no
+measured two-second drift. Calibration, the exact controller profile, mode 0,
+startup force 32, status 0, and torque-off still match. This resolves the
+16:52 pose failure. The fixed view contains the raised follower and tabletop;
+the wrist now faces the operator/ceiling, so its mount needs adjustment before
+the final no-motion and motion checks. No write was attempted; all handles closed.
 
 - The raw-base no-motion run processed 295 observations/chunks in 60.027 s at
   4.914 sampled camera FPS. Observation-to-chunk latency was 149.313 ms median
@@ -214,32 +239,29 @@ The four earlier results below remain historical evidence. See the latest
 
 | Blocker | Status | Reason |
 | --- | --- | --- |
-| Serve untested on hardware | **Partial / motion deferred** | Four historical no-motion runs passed. Fresh 2026-09-04 follower/calibration/torque-off and numeric pose checks passed; current camera framing is corrected. Concurrent camera-only capture measured 20.10/6.34 FPS without timeouts. The approved low-controller-limit profile, final physical checklist, and fresh no-motion loop remain open; neither motion stage has run. |
+| Serve untested on hardware | **Partial / motion deferred** | Four historical no-motion runs and the latest warm repeat passed; the preceding cold timeout is preserved. Reduced controller settings and the 17:31 numeric pose pass exact readback. The wrist camera now points upward after repositioning; correct it, verify physical readiness, and repeat no-motion on the final setup. Neither motion stage has run. |
 | macOS / MLX floor | **Clear** | MLX 0.32.0–0.32.2 and their official macOS 14 wheel family passed the fixed software gates. |
 | Claims exceed evidence | **Clear** | Public language distinguishes live no-motion RPC evidence from unperformed physical motion; no claim says the model drives the arm. |
 | Operator material in tree | **Clear** | The current tracked tree contains no exact device serial or private path. Telemetry, camera frames, and the bystander-containing image remain ignored and untracked; public evidence is redacted. |
-| First-page friction | **Clear** | The README, existing artifact matrix, and prior installed `doctor` checks are verified. The current unchanged `make test-fast` target passed all 489 selected tests in 106.30 seconds complete-command wall time, below two minutes. |
+| First-page friction | **Clear** | The README, existing artifact matrix, and prior installed `doctor` checks are verified. The current unchanged `make test-fast` target passed all 497 selected tests in 99.57 seconds complete-command wall time, below two minutes. Existing artifacts predate the controller guard and require a fresh tag-built matrix after hardware completion. |
 
 ## Exact next gate
 
-The physical prerequisites and exact new statement are maintained in
+The physical prerequisites are maintained in
 [`HUMAN_TASKS.md`](HUMAN_TASKS.md), with the remaining sequence in the
 [continuation plan](PLAN_HARDWARE_RELEASE_CONTINUATION.md). The physically
 present operator supplied `ARM SESSION CONFIRMED` for the 2026-09-04 read-only
-session; a later session still requires its own live confirmation.
-The current fixed/wrist identities and framing were visually rechecked, and
-concurrent capture was measured. Recheck cameras after later reconnection or
-setup changes, and freshly verify the mechanically supported inset pose before
-arming; previous pose passes are not a persistent clearance. Power
-off before any manual adjustment and support the torque-free arm safely.
-Complete a fresh bounded no-motion check with new logs after preflight.
-Motion may resume only after an operator-known procedure has produced the
-exact low-limit JSON profile and the workspace/base/power checklist is true.
-The required new in-session phrase is:
+session and subsequently delegated setup and client execution. The amended
+runbook does not require another prescribed motion phrase in this session.
+A later session still needs its own live authorization.
 
-```text
-MOTION PREREQUISITES CONFIRMED: cameras framed, arm neutral, low limits profiled, workspace clear, base secure, hand on power.
-```
+The current numeric pose and exact reduced controller profile pass. Aim the
+wrist mount downward with motor power off, then freshly check both views,
+supported pose, and profile after any reset. Verify workspace clearance, base
+security, and operator readiness at the physical power switch. Complete a
+fresh bounded no-motion check with new logs on the final setup. The authorized
+delegate may then execute one guarded action and review it before continuous
+motion. Delegation permits execution; it does not establish physical readiness.
 
 Until single-action and bounded-continuous results are reviewed and committed,
 do not tag, publish, make the repository public, create a GitHub Release,

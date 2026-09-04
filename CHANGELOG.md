@@ -33,12 +33,17 @@ Initial public release candidate.
 - Prevented torque-enable against retained servo goals by preloading and
   exactly verifying fresh raw positions while torque remains off. Outbound and
   return-to-start commands are both bounded to gradual one-public-unit steps.
+- Recheck the complete controller-limit profile after goal preload, require
+  integer position mode, and reject startup force above the torque cap or
+  changed during arming preparation.
 
 ### Known limitations
 
-- Connected Hiwonder SO-101 state/camera capture and four 60-second no-motion
-  MLX loops pass, but the single-action and bounded-continuous gates have not
-  run; no real-robot motion claim is made in this release candidate.
+- Connected Hiwonder SO-101 state/camera capture passed the latest warm
+  60-second no-motion MLX run; the preceding cold attempt missed its first
+  deadline and failed the zero-timeout gate. The single-action and bounded-
+  continuous gates have not run; no real-robot motion claim is made. See the
+  [measured evidence](hardware/FIRST_CONTACT.md).
 - Raw `lerobot/smolvla_base` output lacks effective generic-key physical
   statistics and is restricted to no-motion diagnostics by the fail-closed
   client. Motion requires a reviewed stats-active checkpoint and an
