@@ -1,0 +1,69 @@
+name: Hosted packaging
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  packaging:
+    name: Python ${{ matrix.python }} / ${{ matrix.resolution }}
+    runs-on: macos-15
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ['3.11', '3.12', '3.13']
+        resolution: [highest]
+        include:
+          - python: '3.12'
+            resolution: lowest-direct
+    env:
+      MACOSX_DEPLOYMENT_TARGET: '14.0'
+      CMAKE_OSX_DEPLOYMENT_TARGET: '14.0'
+      UV_PYTHON_DOWNLOADS: never
+      HF_HUB_OFFLINE: '1'
+      HF_DATASETS_OFFLINE: '1'
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: ${{ matrix.python }}
+          architecture: arm64
+      - name: Check runner and install packaging tools
+        run: |
+          test "$(uname -m)" = arm64
+          python -m pip install uv==0.11.25 twine
+      - name: Build the sdist and wheel from that sdist
+        run: |
+          uv build --sdist --python "$(command -v python)" --out-dir "$RUNNER_TEMP/source-dist"
+          uv build "$RUNNER_TEMP"/source-dist/*.tar.gz --wheel --python "$(command -v python)" --out-dir "$RUNNER_TEMP/wheel-dist"
+          python -m twine check "$RUNNER_TEMP"/source-dist/*.tar.gz "$RUNNER_TEMP"/wheel-dist/*.whl
+      - name: Install resolved wheel in an isolated environment
+        env:
+          RESOLUTION: ${{ matrix.resolution }}
+        run: |
+          uv venv "$RUNNER_TEMP/installed" --python "$(command -v python)"
+          # Explicit roots ensure lowest-direct applies to runtime dependencies,
+          # rather than only to the wheel named on the command line.
+          python - <<'PYREQ'
+          import os, pathlib, tomllib
+          dependencies = tomllib.load(open('pyproject.toml', 'rb'))['project']['dependencies']
+          pathlib.Path(os.environ['RUNNER_TEMP'], 'runtime-requirements.txt').write_text('\n'.join(dependencies) + '\n')
+          PYREQ
+          uv pip install --python "$RUNNER_TEMP/installed/bin/python" --resolution "$RESOLUTION" \
+            -r "$RUNNER_TEMP/runtime-requirements.txt" "$RUNNER_TEMP"/wheel-dist/*.whl
+          uv pip check --python "$RUNNER_TEMP/installed/bin/python"
+      - name: Verify distribution and offline installed imports
+        run: |
+          VERSION=$(python -c 'import tomllib; print(tomllib.load(open("pyproject.toml", "rb"))["project"]["version"])')
+          python tests/packaging/check_artifacts.py \
+            --wheel "$RUNNER_TEMP"/wheel-dist/*.whl \
+            --sdist "$RUNNER_TEMP"/source-dist/*.tar.gz \
+            --expected-version "$VERSION" --python "$RUNNER_TEMP/installed/bin/python"

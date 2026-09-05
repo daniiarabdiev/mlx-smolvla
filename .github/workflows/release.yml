@@ -1,0 +1,198 @@
+# Prepared Trusted Publishing lane; never triggered by a tag push.
+# Enable the repository variable only after registering the PyPI publisher.
+# Build the sdist on macOS: the native backend's build requirements include MLX.
+# This is packaging validation, not the disabled seeded numerical/evidence lane.
+name: Reviewed tag release
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Already reviewed, existing source tag (vMAJOR.MINOR.PATCH)
+        required: true
+        type: string
+      publish:
+        description: Publish verified artifacts using the configured PyPI Trusted Publisher
+        required: true
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ inputs.tag }}
+  cancel-in-progress: false
+
+jobs:
+  source:
+    runs-on: macos-15
+    timeout-minutes: 20
+    outputs:
+      version: ${{ steps.source.outputs.version }}
+      commit: ${{ steps.source.outputs.commit }}
+    env:
+      MACOSX_DEPLOYMENT_TARGET: '14.0'
+      CMAKE_OSX_DEPLOYMENT_TARGET: '14.0'
+      UV_PYTHON_DOWNLOADS: never
+    steps:
+      - name: Validate requested tag syntax
+        env:
+          RELEASE_TAG: ${{ inputs.tag }}
+        run: '[[ "$RELEASE_TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]'
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          ref: refs/tags/${{ inputs.tag }}
+          persist-credentials: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: '3.13'
+          architecture: arm64
+      - name: Verify tag version and record exact source commit
+        id: source
+        env:
+          RELEASE_TAG: ${{ inputs.tag }}
+        run: |
+          test "$(uname -m)" = arm64
+          python - <<'PY'
+          import os, subprocess, tomllib
+          version = tomllib.load(open('pyproject.toml', 'rb'))['project']['version']
+          assert os.environ['RELEASE_TAG'] == 'v' + version
+          commit = subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip()
+          with open(os.environ['GITHUB_OUTPUT'], 'a') as output:
+              output.write(f'version={version}\ncommit={commit}\n')
+          PY
+      - name: Build source distribution once
+        run: |
+          python -m pip install uv==0.11.25 twine
+          uv build --sdist --python "$(command -v python)" --out-dir release-dist
+          python -m twine check release-dist/*.tar.gz
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: release-sdist
+          path: release-dist/*.tar.gz
+          if-no-files-found: error
+
+  build:
+    needs: source
+    runs-on: macos-15
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ['3.11', '3.12', '3.13']
+    env:
+      MACOSX_DEPLOYMENT_TARGET: '14.0'
+      CMAKE_OSX_DEPLOYMENT_TARGET: '14.0'
+      UV_PYTHON_DOWNLOADS: never
+      HF_HUB_OFFLINE: '1'
+      HF_DATASETS_OFFLINE: '1'
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          ref: ${{ needs.source.outputs.commit }}
+          persist-credentials: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: ${{ matrix.python }}
+          architecture: arm64
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: release-sdist
+          path: source-dist
+      - name: Build wheel from verified source archive
+        run: |
+          test "$(uname -m)" = arm64
+          python -m pip install uv==0.11.25 twine
+          uv build source-dist/*.tar.gz --wheel --python "$(command -v python)" --out-dir release-dist
+          python -m twine check release-dist/*.whl
+          uv venv "$RUNNER_TEMP/installed" --python "$(command -v python)"
+          uv pip install --python "$RUNNER_TEMP/installed/bin/python" release-dist/*.whl
+          uv pip check --python "$RUNNER_TEMP/installed/bin/python"
+      - name: Verify artifacts and installed imports
+        env:
+          RELEASE_VERSION: ${{ needs.source.outputs.version }}
+        run: |
+          python tests/packaging/check_artifacts.py --wheel release-dist/*.whl \
+            --sdist source-dist/*.tar.gz --expected-version "$RELEASE_VERSION" \
+            --python "$RUNNER_TEMP/installed/bin/python"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: release-wheel-${{ matrix.python }}
+          path: release-dist/*.whl
+          if-no-files-found: error
+
+  verify:
+    needs: [source, build]
+    runs-on: macos-15
+    timeout-minutes: 30
+    env:
+      HF_HUB_OFFLINE: '1'
+      HF_DATASETS_OFFLINE: '1'
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          ref: ${{ needs.source.outputs.commit }}
+          persist-credentials: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: '3.13'
+          architecture: arm64
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          pattern: release-*
+          merge-multiple: true
+          path: release-dist
+      - name: Verify complete artifact set
+        env:
+          RELEASE_VERSION: ${{ needs.source.outputs.version }}
+        run: |
+          python - <<'PY'
+          import os
+          from pathlib import Path
+          v = os.environ['RELEASE_VERSION']
+          expected = {f'mlx_smolvla-{v}-cp{p}-cp{p}-macosx_14_0_arm64.whl' for p in ('311', '312', '313')}
+          expected.add(f'mlx_smolvla-{v}.tar.gz')
+          assert {p.name for p in Path('release-dist').iterdir()} == expected
+          PY
+      - name: Check installation preserves preinstalled NumPy and Transformers
+        env:
+          RELEASE_VERSION: ${{ needs.source.outputs.version }}
+        run: |
+          python -m venv "$RUNNER_TEMP/consumer"
+          "$RUNNER_TEMP/consumer/bin/python" -m pip install --upgrade pip
+          "$RUNNER_TEMP/consumer/bin/python" -m pip install 'numpy>=2,<3' transformers
+          "$RUNNER_TEMP/consumer/bin/python" -c 'import importlib.metadata as m, json; print(json.dumps({p:m.version(p) for p in ("numpy", "transformers")}))' > "$RUNNER_TEMP/before.json"
+          "$RUNNER_TEMP/consumer/bin/python" -m pip install release-dist/*-cp313-*.whl
+          "$RUNNER_TEMP/consumer/bin/python" -m pip check
+          "$RUNNER_TEMP/consumer/bin/python" - "$RUNNER_TEMP/before.json" <<'PY'
+          import importlib.metadata as m, json, sys
+          before = json.load(open(sys.argv[1]))
+          after = {p: m.version(p) for p in before}
+          assert before == after, (before, after)
+          print('Preserved preinstalled versions:', after)
+          PY
+          python tests/packaging/check_artifacts.py --wheel release-dist/*-cp313-*.whl \
+            --sdist release-dist/*.tar.gz --expected-version "$RELEASE_VERSION" \
+            --python "$RUNNER_TEMP/consumer/bin/python"
+
+  publish:
+    needs: [source, build, verify]
+    if: ${{ inputs.publish && vars.PYPI_TRUSTED_PUBLISHING_ENABLED == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment:
+      name: pypi
+      url: https://pypi.org/project/mlx-smolvla/${{ needs.source.outputs.version }}/
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          pattern: release-*
+          merge-multiple: true
+          path: dist
+      - name: Publish with Trusted Publishing and attestations
+        uses: pypa/gh-action-pypi-publish@dc37677b2e1c63e2034f94d8a5b11f265b73ba33 # release/v1
+        with:
+          attestations: true
