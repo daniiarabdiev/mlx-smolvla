@@ -112,10 +112,9 @@ profile and remains a documented sustained-operation limitation.
   install environments described in [DIST_MANIFEST.md](../evidence/DIST_MANIFEST.md).
   Record exact hashes and tag/source provenance in the manifest and commit/push
   that evidence. Preserve prior artifacts; never upload the untagged candidate.
-- [ ] Obtain separate explicit authorization before changing GitHub visibility,
-  uploading to PyPI/Hub, or creating the GitHub Release. Recheck PyPI name
-  availability immediately before any authorized publication. Converted-weight
-  uploads and a demonstration video remain optional.
+- [x] Explicit publication authorization received on 2026-09-05. Repository
+  made public; PyPI and GitHub Release published with all four hashes verified.
+  Converted-weight uploads and a demonstration video remain optional.
 
 Do not declare public release readiness while a required hardware or final
 verification gate remains open. Normal source/evidence commits and pushes are

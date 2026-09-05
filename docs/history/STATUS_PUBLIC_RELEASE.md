@@ -23,7 +23,8 @@ seconds, and the complete lane passes all 803 tests in 752.18 pytest seconds /
 755.65 wall seconds, with no skips or expected failures. Pushed annotated tag
 `v0.1.0` resolves to the verified source; its sdist and three native wheels pass
 archive, Twine, macOS-floor, and seven-environment installed smoke checks. The
-repository remains private and publication actions remain withheld.
+repository is public; PyPI and GitHub Release publication completed on
+2026-09-05 with all four artifact hashes verified.
 
 ## Stage outcomes
 
@@ -263,11 +264,14 @@ the final no-motion and motion checks. No write was attempted; all handles close
 | Operator material in tree | **Clear** | The current tracked tree contains no exact device serial or private path. Telemetry, camera frames, and the bystander-containing image remain ignored and untracked; public evidence is redacted. |
 | First-page friction | **Clear** | The README and final artifact matrix are verified. The unchanged fast lane passed all 502 selected tests under two minutes, the full suite passed 803, and all seven tag-built clean-install environments passed. |
 
-## Exact next gate
+## Publication complete
 
-The technical preparation is complete. Making the repository public, uploading
-to PyPI or a model Hub, creating the GitHub Release, and announcing the release
-require separate explicit publication authorization. Immediately before any
-authorized PyPI upload, recheck name availability and match every uploaded byte
-to `DIST_MANIFEST.md`. The failed 20-chunk return must remain disclosed in all
-hardware claims.
+Published on 2026-09-05 with explicit operator authorization. The repository
+is public. PyPI and GitHub Release each contain all four artifacts; their
+SHA-256 digests exactly match this manifest. The source tag is unchanged.
+No converted weights were uploaded to a model Hub.
+
+- [PyPI 0.1.0](https://pypi.org/project/mlx-smolvla/0.1.0/)
+- [GitHub Release](https://github.com/daniiarabdiev/mlx-smolvla/releases/tag/v0.1.0)
+
+The failed 20-chunk return remains a documented limitation.

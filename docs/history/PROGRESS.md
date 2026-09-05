@@ -3637,3 +3637,12 @@ manifest artifact hashes. PyPI project lookup returned 404; `uv publish`
 stopped for missing credentials, with no artifact published. GitHub Release
 remains pending the PyPI step; notes are prepared locally. No Hub upload or
 hardware action occurred.
+
+
+## 2026-09-05 — publication completed
+
+The operator supplied PyPI credentials locally and completed the upload.
+Verified all four PyPI 0.1.0 file digests against the retained manifest, then
+created the authorized public GitHub Release with the same four artifacts.
+GitHub asset digests also match exactly; the release is not a draft. Updated
+installation and release-status documentation. No hardware or Hub action.

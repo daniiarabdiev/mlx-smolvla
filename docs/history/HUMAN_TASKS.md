@@ -32,11 +32,9 @@ supervised investigation requires a new live hardware authorization and full
 preflight, but it is not a blocker for the narrowly claimed one-action and
 two-chunk v0.1.0 integration result.
 
-The version tag still requires final software verification and a reviewed,
-committed, pushed source/evidence checkpoint. Fresh tag-built artifacts and
-their complete install matrix must precede publication. GitHub visibility
-changes, PyPI/Hub uploads, release creation, and announcement remain separately
-authorized actions.
+Final software verification, tagged builds, and the complete install matrix
+passed. The operator subsequently authorized publication; PyPI and GitHub
+Release publication completed on 2026-09-05.
 
 ## Done — correct and verify camera role mapping
 
@@ -70,53 +68,15 @@ authorized actions.
   reference/training identity checks all pass. Exact hashes are in
   [`../evidence/DIST_MANIFEST.md`](../evidence/DIST_MANIFEST.md).
 
-## Blocked on credentials — publish the Python distributions
+## Done — publish Python distributions and GitHub Release
 
-- Publication is explicitly authorized as of 2026-09-05. All four hashes match
-  the manifest. PyPI project lookup returned HTTP 404. `uv publish` stopped
-  before publication because no credentials, keyring provider, or supported
-  trusted-publishing identity were configured. Supply credentials securely in
-  the publishing process; do not paste a token into chat. No new authorization
-  is needed to resume this upload or the subsequent GitHub Release.
+Published on 2026-09-05 with explicit operator authorization. The repository
+is public. PyPI and GitHub Release each contain all four artifacts; their
+SHA-256 digests exactly match this manifest. The source tag is unchanged.
+No converted weights were uploaded to a model Hub.
 
-
-- Obtain separate explicit authorization for the PyPI upload. Immediately
-  before an authorized publication, recheck that the name is still available:
-
-  ```sh
-  python -c 'import urllib.request; urllib.request.urlopen("https://pypi.org/pypi/mlx-smolvla/json")'
-  ```
-
-  A `404` means the name still appears unclaimed; any successful response means
-  stop and resolve the naming conflict.
-- Supply the operator's PyPI credential securely through the environment,
-  outside this repository and shell history. With explicit upload authorization
-  and that credential already configured, upload only the four final
-  manifest-matched artifacts:
-
-  ```sh
-  uv publish \
-    .cache/release-v0.1.0-artifacts/mlx_smolvla-0.1.0*
-  ```
-
-- Never write the token to a file, shell history, issue, log, or commit.
-
-## Pending PyPI upload — create the GitHub Release
-
-- Explicitly authorized on 2026-09-05; waiting on the preceding PyPI upload.
-  Prepared notes are in ignored `.cache/release-v0.1.0-notes.md`.
-
-
-- Only after a verified `v0.1.0` tag exists, PyPI publication succeeds, and
-  separate explicit authorization to create the GitHub Release is supplied:
-
-  ```sh
-  gh release create v0.1.0 \
-    .cache/release-v0.1.0-artifacts/mlx_smolvla-0.1.0* \
-    --repo daniiarabdiev/mlx-smolvla \
-    --title 'mlx-smolvla v0.1.0' \
-    --notes-file CHANGELOG.md
-  ```
+- [PyPI 0.1.0](https://pypi.org/project/mlx-smolvla/0.1.0/)
+- [GitHub Release](https://github.com/daniiarabdiev/mlx-smolvla/releases/tag/v0.1.0)
 
 ## Optional — publish converted weights deliberately
 

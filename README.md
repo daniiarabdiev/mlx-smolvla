@@ -34,13 +34,13 @@ dylib inspection evidence.
 
 ## Install
 
-When the operator publishes v0.1.0 to PyPI:
+Install v0.1.0 from PyPI:
 
 ```bash
 python -m pip install mlx-smolvla
 ```
 
-Until then, install from a checkout:
+Or install from a checkout:
 
 ```bash
 git clone https://github.com/daniiarabdiev/mlx-smolvla.git

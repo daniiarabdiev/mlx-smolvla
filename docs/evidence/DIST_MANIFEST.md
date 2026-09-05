@@ -2,12 +2,13 @@
 
 This manifest records the final local `mlx-smolvla` 0.1.0 artifacts built from
 the pushed annotated tag `v0.1.0`. The tag resolves to verified source commit
-`9b28dc216e24aa86d121d9b805c1fc1733afbf9d`. On 2026-09-05, the operator explicitly authorized publication. The GitHub
-repository was made public and its unauthenticated page returned HTTP 200.
-All four artifact hashes were reverified unchanged. PyPI still returned HTTP
-404 for the project; an upload attempt stopped with missing credentials before
-any artifact was published. The GitHub Release awaits successful PyPI upload
-per the release sequence. No Hub upload was performed.
+`9b28dc216e24aa86d121d9b805c1fc1733afbf9d`. Published on 2026-09-05 with explicit operator authorization. The repository
+is public. PyPI and GitHub Release each contain all four artifacts; their
+SHA-256 digests exactly match this manifest. The source tag is unchanged.
+No converted weights were uploaded to a model Hub.
+
+- [PyPI 0.1.0](https://pypi.org/project/mlx-smolvla/0.1.0/)
+- [GitHub Release](https://github.com/daniiarabdiev/mlx-smolvla/releases/tag/v0.1.0)
 
 ## Build environment
 
@@ -163,9 +164,10 @@ doctor reports, and loopback results are in
 
 ## Publication status
 
-These are the verified local artifacts for the pushed `v0.1.0` tag. Their
-bytes are available only in ignored local directories and have not been
-uploaded. Before publication, the operator must recheck PyPI name availability
-and explicitly authorize the GitHub visibility change, PyPI or Hub uploads, and
-GitHub Release creation. Only the four hashes in this manifest may be uploaded
-for this tag.
+Published on 2026-09-05 with explicit operator authorization. The repository
+is public. PyPI and GitHub Release each contain all four artifacts; their
+SHA-256 digests exactly match this manifest. The source tag is unchanged.
+No converted weights were uploaded to a model Hub.
+
+- [PyPI 0.1.0](https://pypi.org/project/mlx-smolvla/0.1.0/)
+- [GitHub Release](https://github.com/daniiarabdiev/mlx-smolvla/releases/tag/v0.1.0)
