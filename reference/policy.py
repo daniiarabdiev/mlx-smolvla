@@ -13,7 +13,7 @@ from lerobot.policies.factory import make_pre_post_processors
 from lerobot.policies.smolvla.configuration_smolvla import SmolVLAConfig
 from lerobot.policies.smolvla.modeling_smolvla import SmolVLAPolicy
 
-from reference.discovery import (
+from mlx_smolvla._lab.reference.discovery import (
     BASE_VLM_ID,
     BASE_VLM_REVISION,
     CHECKPOINT_ID,

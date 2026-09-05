@@ -32,7 +32,7 @@ import mlx.nn as nn
 from mlx.utils import tree_flatten, tree_map, tree_unflatten
 import numpy as np
 
-from reference.discovery import (
+from mlx_smolvla._lab.reference.discovery import (
     BASE_VLM_ID,
     BASE_VLM_REVISION,
     CHECKPOINT_ID,
@@ -41,7 +41,7 @@ from reference.discovery import (
     DATASET_REVISION,
 )
 from mlx_smolvla.types import ProcessedObservation
-from training.dataset import (
+from mlx_smolvla._lab.training.dataset import (
     BridgeBatch,
     SAMPLER_SEED,
     SPLIT_SEED,
@@ -49,28 +49,28 @@ from training.dataset import (
     compute_train_statistics,
     make_episode_split,
 )
-from training.export import (
+from mlx_smolvla._lab.training.export import (
     expected_merged_checkpoint_support_file_sha256,
     export_merged_checkpoint,
     resolve_base_checkpoint,
     validate_merged_checkpoint_export,
     validate_bound_merged_checkpoint_export,
 )
-from training.gradients import canonical_parameter_name
-from training.lora import (
+from mlx_smolvla._lab.training.gradients import canonical_parameter_name
+from mlx_smolvla._lab.training.lora import (
     EXPERT_ONLY_SCOPE,
     LEGACY_FULL_SCOPE,
     LoRAConfig,
     install_lora,
     merge_lora,
 )
-from training.model import SmolVLATrainingModel, TrainingBatch, training_loss
-from training.optimizer import (
+from mlx_smolvla._lab.training.model import SmolVLATrainingModel, TrainingBatch, training_loss
+from mlx_smolvla._lab.training.optimizer import (
     SmolVLAAdamW,
     SmolVLAOptimizerConfig,
     clip_gradients_by_global_norm,
 )
-from training.t3_contract import (
+from mlx_smolvla._lab.training.t3_contract import (
     FROZEN_BASE_REPORT_SHA256,
     FROZEN_CHECKPOINT_REVISION_TREE_SHA256,
     FROZEN_DATASET_REVISION_TREE_SHA256,
@@ -4864,8 +4864,8 @@ def _resolve_t3b_input_paths(
     model: SmolVLATrainingModel | None,
 ) -> _T3BInputPaths:
     from huggingface_hub import snapshot_download
-    from training.evaluation import _require_pinned_dataset_root
-    from training.reference_export import resolve_tokenizer_snapshot
+    from mlx_smolvla._lab.training.evaluation import _require_pinned_dataset_root
+    from mlx_smolvla._lab.training.reference_export import resolve_tokenizer_snapshot
 
     cache_snapshot = _snapshot_directory(
         Path(os.path.abspath(config.cache_dir)),
@@ -5062,7 +5062,7 @@ def collect_t3b_frozen_input_evidence(
     """Rebuild every physical input commitment used by a T3B process."""
 
     _validate_t3b_frozen_config(config)
-    from training.evaluation import _frozen_evaluation_artifact
+    from mlx_smolvla._lab.training.evaluation import _frozen_evaluation_artifact
 
     if validate_runtime_model and model is None:
         raise ValueError("runtime model validation requires a loaded T3B model")
@@ -5308,7 +5308,7 @@ def _private_t3b_tokenizer_snapshot(
 ) -> Iterator[_BoundDirectoryLease]:
     """Copy the launch-bound tokenizer into owner-only descriptor-held files."""
 
-    from training.reference_export import resolve_tokenizer_snapshot
+    from mlx_smolvla._lab.training.reference_export import resolve_tokenizer_snapshot
 
     expected = validate_t3b_frozen_input_evidence(expected_evidence)[
         "tokenizer_snapshot"
@@ -6455,9 +6455,9 @@ _T3B_NATIVE_DEPENDENCY_SCOPE = (
 _T3B_REQUIRED_PROVENANCE_MODULES = frozenset(
     {
         "__main__",
-        "training",
-        "training.runtime_provenance",
-        "training.finetune",
+        "mlx_smolvla._lab.training",
+        "mlx_smolvla._lab.training.runtime_provenance",
+        "mlx_smolvla._lab.training.finetune",
     }
 )
 
@@ -6473,7 +6473,7 @@ def _require_t3b_runtime_provenance(
         raise RuntimeError(
             "T3B runtime provenance requires the isolated -I -S launcher"
         )
-    from training.runtime_provenance import (
+    from mlx_smolvla._lab.training.runtime_provenance import (
         freeze_runtime_provenance,
         runtime_provenance_evidence,
     )
@@ -6590,8 +6590,8 @@ def finetune_implementation_hashes() -> dict[str, str]:
     import mlx_smolvla.convert  # noqa: F401
     import torch  # noqa: F401
     import torch.utils.data._utils.collate  # noqa: F401
-    import training.evaluation  # noqa: F401
-    import training.reference_export  # noqa: F401
+    import mlx_smolvla._lab.training.evaluation  # noqa: F401
+    import mlx_smolvla._lab.training.reference_export  # noqa: F401
     from transformers import AutoTokenizer  # noqa: F401
 
     installed_runtime_recorded_paths = _installed_runtime_recorded_paths()

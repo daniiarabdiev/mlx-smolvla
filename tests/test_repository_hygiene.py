@@ -18,6 +18,8 @@ PUBLIC_ROOT = {
     "CONTRIBUTING.md",
     "LICENSE",
     "Makefile",
+    "MANIFEST.in",
+    "_build_backend.py",
     "NOTICE",
     "README.md",
     "docs",

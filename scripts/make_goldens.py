@@ -12,7 +12,7 @@ _REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 if str(_REPOSITORY_ROOT) not in sys.path:
     sys.path.insert(0, str(_REPOSITORY_ROOT))
 
-from reference.discovery import (
+from mlx_smolvla._lab.reference.discovery import (
     BASE_VLM_ID,
     BASE_VLM_REVISION,
     CHECKPOINT_ID,
@@ -20,8 +20,8 @@ from reference.discovery import (
     DATASET_ID,
     DATASET_REVISION,
 )
-from reference.goldens import GOLDEN_SAMPLE_SPECS, GoldenWriter, capture_sample
-from reference.policy import ReferencePolicy, load_dataset_observation
+from mlx_smolvla._lab.reference.goldens import GOLDEN_SAMPLE_SPECS, GoldenWriter, capture_sample
+from mlx_smolvla._lab.reference.policy import ReferencePolicy, load_dataset_observation
 
 
 def _selected_specs(indices: list[int] | None):

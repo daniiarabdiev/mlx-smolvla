@@ -25,7 +25,7 @@ from tests.test_trained_parity import (
 
 def test_producer_assembles_the_exact_frozen_comparison_schema() -> None:
     module = __import__(
-        "training.evaluation",
+        "mlx_smolvla._lab.training.evaluation",
         fromlist=["assemble_trained_comparison_report"],
     )
     parity = parity_module()
@@ -98,7 +98,7 @@ def test_producer_validates_the_real_floor_bundle_and_one_shot_marker(
     tmp_path: Path,
 ) -> None:
     module = __import__(
-        "training.evaluation",
+        "mlx_smolvla._lab.training.evaluation",
         fromlist=["validate_trained_comparison_start_files"],
     )
     parity = parity_module()
@@ -130,7 +130,7 @@ def test_invalid_floor_or_marker_stops_before_any_model_evaluation(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     module = __import__(
-        "training.evaluation",
+        "mlx_smolvla._lab.training.evaluation",
         fromlist=["run_trained_comparison_evaluation"],
     )
     evaluated = False

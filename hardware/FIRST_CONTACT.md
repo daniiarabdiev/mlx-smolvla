@@ -3,7 +3,8 @@
 **Status: bounded physical integration passed on 2026-09-04. The final
 60-second no-motion check, one valid single action, and a two-chunk continuous
 run passed with verified torque-off shutdown. A separate 20-chunk attempt
-failed exact return-to-start under the temporary low-torque profile.**
+is inconclusive under reduced torque; its exact return-to-start requirement
+was not met under the temporary low-torque profile.**
 
 The operator supplied `ARM SESSION CONFIRMED` in the live task on 2026-09-02.
 The follower-only serial path, both cameras, native MLX server, and four
@@ -275,11 +276,14 @@ with `action_limit`, returned to the exact recorded start, showed zero
 post-run drift, and read all six torque bits as zero. There were no timeouts.
 
 A subsequent 20-chunk continuous attempt moved the arm gradually toward the
-task object. Its exact return failed because the 20-step cleanup cap was
-exhausted while several gravity-loaded joints stopped following one-degree
+task object. Its exact return requirement was not met: the 20-step cleanup cap
+was exhausted while several gravity-loaded joints stopped following one-degree
 return targets under torque limit 100. This run exited nonzero and is retained
-as a failed sustained-motion result. Cleanup still disabled all six torque
-bits, and an independent check found the stopped pose inside every inset bound,
+as inconclusive under reduced torque for sustained operation. The observed
+return problem is consistent with insufficient gravity-holding torque, but
+the retained logs do not isolate the cause or establish that all chunks were
+valid and no serving or policy fault occurred. Cleanup still disabled all six
+torque bits, and an independent check found the stopped pose inside every inset bound,
 with zero drift, matching calibration/profile readbacks, clear camera views,
 and no status alarm. The controller limits were not raised.
 
@@ -297,7 +301,10 @@ record hashes are in [`PREFLIGHT.md`](PREFLIGHT.md).
 The claim “executes a guarded single action and a short bounded-continuous run
 on a connected SO-101 from a MacBook, with exact torque-off shutdown” is
 evidenced. The evidence is limited to one valid action and two continuous
-chunks under the temporary 10% torque profile. The failed 20-chunk return means
-sustained 20-chunk operation and reliable task completion are not evidenced.
+chunks under the temporary 10% torque profile. The 20-chunk attempt is
+inconclusive under reduced torque, and its exact return requirement remains
+unmet. Sustained 20-chunk operation and reliable
+task completion are not evidenced. A nominal-profile rerun remains pending;
+it does not supersede this attempt or its recorded outcome.
 Future powered sessions require fresh authorization, physical preflight, and
 profile readback; the client must never raise the torque limit automatically.

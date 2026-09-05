@@ -20,16 +20,16 @@ from mlx.utils import tree_flatten
 import numpy as np
 
 from mlx_smolvla.types import ProcessedObservation
-from training.data import TrainingArtifact
-from training.differentiable import differentiable_cpu_primitives
-from training.gradients import (
+from mlx_smolvla._lab.training.data import TrainingArtifact
+from mlx_smolvla._lab.training.differentiable import differentiable_cpu_primitives
+from mlx_smolvla._lab.training.gradients import (
     GradientComparison,
     canonical_parameter_name,
     compare_gradient_arrays,
     configure_reference_trainable,
     relative_loss_difference,
 )
-from training.model import SmolVLATrainingModel, TrainingBatch, training_loss
+from mlx_smolvla._lab.training.model import SmolVLATrainingModel, TrainingBatch, training_loss
 
 
 LOSS_RELATIVE_TOLERANCE = 1e-4

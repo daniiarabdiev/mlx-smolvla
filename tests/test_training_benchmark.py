@@ -9,7 +9,7 @@ from pathlib import Path
 
 
 def test_training_benchmark_protocol_is_fixed() -> None:
-    from training.benchmark import TrainingBenchmarkConfig
+    from mlx_smolvla._lab.training.benchmark import TrainingBenchmarkConfig
 
     config = TrainingBenchmarkConfig()
     assert config.warmup_updates == 3
@@ -21,7 +21,7 @@ def test_training_benchmark_protocol_is_fixed() -> None:
 
 
 def test_training_timing_summary_uses_median_update_rate_and_per_1k_projection() -> None:
-    from training.benchmark import summarize_update_seconds
+    from mlx_smolvla._lab.training.benchmark import summarize_update_seconds
 
     summary = summarize_update_seconds((1.0, 2.0, 3.0, 4.0))
     assert summary == {
@@ -35,7 +35,7 @@ def test_training_timing_summary_uses_median_update_rate_and_per_1k_projection()
 
 
 def test_training_benchmark_matrix_validator_requires_all_four_cells() -> None:
-    from training.benchmark import validate_training_benchmark
+    from mlx_smolvla._lab.training.benchmark import validate_training_benchmark
 
     cells = []
     for mode in ("lora", "full"):

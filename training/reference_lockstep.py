@@ -13,9 +13,9 @@ import time
 import numpy as np
 import torch
 
-from training.data import TrainingArtifact, TrainingArtifactWriter
-from training.optimizer import SmolVLAOptimizerConfig, cosine_decay_with_warmup_lr
-from training.reference import prepare_reference_training_case
+from mlx_smolvla._lab.training.data import TrainingArtifact, TrainingArtifactWriter
+from mlx_smolvla._lab.training.optimizer import SmolVLAOptimizerConfig, cosine_decay_with_warmup_lr
+from mlx_smolvla._lab.training.reference import prepare_reference_training_case
 
 
 OPTIMIZER_LOCKSTEP_STEPS = 25

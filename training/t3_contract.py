@@ -1,6 +1,6 @@
 """Exact identities and audit anchors for the captured Stage T3 evidence."""
 
-from reference.discovery import DATASET_ID, DATASET_REVISION
+from mlx_smolvla._lab.reference.discovery import DATASET_ID, DATASET_REVISION
 
 FROZEN_EVALUATION_MANIFEST_SHA256 = (
     "9cabca6cd21e8658a94e42980af3e91ecd8ff5ed5daca5f75eb7a1ebd1d261a3"

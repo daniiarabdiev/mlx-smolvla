@@ -17,12 +17,12 @@ import sys
 
 import mlx.core as mx
 
-from training.benchmark import (
+from mlx_smolvla._lab.training.benchmark import (
     TrainingBenchmarkConfig,
     benchmark_training_cells,
     validate_training_benchmark,
 )
-from training.finetune import write_run_state
+from mlx_smolvla._lab.training.finetune import write_run_state
 
 
 _PROHIBITED_PROCESS_PATTERNS = (

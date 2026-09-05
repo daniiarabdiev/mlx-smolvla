@@ -6,7 +6,7 @@ from pathlib import Path
 
 import numpy as np
 
-from training.data import TrainingArtifact
+from mlx_smolvla._lab.training.data import TrainingArtifact
 
 
 _T1_DIR = Path(".cache/training/gradient_goldens")
@@ -15,7 +15,7 @@ _T2_DIR = Path(".cache/training/optimizer_goldens")
 
 def test_reference_lockstep_constants_fix_the_observation_window() -> None:
     module = __import__(
-        "training.reference_lockstep",
+        "mlx_smolvla._lab.training.reference_lockstep",
         fromlist=[
             "OPTIMIZER_LOCKSTEP_STEPS",
             "OPTIMIZER_TRAINING_HORIZON",
@@ -53,7 +53,7 @@ def test_reference_optimizer_artifact_is_complete_and_linked_to_t1() -> None:
 
 def test_reference_optimizer_step_metrics_and_draws_are_exact() -> None:
     optimizer_module = __import__(
-        "training.optimizer",
+        "mlx_smolvla._lab.training.optimizer",
         fromlist=["SmolVLAOptimizerConfig", "cosine_decay_with_warmup_lr"],
     )
     artifact = TrainingArtifact(_T2_DIR)

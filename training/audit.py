@@ -14,8 +14,8 @@ import mlx.core as mx
 import mlx.nn as nn
 from mlx.utils import tree_flatten
 
-from training.gradients import canonical_parameter_name, configure_reference_trainable
-from training.model import SmolVLATrainingModel, make_random_audit_batch, training_loss
+from mlx_smolvla._lab.training.gradients import canonical_parameter_name, configure_reference_trainable
+from mlx_smolvla._lab.training.model import SmolVLATrainingModel, make_random_audit_batch, training_loss
 
 
 _MINIMUM_FREE_BYTES = 40 * 1024**3

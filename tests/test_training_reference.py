@@ -8,7 +8,7 @@ import numpy as np
 import pytest
 import torch
 
-from training.data import TrainingArtifact
+from mlx_smolvla._lab.training.data import TrainingArtifact
 
 
 pytestmark = pytest.mark.slow
@@ -16,7 +16,7 @@ pytestmark = pytest.mark.slow
 
 @pytest.fixture(scope="module")
 def reference_training_case():
-    module = __import__("training.reference", fromlist=["prepare_reference_training_case"])
+    module = __import__("mlx_smolvla._lab.training.reference", fromlist=["prepare_reference_training_case"])
     return module.prepare_reference_training_case(
         Path(".cache/hf"),
         episode=0,

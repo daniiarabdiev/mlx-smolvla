@@ -19,7 +19,7 @@ _REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 if str(_REPOSITORY_ROOT) not in sys.path:
     sys.path.insert(0, str(_REPOSITORY_ROOT))
 
-from reference.discovery import CHECKPOINT_ID, CHECKPOINT_REVISION
+from mlx_smolvla._lab.reference.discovery import CHECKPOINT_ID, CHECKPOINT_REVISION
 from scripts.benchmark_inference_comparison import (
     _atomic_no_clobber_json,
     _combined_sha256,

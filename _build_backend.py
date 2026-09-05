@@ -1,7 +1,7 @@
 """PEP 517 backend for the optional MLX CMake extension.
 
-Keeping this small backend in an existing package lets the public repository
-root stay focused while retaining MLX's supported setuptools/CMake build path.
+This standalone backend is included only in the source distribution; it does
+not import the runtime package or ship in the wheel.
 """
 
 from __future__ import annotations
@@ -24,16 +24,9 @@ def setup_kwargs() -> dict[str, Any]:
         "false",
         "no",
     }
-    packages = find_packages(
-        include=(
-            "mlx_smolvla",
-            "mlx_smolvla.*",
-            "training",
-            "training.*",
-            "reference",
-            "reference.*",
-        )
-    )
+    packages = find_packages(include=("mlx_smolvla", "mlx_smolvla.*"))
+    lab_packages = find_packages(include=("training", "training.*", "reference", "reference.*"))
+    packages += [f"mlx_smolvla._lab.{name}" for name in lab_packages]
     ext_modules = (
         [
             extension.CMakeExtension(
@@ -48,6 +41,10 @@ def setup_kwargs() -> dict[str, Any]:
         "ext_modules": ext_modules,
         "cmdclass": {"build_ext": extension.CMakeBuild} if build_native else {},
         "packages": packages,
+        "package_dir": {
+            "mlx_smolvla._lab.training": "training",
+            "mlx_smolvla._lab.reference": "reference",
+        },
         "include_package_data": False,
         "package_data": {
             "mlx_smolvla": [

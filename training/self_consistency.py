@@ -25,7 +25,7 @@ import time
 from typing import Mapping, Sequence
 import io
 
-from training.floor_runtime import (
+from mlx_smolvla._lab.training.floor_runtime import (
     CPU_THREAD_ENVIRONMENT_KEYS,
     MPS_ENVIRONMENT_KEYS,
     cpu_thread_environment_snapshot as _cpu_thread_environment_snapshot,
@@ -395,9 +395,9 @@ def _collect_floor_input_locations(
     )
     cache_dir = _require_cache_path(cache_dir, label="Hugging Face cache")
 
-    from training.evaluation import _require_pinned_dataset_root
-    from training.reference_export import resolve_tokenizer_snapshot
-    from reference.discovery import DATASET_REVISION
+    from mlx_smolvla._lab.training.evaluation import _require_pinned_dataset_root
+    from mlx_smolvla._lab.training.reference_export import resolve_tokenizer_snapshot
+    from mlx_smolvla._lab.reference.discovery import DATASET_REVISION
 
     dataset_root = _require_pinned_dataset_root(cache_dir)
     tokenizer_snapshot = resolve_tokenizer_snapshot(cache_dir)
@@ -944,8 +944,8 @@ def run_reference_variant(
         raise RuntimeError("fixed MPS perturbation requested but MPS is unavailable")
     dtype = {"float32": torch.float32, "float64": torch.float64}[variant.dtype]
 
-    from training.evaluation import _torch_observation, load_evaluation_cases
-    from training.reference_export import TorchExportPolicy
+    from mlx_smolvla._lab.training.evaluation import _torch_observation, load_evaluation_cases
+    from mlx_smolvla._lab.training.reference_export import TorchExportPolicy
 
     cases = load_evaluation_cases(evaluation_dir)
     reference = TorchExportPolicy.load(
@@ -1295,7 +1295,7 @@ def run_self_consistency_floor(
     )
     if final_inputs != inputs:
         raise RuntimeError("self-consistency inputs changed while workers were running")
-    from training.evaluation import load_evaluation_cases
+    from mlx_smolvla._lab.training.evaluation import load_evaluation_cases
 
     cases = load_evaluation_cases(evaluation_dir)
     identities = tuple(
@@ -1455,13 +1455,13 @@ def _validate_timestamp(created_at_utc: object, created_at_ns: object) -> tuple[
 
 
 def _fixed_source_identity() -> dict[str, object]:
-    from reference.discovery import (
+    from mlx_smolvla._lab.reference.discovery import (
         BASE_VLM_ID,
         BASE_VLM_REVISION,
         DATASET_ID,
         DATASET_REVISION,
     )
-    from training.t3_contract import (
+    from mlx_smolvla._lab.training.t3_contract import (
         FROZEN_EVALUATION_MANIFEST_SHA256,
         FROZEN_EVALUATION_METADATA_SHA256,
     )

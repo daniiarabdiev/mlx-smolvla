@@ -8,7 +8,7 @@ import pytest
 
 def test_pure_cpu_primitives_have_finite_nonzero_vjps() -> None:
     module = __import__(
-        "training.differentiable",
+        "mlx_smolvla._lab.training.differentiable",
         fromlist=[
             "differentiable_rms_norm",
             "differentiable_rope",
@@ -58,7 +58,7 @@ def _runtime_callables() -> dict[str, object]:
 
 
 def test_cpu_autodiff_scope_patches_only_while_active_and_restores_on_exit() -> None:
-    module = __import__("training.differentiable", fromlist=["differentiable_cpu_primitives"])
+    module = __import__("mlx_smolvla._lab.training.differentiable", fromlist=["differentiable_cpu_primitives"])
     original = _runtime_callables()
 
     with mx.stream(mx.cpu):
@@ -78,7 +78,7 @@ def test_cpu_autodiff_scope_patches_only_while_active_and_restores_on_exit() -> 
 
 
 def test_cpu_autodiff_scope_restores_after_exception_and_rejects_nesting() -> None:
-    module = __import__("training.differentiable", fromlist=["differentiable_cpu_primitives"])
+    module = __import__("mlx_smolvla._lab.training.differentiable", fromlist=["differentiable_cpu_primitives"])
     original = _runtime_callables()
 
     with pytest.raises(RuntimeError, match="intentional"):
@@ -93,7 +93,7 @@ def test_cpu_autodiff_scope_restores_after_exception_and_rejects_nesting() -> No
 
 
 def test_cpu_autodiff_scope_refuses_non_cpu_execution() -> None:
-    module = __import__("training.differentiable", fromlist=["differentiable_cpu_primitives"])
+    module = __import__("mlx_smolvla._lab.training.differentiable", fromlist=["differentiable_cpu_primitives"])
 
     with mx.stream(mx.gpu):
         with pytest.raises(RuntimeError, match="MLX CPU"):

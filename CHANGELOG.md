@@ -2,6 +2,24 @@
 
 This project follows [Semantic Versioning](https://semver.org/).
 
+## [0.1.2] - 2026-09-05
+
+Packaging, diagnostics, and documentation corrections. Numerical gates and
+execution-mode semantics are unchanged.
+
+- Isolate installed training/reference modules under `mlx_smolvla._lab`; keep
+  repository source paths for provenance and exclude the build backend from wheels.
+- Use bounded runtime dependency ranges while retaining the exact lockfile
+  versions and the verified MLX 0.32.0–0.32.2 support range.
+- Preserve strict CPU fallback when native kernels cannot load, report the
+  selected backend and reason in `doctor`, and handle dynamic-loader errors.
+- Replace relative PyPI README links with tag-pinned URLs, simplify instructions,
+  align the upstream fine-tuning example, and move hardware status below usage.
+- Retain the reduced-torque 20-chunk attempt as inconclusive hardware evidence,
+  including its unmet return check and successful torque-off cleanup.
+- Add hosted artifact checks and a gated Trusted Publishing workflow; local
+  release publication continues until the PyPI publisher is configured.
+
 ## [0.1.1] - 2026-09-05
 
 ### Fixed
@@ -72,3 +90,5 @@ Evidence and reproducibility details are indexed in
 [0.1.0]: https://github.com/daniiarabdiev/mlx-smolvla/releases/tag/v0.1.0
 
 [0.1.1]: https://github.com/daniiarabdiev/mlx-smolvla/releases/tag/v0.1.1
+
+[0.1.2]: https://github.com/daniiarabdiev/mlx-smolvla/releases/tag/v0.1.2

@@ -23,7 +23,7 @@ import tempfile
 import time
 from typing import Mapping, Sequence
 
-from training.t3_contract import (
+from mlx_smolvla._lab.training.t3_contract import (
     FROZEN_BASE_REPORT_SHA256,
     FROZEN_TRAIN_STATISTICS_SHA256,
 )
@@ -389,7 +389,7 @@ def _validate_snapshot_conversion(
 def _load_floor_bundle(floor: object, *, variant_root: str | Path) -> FloorBundle:
     """Rebuild a floor from the exact raw arrays and worker metadata."""
 
-    from training.self_consistency import (
+    from mlx_smolvla._lab.training.self_consistency import (
         assemble_floor_report,
         perturbation_plan,
         validate_floor_report,
@@ -1186,7 +1186,7 @@ def evaluate_trained_parity_documents(
 ) -> dict[str, object]:
     """Recompute evidence after chronology and exact source bindings pass."""
 
-    from training.self_consistency import validate_floor_report
+    from mlx_smolvla._lab.training.self_consistency import validate_floor_report
 
     if not isinstance(floor, Mapping) or floor.get("purpose") != "prospective_gate":
         raise ValueError("trained parity requires a prospective self-consistency floor")
@@ -1690,7 +1690,7 @@ def _validate_training_manifest(
         fields={"repo_id", "revision"},
         label="checkpoint training manifest source",
     )
-    from reference.discovery import CHECKPOINT_ID, CHECKPOINT_REVISION
+    from mlx_smolvla._lab.reference.discovery import CHECKPOINT_ID, CHECKPOINT_REVISION
 
     if dict(source) != {
         "repo_id": CHECKPOINT_ID,

@@ -6,8 +6,8 @@ import torch
 
 @pytest.mark.slow
 def test_reference_policy_loads_pinned_checkpoint_on_cpu() -> None:
-    from reference.discovery import BASE_VLM_REVISION
-    from reference.policy import ReferencePolicy
+    from mlx_smolvla._lab.reference.discovery import BASE_VLM_REVISION
+    from mlx_smolvla._lab.reference.policy import ReferencePolicy
 
     reference = ReferencePolicy.load(cache_dir=Path(".cache/hf"))
 
@@ -24,7 +24,7 @@ def test_reference_policy_loads_pinned_checkpoint_on_cpu() -> None:
 
 @pytest.mark.slow
 def test_real_dataset_observation_maps_two_cameras_and_task() -> None:
-    from reference.policy import load_dataset_observation
+    from mlx_smolvla._lab.reference.policy import load_dataset_observation
 
     sample = load_dataset_observation(cache_dir=Path(".cache/hf"), index=0)
 
@@ -44,7 +44,7 @@ def test_real_dataset_observation_maps_two_cameras_and_task() -> None:
 
 @pytest.mark.slow
 def test_checkpoint_preprocessor_batches_tokenizes_and_normalizes() -> None:
-    from reference.policy import ReferencePolicy, load_dataset_observation
+    from mlx_smolvla._lab.reference.policy import ReferencePolicy, load_dataset_observation
 
     reference = ReferencePolicy.load(cache_dir=Path(".cache/hf"))
     sample = load_dataset_observation(cache_dir=Path(".cache/hf"), index=0)
@@ -64,7 +64,7 @@ def test_checkpoint_preprocessor_batches_tokenizes_and_normalizes() -> None:
 
 @pytest.mark.slow
 def test_reference_predicts_finite_action_chunk_from_fixed_noise() -> None:
-    from reference.policy import ReferencePolicy, load_dataset_observation
+    from mlx_smolvla._lab.reference.policy import ReferencePolicy, load_dataset_observation
 
     reference = ReferencePolicy.load(cache_dir=Path(".cache/hf"))
     sample = load_dataset_observation(cache_dir=Path(".cache/hf"), index=0)

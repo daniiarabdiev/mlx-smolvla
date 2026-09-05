@@ -15,9 +15,9 @@ if str(_REPOSITORY_ROOT) not in sys.path:
 
 from huggingface_hub import snapshot_download
 
-from reference.discovery import BASE_VLM_ID, BASE_VLM_REVISION
-from reference.goldens import GOLDEN_SAMPLE_SPECS, GoldenWriter, capture_sample
-from reference.policy import ReferencePolicy, load_checkpoint_dataset_observation
+from mlx_smolvla._lab.reference.discovery import BASE_VLM_ID, BASE_VLM_REVISION
+from mlx_smolvla._lab.reference.goldens import GOLDEN_SAMPLE_SPECS, GoldenWriter, capture_sample
+from mlx_smolvla._lab.reference.policy import ReferencePolicy, load_checkpoint_dataset_observation
 
 
 MODEL_ID = "soonweihong0857/swhfypv3_smolvla_multitask_model"

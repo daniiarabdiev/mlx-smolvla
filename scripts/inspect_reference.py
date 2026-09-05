@@ -14,8 +14,8 @@ _REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 if str(_REPOSITORY_ROOT) not in sys.path:
     sys.path.insert(0, str(_REPOSITORY_ROOT))
 
-from reference.audit import inspect_reference
-from reference.discovery import (
+from mlx_smolvla._lab.reference.audit import inspect_reference
+from mlx_smolvla._lab.reference.discovery import (
     BASE_VLM_ID,
     BASE_VLM_REVISION,
     CHECKPOINT_ID,
@@ -23,7 +23,7 @@ from reference.discovery import (
     ReferenceDiscovery,
     discover_reference,
 )
-from reference.policy import ReferencePolicy, load_dataset_observation
+from mlx_smolvla._lab.reference.policy import ReferencePolicy, load_dataset_observation
 
 
 def read_safetensors_inventory(path: Path) -> list[dict[str, Any]]:

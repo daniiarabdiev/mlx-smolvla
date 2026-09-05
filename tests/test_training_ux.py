@@ -24,7 +24,7 @@ class _TinyFullModel(nn.Module):
 
 
 def test_training_modes_are_explicit_and_validate_public_controls(tmp_path: Path) -> None:
-    from training.ux import FullTrainingConfig, LoRATrainingConfig
+    from mlx_smolvla._lab.training.ux import FullTrainingConfig, LoRATrainingConfig
 
     common = {
         "dataset": "owner/dataset",
@@ -62,7 +62,7 @@ def test_dataset_source_accepts_local_path_and_materializes_repo_id(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     import lerobot.datasets.dataset_metadata as metadata_module
-    import training.ux as module
+    import mlx_smolvla._lab.training.ux as module
 
     local = tmp_path / "local-data"
     (local / "meta").mkdir(parents=True)
@@ -117,8 +117,8 @@ def test_dataset_source_accepts_local_path_and_materializes_repo_id(
 
 
 def test_full_mode_matches_reference_trainable_policy_and_optimizer_coverage() -> None:
-    from training.optimizer import SmolVLAAdamW, SmolVLAOptimizerConfig
-    from training.ux import configure_full_training, optimizer_coverage_evidence
+    from mlx_smolvla._lab.training.optimizer import SmolVLAAdamW, SmolVLAOptimizerConfig
+    from mlx_smolvla._lab.training.ux import configure_full_training, optimizer_coverage_evidence
 
     model = _TinyFullModel()
     report = configure_full_training(model)
@@ -149,7 +149,7 @@ def test_full_mode_matches_reference_trainable_policy_and_optimizer_coverage() -
 
 
 def test_trajectory_hash_excludes_measurement_time_but_binds_continuation_state() -> None:
-    from training.ux import trajectory_state_sha256
+    from mlx_smolvla._lab.training.ux import trajectory_state_sha256
 
     state = {
         "completed_step": 50,
@@ -247,7 +247,7 @@ def _write_resume_fixture(
 def test_resume_evaluator_enforces_fixed_parameter_loss_and_state_gates(
     tmp_path: Path,
 ) -> None:
-    from training.ux import evaluate_resume_exactness
+    from mlx_smolvla._lab.training.ux import evaluate_resume_exactness
 
     direct = tmp_path / "direct"
     resumed = tmp_path / "resumed"
@@ -337,9 +337,9 @@ def test_public_runner_retains_three_checkpoints_and_resumes_exactly(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    import training.ux as module
-    from training.finetune import UpdateResult
-    from training.optimizer import SmolVLAAdamW, SmolVLAOptimizerConfig
+    import mlx_smolvla._lab.training.ux as module
+    from mlx_smolvla._lab.training.finetune import UpdateResult
+    from mlx_smolvla._lab.training.optimizer import SmolVLAAdamW, SmolVLAOptimizerConfig
 
     def prepare(config):
         mx.random.seed(config.seed)

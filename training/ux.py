@@ -1,6 +1,6 @@
 """Public Stage T4 training UX and exact-resume evidence.
 
-This module is deliberately separate from :mod:`training.finetune`.  The
+This module is deliberately separate from :mod:`mlx_smolvla._lab.training.finetune`.  The
 completed T3/T3B LoRA runner is an immutable experiment record; T4 reuses its
 audited numerical and checkpoint primitives without changing that runner's
 configuration or launch schemas.
@@ -27,16 +27,16 @@ from huggingface_hub import snapshot_download
 import numpy as np
 from safetensors import safe_open
 
-from reference.discovery import DATASET_ID
-from reference.discovery import DATASET_REVISION
+from mlx_smolvla._lab.reference.discovery import DATASET_ID
+from mlx_smolvla._lab.reference.discovery import DATASET_REVISION
 from mlx_smolvla.policy import SmolVLAMLX
-from training.dataset import (
+from mlx_smolvla._lab.training.dataset import (
     TrainingDataBridge,
     compute_train_statistics,
     make_episode_split,
 )
-from training.export import export_merged_checkpoint, resolve_base_checkpoint
-from training.finetune import (
+from mlx_smolvla._lab.training.export import export_merged_checkpoint, resolve_base_checkpoint
+from mlx_smolvla._lab.training.finetune import (
     CheckpointState,
     UpdateResult,
     _save_adapter_checkpoint,
@@ -48,16 +48,16 @@ from training.finetune import (
     training_batch_from_bridge,
     write_run_state,
 )
-from training.gradients import configure_reference_trainable
-from training.lora import (
+from mlx_smolvla._lab.training.gradients import configure_reference_trainable
+from mlx_smolvla._lab.training.lora import (
     EXPERT_ONLY_SCOPE,
     LoRAConfig,
     LoRAInstallationReport,
     install_lora,
     merge_lora,
 )
-from training.model import SmolVLATrainingModel, training_loss
-from training.optimizer import (
+from mlx_smolvla._lab.training.model import SmolVLATrainingModel, training_loss
+from mlx_smolvla._lab.training.optimizer import (
     SmolVLAAdamW,
     SmolVLAOptimizerConfig,
     clip_gradients_by_global_norm,

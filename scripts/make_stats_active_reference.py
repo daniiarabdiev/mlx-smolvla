@@ -15,13 +15,13 @@ if str(_REPOSITORY_ROOT) not in sys.path:
 
 from huggingface_hub import snapshot_download
 
-from reference.discovery import (
+from mlx_smolvla._lab.reference.discovery import (
     CHECKPOINT_ID,
     CHECKPOINT_REVISION,
     DATASET_ID,
     DATASET_REVISION,
 )
-from reference.stats_active import build_stats_active_artifact
+from mlx_smolvla._lab.reference.stats_active import build_stats_active_artifact
 
 
 def main(argv: list[str] | None = None) -> int:

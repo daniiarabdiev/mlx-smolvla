@@ -9,7 +9,7 @@ import pytest
 
 
 def test_gradient_comparison_matches_float64_relative_l2_and_cosine() -> None:
-    module = __import__("training.gradients", fromlist=["compare_gradient_arrays"])
+    module = __import__("mlx_smolvla._lab.training.gradients", fromlist=["compare_gradient_arrays"])
     reference = np.array([3.0, 4.0], dtype=np.float32)
     candidate = np.array([3.0, 5.0], dtype=np.float32)
 
@@ -24,7 +24,7 @@ def test_gradient_comparison_matches_float64_relative_l2_and_cosine() -> None:
 
 
 def test_zero_candidate_gradient_is_a_gateable_comparison() -> None:
-    module = __import__("training.gradients", fromlist=["compare_gradient_arrays"])
+    module = __import__("mlx_smolvla._lab.training.gradients", fromlist=["compare_gradient_arrays"])
 
     result = module.compare_gradient_arrays(
         "weight",
@@ -37,7 +37,7 @@ def test_zero_candidate_gradient_is_a_gateable_comparison() -> None:
 
 
 def test_relative_loss_difference_uses_the_nonzero_reference_denominator() -> None:
-    module = __import__("training.gradients", fromlist=["relative_loss_difference"])
+    module = __import__("mlx_smolvla._lab.training.gradients", fromlist=["relative_loss_difference"])
 
     assert module.relative_loss_difference(2.0, 2.0002) == pytest.approx(1e-4)
 
@@ -56,7 +56,7 @@ def test_gradient_comparison_rejects_invalid_inputs(
     candidate: np.ndarray,
     message: str,
 ) -> None:
-    module = __import__("training.gradients", fromlist=["compare_gradient_arrays"])
+    module = __import__("mlx_smolvla._lab.training.gradients", fromlist=["compare_gradient_arrays"])
 
     with pytest.raises(ValueError, match=message):
         module.compare_gradient_arrays("weight", reference, candidate)

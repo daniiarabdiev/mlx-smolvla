@@ -54,14 +54,14 @@ def _runtime_metadata(item) -> dict[str, object]:
                 else None
             )
             for key in __import__(
-                "training.self_consistency",
+                "mlx_smolvla._lab.training.self_consistency",
                 fromlist=["MPS_ENVIRONMENT_KEYS"],
             ).MPS_ENVIRONMENT_KEYS
         },
         "cpu_thread_environment": {
             key: None
             for key in __import__(
-                "training.self_consistency",
+                "mlx_smolvla._lab.training.self_consistency",
                 fromlist=["CPU_THREAD_ENVIRONMENT_KEYS"],
             ).CPU_THREAD_ENVIRONMENT_KEYS
         },
@@ -133,7 +133,7 @@ def _report(module) -> dict[str, object]:
 
 def test_perturbation_set_is_exact_and_max_threads_is_explicit() -> None:
     module = __import__(
-        "training.self_consistency",
+        "mlx_smolvla._lab.training.self_consistency",
         fromlist=["perturbation_plan"],
     )
 
@@ -161,7 +161,7 @@ def test_perturbation_set_is_exact_and_max_threads_is_explicit() -> None:
 
 def test_floor_envelope_includes_every_nonbaseline_perturbation() -> None:
     module = __import__(
-        "training.self_consistency",
+        "mlx_smolvla._lab.training.self_consistency",
         fromlist=["assemble_floor_report"],
     )
 
@@ -184,7 +184,7 @@ def test_floor_envelope_includes_every_nonbaseline_perturbation() -> None:
 
 def test_prospective_floor_uses_checkpoint_generic_identity_and_context() -> None:
     module = __import__(
-        "training.self_consistency",
+        "mlx_smolvla._lab.training.self_consistency",
         fromlist=["assemble_floor_report", "validate_floor_report"],
     )
     actions = {
@@ -221,7 +221,7 @@ def test_any_mps_process_slot_can_define_the_floor(
     dominant_mps_variant: str,
 ) -> None:
     module = __import__(
-        "training.self_consistency",
+        "mlx_smolvla._lab.training.self_consistency",
         fromlist=["assemble_floor_report"],
     )
     actions = {
@@ -247,7 +247,7 @@ def test_any_mps_process_slot_can_define_the_floor(
 
 def test_mps_process_slots_cannot_be_missing_or_relabelled() -> None:
     module = __import__(
-        "training.self_consistency",
+        "mlx_smolvla._lab.training.self_consistency",
         fromlist=["assemble_floor_report", "validate_floor_report"],
     )
     plan = module.perturbation_plan(max_threads=12)
@@ -274,7 +274,7 @@ def test_mps_process_slots_cannot_be_missing_or_relabelled() -> None:
 
 def test_floor_rejects_missing_changed_or_nonfinite_variant_outputs() -> None:
     module = __import__(
-        "training.self_consistency",
+        "mlx_smolvla._lab.training.self_consistency",
         fromlist=["assemble_floor_report"],
     )
     plan = module.perturbation_plan(max_threads=12)
@@ -307,7 +307,7 @@ def test_floor_rejects_missing_changed_or_nonfinite_variant_outputs() -> None:
 
 def test_floor_validation_binds_all_inputs_and_recomputes_envelopes() -> None:
     module = __import__(
-        "training.self_consistency",
+        "mlx_smolvla._lab.training.self_consistency",
         fromlist=["validate_floor_report"],
     )
     report = _report(module)
@@ -342,7 +342,7 @@ def test_floor_validation_binds_all_inputs_and_recomputes_envelopes() -> None:
 
 def test_floor_timestamp_text_and_nanoseconds_must_identify_same_instant() -> None:
     module = __import__(
-        "training.self_consistency",
+        "mlx_smolvla._lab.training.self_consistency",
         fromlist=["validate_floor_report"],
     )
     changed = json.loads(json.dumps(_report(module)))
@@ -370,7 +370,7 @@ def test_floor_validation_enforces_variant_runtime_evidence(
     message: str,
 ) -> None:
     module = __import__(
-        "training.self_consistency",
+        "mlx_smolvla._lab.training.self_consistency",
         fromlist=["validate_floor_report"],
     )
     changed = json.loads(json.dumps(_report(module)))
@@ -385,7 +385,7 @@ def test_floor_validation_enforces_variant_runtime_evidence(
 
 def test_floor_write_is_atomic_hashable_and_round_trips(tmp_path: Path) -> None:
     module = __import__(
-        "training.self_consistency",
+        "mlx_smolvla._lab.training.self_consistency",
         fromlist=["write_floor_report"],
     )
     report = _report(module)
@@ -403,7 +403,7 @@ def test_input_tree_hashes_every_file_and_rejects_escape_symlinks(
     tmp_path: Path,
 ) -> None:
     module = __import__(
-        "training.self_consistency",
+        "mlx_smolvla._lab.training.self_consistency",
         fromlist=["hash_input_tree"],
     )
     allowed = tmp_path / "allowed"
@@ -434,7 +434,7 @@ def test_variant_artifact_binds_plan_inputs_and_normalized_actions(
     tmp_path: Path,
 ) -> None:
     module = __import__(
-        "training.self_consistency",
+        "mlx_smolvla._lab.training.self_consistency",
         fromlist=["read_variant_artifact", "write_variant_artifact"],
     )
     variant = module.perturbation_plan(max_threads=12)[1]
@@ -478,7 +478,7 @@ def test_variant_artifact_binds_plan_inputs_and_normalized_actions(
 
 def test_cache_path_rejects_symlinked_existing_ancestor(tmp_path: Path) -> None:
     module = __import__(
-        "training.self_consistency",
+        "mlx_smolvla._lab.training.self_consistency",
         fromlist=["_require_cache_path"],
     )
     link = Path(".cache") / f"escape-{tmp_path.name}"
@@ -498,7 +498,7 @@ def test_floor_outputs_cannot_overlap_hashed_inputs_or_escape_worker_root(
     tmp_path: Path,
 ) -> None:
     module = __import__(
-        "training.self_consistency",
+        "mlx_smolvla._lab.training.self_consistency",
         fromlist=["_require_floor_paths_disjoint", "run_reference_variant"],
     )
     checkpoint = Path(".cache/training/t3/export").resolve()
@@ -530,7 +530,7 @@ def test_float64_compatibility_step_preserves_double_projection_inputs() -> None
     import torch
 
     module = __import__(
-        "training.self_consistency",
+        "mlx_smolvla._lab.training.self_consistency",
         fromlist=["_float64_denoise_step"],
     )
 
@@ -571,11 +571,11 @@ def test_torch_export_loader_honors_nondefault_float64_policy_and_processor() ->
     import torch
 
     evaluation = __import__(
-        "training.evaluation",
+        "mlx_smolvla._lab.training.evaluation",
         fromlist=["_torch_observation", "load_evaluation_cases"],
     )
     reference_export = __import__(
-        "training.reference_export",
+        "mlx_smolvla._lab.training.reference_export",
         fromlist=["TorchExportPolicy"],
     )
     case = evaluation.load_evaluation_cases(
@@ -633,7 +633,7 @@ def test_self_consistency_cli_exposes_the_frozen_plan_without_model_loading() ->
 
 def test_floor_input_evidence_names_every_hashed_location() -> None:
     module = __import__(
-        "training.self_consistency",
+        "mlx_smolvla._lab.training.self_consistency",
         fromlist=["collect_floor_input_evidence", "collect_floor_input_hashes"],
     )
     arguments = {
@@ -671,7 +671,7 @@ def test_floor_input_evidence_names_every_hashed_location() -> None:
 
 def test_self_consistency_cli_assembles_completed_workers_without_rerunning_them() -> None:
     module = __import__(
-        "training.self_consistency",
+        "mlx_smolvla._lab.training.self_consistency",
         fromlist=[
             "collect_floor_input_hashes",
             "perturbation_plan",
@@ -754,7 +754,7 @@ def test_self_consistency_cli_assembles_completed_workers_without_rerunning_them
 
 def test_worker_environment_clears_every_documented_mps_switch() -> None:
     module = __import__(
-        "training.self_consistency",
+        "mlx_smolvla._lab.training.self_consistency",
         fromlist=["_worker_environment"],
     )
     plan = module.perturbation_plan(max_threads=12)
@@ -789,7 +789,7 @@ def test_variant_root_rejects_a_symlinked_parent_on_reuse(
     tmp_path: Path,
 ) -> None:
     module = __import__(
-        "training.self_consistency",
+        "mlx_smolvla._lab.training.self_consistency",
         fromlist=["_require_variant_root"],
     )
     work = Path(".cache") / f"self-consistency-symlink-{os.getpid()}"
@@ -812,7 +812,7 @@ def test_floor_orchestration_rejects_symlinked_variant_root(
     tmp_path: Path,
 ) -> None:
     module = __import__(
-        "training.self_consistency",
+        "mlx_smolvla._lab.training.self_consistency",
         fromlist=["assemble_existing_floor", "run_self_consistency_floor"],
     )
     work = Path(".cache") / f"self-consistency-{mode}-symlink-{os.getpid()}"
@@ -869,7 +869,7 @@ def test_utc_timestamp_generation_truncates_submicroseconds(
     nanosecond_remainder: int,
 ) -> None:
     module = __import__(
-        "training.self_consistency",
+        "mlx_smolvla._lab.training.self_consistency",
         fromlist=["_utc_from_ns"],
     )
     created_at_ns = 1_788_264_000_123_456_000 + nanosecond_remainder
@@ -885,7 +885,7 @@ def test_utc_timestamp_generation_truncates_submicroseconds(
 
 def test_utc_timestamp_generation_handles_second_rollover_exactly() -> None:
     module = __import__(
-        "training.self_consistency",
+        "mlx_smolvla._lab.training.self_consistency",
         fromlist=["_utc_from_ns"],
     )
     created_at_ns = 1_788_264_001_000_000_999
@@ -897,7 +897,7 @@ def test_utc_timestamp_generation_handles_second_rollover_exactly() -> None:
 
 def test_mps_floor_has_five_separate_process_slots() -> None:
     module = __import__(
-        "training.self_consistency",
+        "mlx_smolvla._lab.training.self_consistency",
         fromlist=["MPS_REPETITIONS", "perturbation_plan"],
     )
     plan = module.perturbation_plan(max_threads=12)

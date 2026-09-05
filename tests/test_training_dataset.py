@@ -7,7 +7,7 @@ from pathlib import Path
 import numpy as np
 import pytest
 
-from training.data import TrainingArtifact
+from mlx_smolvla._lab.training.data import TrainingArtifact
 
 
 pytestmark = pytest.mark.slow
@@ -63,7 +63,7 @@ _EXPECTED_TRAIN = (
 
 
 def test_episode_split_is_exact_disjoint_and_sixteen_percent() -> None:
-    module = __import__("training.dataset", fromlist=["make_episode_split"])
+    module = __import__("mlx_smolvla._lab.training.dataset", fromlist=["make_episode_split"])
 
     first = module.make_episode_split(num_episodes=50, seed=20260901)
     second = module.make_episode_split(num_episodes=50, seed=20260901)
@@ -80,7 +80,7 @@ def test_episode_split_is_exact_disjoint_and_sixteen_percent() -> None:
 
 
 def test_train_only_statistics_exclude_all_heldout_rows() -> None:
-    module = __import__("training.dataset", fromlist=["compute_train_statistics"])
+    module = __import__("mlx_smolvla._lab.training.dataset", fromlist=["compute_train_statistics"])
     split = module.make_episode_split(num_episodes=50, seed=20260901)
 
     result = module.compute_train_statistics(_DATASET_ROOT, split.train_episodes)
@@ -121,7 +121,7 @@ def test_train_only_statistics_exclude_all_heldout_rows() -> None:
 
 
 def test_heldout_manifest_has_seven_full_chunk_cases_per_episode() -> None:
-    module = __import__("training.dataset", fromlist=["make_heldout_case_specs"])
+    module = __import__("mlx_smolvla._lab.training.dataset", fromlist=["make_heldout_case_specs"])
 
     specs = module.make_heldout_case_specs(
         _DATASET_ROOT,
@@ -143,7 +143,7 @@ def test_heldout_manifest_has_seven_full_chunk_cases_per_episode() -> None:
 
 
 def test_bridge_fixed_case_matches_the_immutable_reference_artifact() -> None:
-    module = __import__("training.dataset", fromlist=["TrainingDataBridge"])
+    module = __import__("mlx_smolvla._lab.training.dataset", fromlist=["TrainingDataBridge"])
     artifact = TrainingArtifact(Path(".cache/training/gradient_goldens"))
     bridge = module.TrainingDataBridge(
         cache_dir=_CACHE_DIR,
@@ -169,7 +169,7 @@ def test_bridge_fixed_case_matches_the_immutable_reference_artifact() -> None:
 
 
 def test_bridge_sampler_is_reproducible_and_microbatches_are_distinct() -> None:
-    module = __import__("training.dataset", fromlist=["TrainingDataBridge"])
+    module = __import__("mlx_smolvla._lab.training.dataset", fromlist=["TrainingDataBridge"])
     split = module.make_episode_split(num_episodes=50, seed=20260901)
     stats = module.compute_train_statistics(_DATASET_ROOT, split.train_episodes)
     first = module.TrainingDataBridge(
@@ -215,7 +215,7 @@ def test_bridge_sampler_is_reproducible_and_microbatches_are_distinct() -> None:
 
 
 def test_bridge_sampler_state_resumes_at_the_exact_next_microbatch() -> None:
-    module = __import__("training.dataset", fromlist=["TrainingDataBridge"])
+    module = __import__("mlx_smolvla._lab.training.dataset", fromlist=["TrainingDataBridge"])
     split = module.make_episode_split(num_episodes=50, seed=20260901)
     stats = module.compute_train_statistics(_DATASET_ROOT, split.train_episodes)
     uninterrupted = module.TrainingDataBridge(
@@ -248,7 +248,7 @@ def test_bridge_sampler_state_resumes_at_the_exact_next_microbatch() -> None:
 
 
 def test_bridge_semantic_evidence_hashes_materialized_behavior_rows() -> None:
-    module = __import__("training.dataset", fromlist=["TrainingDataBridge"])
+    module = __import__("mlx_smolvla._lab.training.dataset", fromlist=["TrainingDataBridge"])
     from datasets import Dataset
     import pyarrow as pa
 
@@ -285,7 +285,7 @@ def test_bridge_semantic_evidence_hashes_materialized_behavior_rows() -> None:
 
 
 def test_bridge_semantic_evidence_rejects_a_replaced_live_iterator() -> None:
-    module = __import__("training.dataset", fromlist=["TrainingDataBridge"])
+    module = __import__("mlx_smolvla._lab.training.dataset", fromlist=["TrainingDataBridge"])
     bridge = module.TrainingDataBridge(
         cache_dir=_CACHE_DIR,
         episodes=(0,),

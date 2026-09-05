@@ -10,7 +10,7 @@ import numpy as np
 
 
 def test_flatten_dataset_stats_preserves_every_numeric_vector() -> None:
-    module = __import__("reference.stats_active", fromlist=["flatten_dataset_stats"])
+    module = __import__("mlx_smolvla._lab.reference.stats_active", fromlist=["flatten_dataset_stats"])
     stats = {
         "observation.state": {"mean": [1.0, 2.0], "std": [3.0, 4.0], "count": [5]},
         "action": {"mean": [6.0, 7.0], "std": [8.0, 9.0]},
@@ -33,7 +33,7 @@ def test_flatten_dataset_stats_preserves_every_numeric_vector() -> None:
 def test_build_stats_active_artifact_binds_source_and_dataset(
     tmp_path: Path,
 ) -> None:
-    module = __import__("reference.stats_active", fromlist=["build_stats_active_artifact"])
+    module = __import__("mlx_smolvla._lab.reference.stats_active", fromlist=["build_stats_active_artifact"])
     source = tmp_path / "source"
     source.mkdir()
     for name, payload in {

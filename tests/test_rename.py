@@ -8,7 +8,7 @@ import warnings
 
 
 def test_distribution_import_cli_and_native_extension_use_canonical_name() -> None:
-    from reference._build_backend import setup_kwargs
+    from _build_backend import setup_kwargs
 
     project = tomllib.loads(Path("pyproject.toml").read_text(encoding="utf-8"))
 
@@ -120,7 +120,7 @@ def test_makefile_and_workflow_export_only_the_canonical_cache_variable() -> Non
 
 
 def test_native_build_toggle_uses_canonical_environment_prefix(monkeypatch) -> None:
-    from reference._build_backend import setup_kwargs
+    from _build_backend import setup_kwargs
 
     monkeypatch.setenv("MLX_SMOLVLA_BUILD_NATIVE", "0")
     monkeypatch.delenv("SMOLVLA_MLX_BUILD_NATIVE", raising=False)

@@ -13,7 +13,7 @@ from typing import Any, Iterator, Mapping
 
 import numpy as np
 
-from reference.discovery import (
+from mlx_smolvla._lab.reference.discovery import (
     BASE_VLM_ID,
     BASE_VLM_REVISION,
     CHECKPOINT_ID,

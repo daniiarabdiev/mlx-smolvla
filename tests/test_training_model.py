@@ -19,7 +19,7 @@ class SmallComponents(nn.Module):
 
 
 def test_reference_selection_trains_only_state_projection_and_expert() -> None:
-    module = __import__("training.gradients", fromlist=["configure_reference_trainable"])
+    module = __import__("mlx_smolvla._lab.training.gradients", fromlist=["configure_reference_trainable"])
     model = SmallComponents()
 
     names = module.configure_reference_trainable(model)
@@ -31,7 +31,7 @@ def test_reference_selection_trains_only_state_projection_and_expert() -> None:
 
 
 def test_canonical_parameter_names_keep_checkpoint_action_projections_at_root() -> None:
-    module = __import__("training.gradients", fromlist=["canonical_parameter_name"])
+    module = __import__("mlx_smolvla._lab.training.gradients", fromlist=["canonical_parameter_name"])
 
     assert module.canonical_parameter_name("expert.action_in_proj.weight") == "action_in_proj.weight"
     assert module.canonical_parameter_name("expert.layers.0.mlp.up_proj.weight") == (
@@ -41,7 +41,7 @@ def test_canonical_parameter_names_keep_checkpoint_action_projections_at_root() 
 
 
 def test_random_audit_batch_has_the_audited_shapes_and_is_repeatable() -> None:
-    module = __import__("training.model", fromlist=["make_random_audit_batch"])
+    module = __import__("mlx_smolvla._lab.training.model", fromlist=["make_random_audit_batch"])
     first = module.make_random_audit_batch(seed=0)
     second = module.make_random_audit_batch(seed=0)
 
@@ -63,8 +63,8 @@ def test_random_audit_batch_has_the_audited_shapes_and_is_repeatable() -> None:
 
 
 def test_full_random_weight_training_path_returns_a_finite_scalar_loss() -> None:
-    model_module = __import__("training.model", fromlist=["SmolVLATrainingModel"])
-    gradient_module = __import__("training.gradients", fromlist=["configure_reference_trainable"])
+    model_module = __import__("mlx_smolvla._lab.training.model", fromlist=["SmolVLATrainingModel"])
+    gradient_module = __import__("mlx_smolvla._lab.training.gradients", fromlist=["configure_reference_trainable"])
     mx.random.seed(0)
     model = model_module.SmolVLATrainingModel()
     model.set_dtype(mx.bfloat16)

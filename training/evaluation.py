@@ -20,18 +20,18 @@ from typing import Callable, Mapping
 import mlx.core as mx
 import numpy as np
 
-from reference.discovery import DATASET_ID, DATASET_REVISION
+from mlx_smolvla._lab.reference.discovery import DATASET_ID, DATASET_REVISION
 from mlx_smolvla.convert import validate_converted_checkpoint
-from training.data import TrainingArtifact, TrainingArtifactWriter
-from training.dataset import (
+from mlx_smolvla._lab.training.data import TrainingArtifact, TrainingArtifactWriter
+from mlx_smolvla._lab.training.dataset import (
     SPLIT_SEED,
     TrainingDataBridge,
     compute_train_statistics,
     make_episode_split,
     make_heldout_case_specs,
 )
-from training.export import resolve_base_checkpoint, validate_merged_checkpoint_export
-from training.finetune import (
+from mlx_smolvla._lab.training.export import resolve_base_checkpoint, validate_merged_checkpoint_export
+from mlx_smolvla._lab.training.finetune import (
     ADAPTIVE_BUDGET_MODE,
     FIXED_BUDGET_MODE,
     METRICS_FIELDS,
@@ -41,12 +41,12 @@ from training.finetune import (
     training_run_config_sha256,
     write_run_state,
 )
-from training.optimizer import SmolVLAOptimizerConfig, cosine_decay_with_warmup_lr
-from training.preprocessing import (
+from mlx_smolvla._lab.training.optimizer import SmolVLAOptimizerConfig, cosine_decay_with_warmup_lr
+from mlx_smolvla._lab.training.preprocessing import (
     StatsAwareSmolVLAPreprocessor,
     load_stats_aware_policy,
 )
-from training.t3_contract import (
+from mlx_smolvla._lab.training.t3_contract import (
     FROZEN_BASE_REPORT_SHA256,
     FROZEN_DATASET_REVISION_TREE_SHA256,
     FROZEN_EVALUATION_MANIFEST_SHA256,
@@ -1899,7 +1899,7 @@ def run_finetune_outcome_evaluation(
     gc.collect()
     mx.clear_cache()
 
-    from training.reference_export import TorchExportPolicy
+    from mlx_smolvla._lab.training.reference_export import TorchExportPolicy
 
     torch_policy = TorchExportPolicy.load(export_dir, cache_dir=cache_dir)
     torch_result = evaluate_torch_export(
@@ -2169,7 +2169,7 @@ def run_trained_comparison_evaluation(
     """Validate the floor first, then evaluate and install its bound comparison."""
 
     from mlx_smolvla.training import trained_parity as parity
-    from training.self_consistency import (
+    from mlx_smolvla._lab.training.self_consistency import (
         collect_floor_input_evidence,
         collect_floor_input_hashes,
     )

@@ -13,6 +13,10 @@ import mlx.core as mx
 
 from mlx_smolvla.cache import resolve_cache_dir
 from mlx_smolvla.compatibility import CompatibilityVerdict, assess_compatibility
+from mlx_smolvla.rmsnorm import (
+    cpu_compatibility_backend,
+    native_extension_unavailable_reason,
+)
 
 
 @dataclass(frozen=True)
@@ -29,6 +33,8 @@ class DoctorReport:
     serve_extra_installed: bool
     train_extra_installed: bool
     compatibility: CompatibilityVerdict
+    cpu_compatibility_backend: str
+    native_extension_unavailable_reason: str | None
 
     def as_dict(self) -> dict[str, object]:
         return asdict(self)
@@ -109,4 +115,6 @@ def collect_doctor_report(cache_dir: Path | str | None = None) -> DoctorReport:
         serve_extra_installed=_all_modules_available("grpc", "lerobot", "torch"),
         train_extra_installed=_all_modules_available("av", "lerobot", "torch"),
         compatibility=compatibility,
+        cpu_compatibility_backend=cpu_compatibility_backend(),
+        native_extension_unavailable_reason=native_extension_unavailable_reason(),
     )

@@ -11,7 +11,7 @@ import pytest
 
 
 def test_training_artifact_round_trips_sorted_hashed_arrays(tmp_path: Path) -> None:
-    module = __import__("training.data", fromlist=["TrainingArtifactWriter", "TrainingArtifact"])
+    module = __import__("mlx_smolvla._lab.training.data", fromlist=["TrainingArtifactWriter", "TrainingArtifact"])
     writer = module.TrainingArtifactWriter(tmp_path)
     noncontiguous = np.arange(24, dtype=np.float32).reshape(4, 6)[:, ::2]
 
@@ -42,7 +42,7 @@ def test_training_artifact_round_trips_sorted_hashed_arrays(tmp_path: Path) -> N
 
 @pytest.mark.parametrize("name", ("", "/absolute", "../parent", "nested/../../escape"))
 def test_training_artifact_rejects_unsafe_logical_names(tmp_path: Path, name: str) -> None:
-    module = __import__("training.data", fromlist=["TrainingArtifactWriter"])
+    module = __import__("mlx_smolvla._lab.training.data", fromlist=["TrainingArtifactWriter"])
     writer = module.TrainingArtifactWriter(tmp_path)
 
     with pytest.raises(ValueError, match="relative"):
@@ -50,7 +50,7 @@ def test_training_artifact_rejects_unsafe_logical_names(tmp_path: Path, name: st
 
 
 def test_training_artifact_rejects_duplicates_objects_and_incomplete_metadata(tmp_path: Path) -> None:
-    module = __import__("training.data", fromlist=["TrainingArtifactWriter"])
+    module = __import__("mlx_smolvla._lab.training.data", fromlist=["TrainingArtifactWriter"])
     writer = module.TrainingArtifactWriter(tmp_path)
     writer.add("value", np.ones((2,), dtype=np.float32))
 
@@ -63,7 +63,7 @@ def test_training_artifact_rejects_duplicates_objects_and_incomplete_metadata(tm
 
 
 def test_training_artifact_detects_payload_tampering(tmp_path: Path) -> None:
-    module = __import__("training.data", fromlist=["TrainingArtifactWriter", "TrainingArtifact"])
+    module = __import__("mlx_smolvla._lab.training.data", fromlist=["TrainingArtifactWriter", "TrainingArtifact"])
     writer = module.TrainingArtifactWriter(tmp_path)
     writer.add("value", np.arange(8, dtype=np.float32))
     writer.finalize({"format_version": 1, "artifact_type": "unit-test"})
@@ -77,7 +77,7 @@ def test_training_artifact_detects_payload_tampering(tmp_path: Path) -> None:
 
 
 def test_training_artifact_detects_manifest_tampering(tmp_path: Path) -> None:
-    module = __import__("training.data", fromlist=["TrainingArtifactWriter", "TrainingArtifact"])
+    module = __import__("mlx_smolvla._lab.training.data", fromlist=["TrainingArtifactWriter", "TrainingArtifact"])
     writer = module.TrainingArtifactWriter(tmp_path)
     writer.add("value", np.arange(3, dtype=np.int32))
     writer.finalize({"format_version": 1, "artifact_type": "unit-test"})
@@ -89,7 +89,7 @@ def test_training_artifact_detects_manifest_tampering(tmp_path: Path) -> None:
 
 
 def test_training_artifact_preserves_zero_dimensional_scalars(tmp_path: Path) -> None:
-    module = __import__("training.data", fromlist=["TrainingArtifactWriter", "TrainingArtifact"])
+    module = __import__("mlx_smolvla._lab.training.data", fromlist=["TrainingArtifactWriter", "TrainingArtifact"])
     writer = module.TrainingArtifactWriter(tmp_path)
     writer.add("scalar", np.asarray(2.5, dtype=np.float32))
     writer.finalize({"format_version": 1, "artifact_type": "unit-test"})

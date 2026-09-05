@@ -11,7 +11,7 @@ import re
 
 import numpy as np
 
-from reference.discovery import CHECKPOINT_ID, CHECKPOINT_REVISION
+from mlx_smolvla._lab.reference.discovery import CHECKPOINT_ID, CHECKPOINT_REVISION
 
 
 _ENGINES = ("mlx", "pytorch-mps")

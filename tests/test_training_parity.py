@@ -8,7 +8,7 @@ import mlx.core as mx
 import numpy as np
 import pytest
 
-from training.data import TrainingArtifact
+from mlx_smolvla._lab.training.data import TrainingArtifact
 
 
 pytestmark = pytest.mark.slow
@@ -20,7 +20,7 @@ _NATIVE_CACHE = Path(".cache/mlx_smolvla/policy-float32")
 
 def test_gradient_parity_thresholds_are_immutable() -> None:
     module = __import__(
-        "training.parity",
+        "mlx_smolvla._lab.training.parity",
         fromlist=[
             "LOSS_RELATIVE_TOLERANCE",
             "GRADIENT_RELATIVE_L2_TOLERANCE",
@@ -34,7 +34,7 @@ def test_gradient_parity_thresholds_are_immutable() -> None:
 
 
 def test_serialized_training_batch_consumes_exact_artifact_draws() -> None:
-    module = __import__("training.parity", fromlist=["load_serialized_training_batch"])
+    module = __import__("mlx_smolvla._lab.training.parity", fromlist=["load_serialized_training_batch"])
     artifact = TrainingArtifact(_GOLDEN_DIR)
 
     batch = module.load_serialized_training_batch(artifact)
@@ -73,9 +73,9 @@ def test_serialized_training_batch_consumes_exact_artifact_draws() -> None:
 
 
 def test_checkpoint_training_parameters_equal_reference_artifact() -> None:
-    model_module = __import__("training.model", fromlist=["SmolVLATrainingModel"])
+    model_module = __import__("mlx_smolvla._lab.training.model", fromlist=["SmolVLATrainingModel"])
     parity_module = __import__(
-        "training.parity",
+        "mlx_smolvla._lab.training.parity",
         fromlist=["validate_checkpoint_parameter_identity"],
     )
     artifact = TrainingArtifact(_GOLDEN_DIR)
@@ -95,7 +95,7 @@ def test_checkpoint_training_parameters_equal_reference_artifact() -> None:
 
 
 def test_real_step_zero_gradient_parity_passes_every_immutable_gate() -> None:
-    module = __import__("training.parity", fromlist=["run_gradient_parity"])
+    module = __import__("mlx_smolvla._lab.training.parity", fromlist=["run_gradient_parity"])
 
     result = module.run_gradient_parity(
         golden_dir=_GOLDEN_DIR,

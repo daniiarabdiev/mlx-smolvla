@@ -6,10 +6,12 @@ from importlib import metadata
 import mlx.core as mx
 import mlx.nn as nn
 
+_native_import_failure: str | None = None
 try:
     from . import _rmsnorm_native
-except ImportError:
+except (ImportError, OSError, RuntimeError) as exc:
     _rmsnorm_native = None
+    _native_import_failure = f"{type(exc).__name__}: {exc}"
 
 
 _NATIVE_EXTENSION_MLX_ABI = "0.32.2"
@@ -36,6 +38,20 @@ def cpu_compatibility_backend() -> str:
     """Name the active CPU compatibility implementation for diagnostics."""
 
     return "native-reference" if native_extension_available() else "pure-mlx-fallback"
+
+
+def native_extension_unavailable_reason() -> str | None:
+    """Explain why strict CPU uses the supported pure-MLX fallback, if active."""
+
+    if _rmsnorm_native is None:
+        return _native_import_failure or "Optional native reference extension is not installed"
+    runtime_version = _runtime_mlx_version()
+    if runtime_version != _NATIVE_EXTENSION_MLX_ABI:
+        return (
+            f"Native reference extension requires MLX ABI {_NATIVE_EXTENSION_MLX_ABI}; "
+            f"runtime MLX is {runtime_version}"
+        )
+    return None
 
 
 def _pure_mlx_rope(states: mx.array, position_ids: mx.array) -> mx.array:

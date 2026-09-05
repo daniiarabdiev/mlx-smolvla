@@ -377,7 +377,7 @@ def _train(args: argparse.Namespace) -> int:
     if sys.version_info < (3, 12):
         raise RuntimeError("train requires Python 3.12+ and the optional .[train] dependencies")
     try:
-        from training.ux import FullTrainingConfig, LoRATrainingConfig, run_training
+        from mlx_smolvla._lab.training.ux import FullTrainingConfig, LoRATrainingConfig, run_training
     except ImportError as error:
         raise RuntimeError(
             "training dependencies are unavailable; install this package with `pip install '.[train]'`"

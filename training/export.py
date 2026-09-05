@@ -25,13 +25,13 @@ from mlx.utils import tree_flatten
 import numpy as np
 from safetensors import safe_open
 
-from reference.discovery import (
+from mlx_smolvla._lab.reference.discovery import (
     BASE_VLM_ID,
     CHECKPOINT_ID,
     CHECKPOINT_REVISION,
 )
 from mlx_smolvla.convert import source_tensor_names, target_name_for_source
-from training.gradients import canonical_parameter_name
+from mlx_smolvla._lab.training.gradients import canonical_parameter_name
 
 
 _PATCH_CONV_SOURCE = "model.vlm_with_expert.vlm.model.vision_model.embeddings.patch_embedding.weight"

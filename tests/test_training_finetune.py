@@ -26,7 +26,7 @@ import pytest
 def _validated_t3b_runtime_provenance(monkeypatch):
     """Unit tests exercise T3B internals without bypassing the public CLI gate."""
 
-    module = __import__("training.finetune", fromlist=["_require_t3b_runtime_provenance"])
+    module = __import__("mlx_smolvla._lab.training.finetune", fromlist=["_require_t3b_runtime_provenance"])
     evidence = {
         "format_version": 1,
         "frozen": True,
@@ -35,7 +35,7 @@ def _validated_t3b_runtime_provenance(monkeypatch):
             "transitive-dyld-images-inventory-hashed-only"
         ),
         "modules": {
-            "training.finetune": [
+            "mlx_smolvla._lab.training.finetune": [
                 {
                     "origin": str(Path(module.__file__).resolve()),
                     "kind": "source",
@@ -100,7 +100,7 @@ def _t3b_frozen_inputs(
     name_map_sha256: str = "c" * 64,
 ) -> dict[str, object]:
     contract = __import__(
-        "training.t3_contract",
+        "mlx_smolvla._lab.training.t3_contract",
         fromlist=[
             "FROZEN_BASE_REPORT_SHA256",
             "FROZEN_CHECKPOINT_REVISION_TREE_SHA256",
@@ -112,7 +112,7 @@ def _t3b_frozen_inputs(
         ],
     )
     discovery = __import__(
-        "reference.discovery", fromlist=["DATASET_REVISION"]
+        "mlx_smolvla._lab.reference.discovery", fromlist=["DATASET_REVISION"]
     )
 
     def tree(files: dict[str, str]) -> dict[str, object]:
@@ -231,7 +231,7 @@ def _tiny_checkpoint_state(module, optimizer, *, step: int, selected_steps: int 
 
 def _install_minimal_fresh_run_fakes(module, config, monkeypatch, inject) -> list[object]:
     optimizer_module = __import__(
-        "training.optimizer", fromlist=["SmolVLAAdamW", "SmolVLAOptimizerConfig"]
+        "mlx_smolvla._lab.training.optimizer", fromlist=["SmolVLAAdamW", "SmolVLAOptimizerConfig"]
     )
     model = TinyRegressor()
     optimizer = optimizer_module.SmolVLAAdamW(
@@ -285,7 +285,7 @@ def _install_minimal_fresh_run_fakes(module, config, monkeypatch, inject) -> lis
 
 
 def test_accumulation_is_the_mean_of_eight_distinct_microbatch_gradients() -> None:
-    module = __import__("training.finetune", fromlist=["accumulate_gradients"])
+    module = __import__("mlx_smolvla._lab.training.finetune", fromlist=["accumulate_gradients"])
     model = TinyRegressor()
     batches = tuple(
         (
@@ -317,7 +317,7 @@ def test_accumulation_is_the_mean_of_eight_distinct_microbatch_gradients() -> No
 
 
 def test_step_budget_caps_nominal_run_and_reserves_export_time() -> None:
-    module = __import__("training.finetune", fromlist=["select_step_budget"])
+    module = __import__("mlx_smolvla._lab.training.finetune", fromlist=["select_step_budget"])
 
     assert module.select_step_budget(1.0, nominal_steps=3000, training_seconds=6900) == 3000
     assert module.select_step_budget(3.0, nominal_steps=3000, training_seconds=6900) == 2300
@@ -335,7 +335,7 @@ def test_fixed_step_budget_commits_all_3000_updates_without_timings(
     monkeypatch,
 ) -> None:
     module = __import__(
-        "training.finetune",
+        "mlx_smolvla._lab.training.finetune",
         fromlist=["FineTuneConfig", "fixed_step_budget"],
     )
     config = module.FineTuneConfig(
@@ -378,7 +378,7 @@ def test_fixed_step_budget_commits_all_3000_updates_without_timings(
 
 
 def test_flow_draws_are_seeded_finite_and_follow_smolvla_support() -> None:
-    module = __import__("training.finetune", fromlist=["sample_flow_draws"])
+    module = __import__("mlx_smolvla._lab.training.finetune", fromlist=["sample_flow_draws"])
     mx.random.seed(20260901)
     first = module.sample_flow_draws((1, 50, 32))
     mx.eval(first.noise, first.timesteps)
@@ -398,7 +398,7 @@ def test_flow_draws_are_seeded_finite_and_follow_smolvla_support() -> None:
 
 
 def test_metrics_csv_has_one_durable_complete_row_per_update(tmp_path: Path) -> None:
-    module = __import__("training.finetune", fromlist=["MetricsWriter"])
+    module = __import__("mlx_smolvla._lab.training.finetune", fromlist=["MetricsWriter"])
     path = tmp_path / "metrics.csv"
     writer = module.MetricsWriter(path)
     writer.write(
@@ -435,7 +435,7 @@ def test_metrics_csv_has_one_durable_complete_row_per_update(tmp_path: Path) -> 
 
 
 def test_metrics_resume_archives_uncheckpointed_tail_before_appending(tmp_path: Path) -> None:
-    module = __import__("training.finetune", fromlist=["MetricsWriter"])
+    module = __import__("mlx_smolvla._lab.training.finetune", fromlist=["MetricsWriter"])
     path = tmp_path / "metrics.csv"
     with module.MetricsWriter(path) as writer:
         for step in range(1, 4):
@@ -476,7 +476,7 @@ def test_metrics_resume_archives_uncheckpointed_tail_before_appending(tmp_path: 
 
 
 def test_metrics_resume_preserves_and_discards_a_torn_trailing_row(tmp_path: Path) -> None:
-    module = __import__("training.finetune", fromlist=["MetricsWriter"])
+    module = __import__("mlx_smolvla._lab.training.finetune", fromlist=["MetricsWriter"])
     path = tmp_path / "metrics.csv"
     with module.MetricsWriter(path) as writer:
         for step in (1, 2):
@@ -517,7 +517,7 @@ def test_metrics_resume_preserves_and_discards_a_torn_trailing_row(tmp_path: Pat
 
 
 def test_metrics_writer_rejects_named_child_replacement(tmp_path: Path) -> None:
-    module = __import__("training.finetune", fromlist=["MetricsWriter"])
+    module = __import__("mlx_smolvla._lab.training.finetune", fromlist=["MetricsWriter"])
     path = tmp_path / "metrics.csv"
     original = tmp_path / "original-metrics.csv"
     writer = module.MetricsWriter(path)
@@ -550,7 +550,7 @@ def test_metrics_resume_rejects_recovery_child_replacement(
     tmp_path: Path,
     monkeypatch,
 ) -> None:
-    module = __import__("training.finetune", fromlist=["MetricsWriter"])
+    module = __import__("mlx_smolvla._lab.training.finetune", fromlist=["MetricsWriter"])
     path = tmp_path / "metrics.csv"
     with module.MetricsWriter(path) as writer:
         writer.write(
@@ -592,7 +592,7 @@ def test_metrics_resume_preserves_a_destination_replaced_before_prefix_publish(
     tmp_path: Path,
     monkeypatch,
 ) -> None:
-    module = __import__("training.finetune", fromlist=["MetricsWriter"])
+    module = __import__("mlx_smolvla._lab.training.finetune", fromlist=["MetricsWriter"])
     path = tmp_path / "metrics.csv"
     with module.MetricsWriter(path) as writer:
         writer.write(
@@ -639,7 +639,7 @@ def test_no_clobber_publication_quarantines_a_source_replaced_during_rename(
     monkeypatch,
 ) -> None:
     module = __import__(
-        "training.finetune",
+        "mlx_smolvla._lab.training.finetune",
         fromlist=["_rename_entry_no_clobber_at"],
     )
     stage = tmp_path / ".state.stage"
@@ -700,7 +700,7 @@ def test_cas_publication_restores_a_destination_replaced_during_rotation(
     monkeypatch,
 ) -> None:
     module = __import__(
-        "training.finetune",
+        "mlx_smolvla._lab.training.finetune",
         fromlist=["_publish_staged_file_at"],
     )
     stage = tmp_path / ".run.json.stage"
@@ -754,7 +754,7 @@ def test_cas_publication_rolls_back_a_destination_replaced_after_publish(
     monkeypatch,
 ) -> None:
     module = __import__(
-        "training.finetune",
+        "mlx_smolvla._lab.training.finetune",
         fromlist=["_publish_staged_file_at"],
     )
     stage = tmp_path / ".run.json.stage"
@@ -808,7 +808,7 @@ def test_cas_publication_rolls_back_a_destination_replaced_after_publish(
 
 def test_metrics_resume_rejects_a_checkpoint_boundary_mismatch(tmp_path: Path) -> None:
     module = __import__(
-        "training.finetune",
+        "mlx_smolvla._lab.training.finetune",
         fromlist=["CheckpointState", "MetricsWriter", "UpdateResult"],
     )
     path = tmp_path / "metrics.csv"
@@ -858,7 +858,7 @@ def test_final_metrics_binding_detects_replacement_after_writer_close(
     tmp_path: Path,
 ) -> None:
     module = __import__(
-        "training.finetune",
+        "mlx_smolvla._lab.training.finetune",
         fromlist=[
             "MetricsWriter",
             "_acquire_t3b_training_lock",
@@ -868,7 +868,7 @@ def test_final_metrics_binding_detects_replacement_after_writer_close(
         ],
     )
     optimizer_module = __import__(
-        "training.optimizer", fromlist=["SmolVLAAdamW", "SmolVLAOptimizerConfig"]
+        "mlx_smolvla._lab.training.optimizer", fromlist=["SmolVLAAdamW", "SmolVLAOptimizerConfig"]
     )
     output = tmp_path / "t3b"
     output.mkdir()
@@ -921,7 +921,7 @@ def test_final_metrics_binding_detects_replacement_after_writer_close(
 
 def test_exporting_resume_schema_requires_exact_final_metrics_evidence() -> None:
     module = __import__(
-        "training.finetune",
+        "mlx_smolvla._lab.training.finetune",
         fromlist=["_validate_t3b_resume_run_document"],
     )
     immutable = {
@@ -1000,7 +1000,7 @@ def test_exporting_resume_rejects_self_consistent_replacement_metrics(
     tmp_path: Path,
 ) -> None:
     module = __import__(
-        "training.finetune",
+        "mlx_smolvla._lab.training.finetune",
         fromlist=[
             "MetricsWriter",
             "_final_metrics_evidence",
@@ -1009,7 +1009,7 @@ def test_exporting_resume_rejects_self_consistent_replacement_metrics(
         ],
     )
     optimizer_module = __import__(
-        "training.optimizer", fromlist=["SmolVLAAdamW", "SmolVLAOptimizerConfig"]
+        "mlx_smolvla._lab.training.optimizer", fromlist=["SmolVLAAdamW", "SmolVLAOptimizerConfig"]
     )
     model = TinyRegressor()
     optimizer = optimizer_module.SmolVLAAdamW(
@@ -1090,7 +1090,7 @@ def test_exporting_resume_rejects_self_consistent_replacement_metrics(
 
 def test_metrics_resume_rejects_incorrect_boundary_throughput(tmp_path: Path) -> None:
     module = __import__(
-        "training.finetune",
+        "mlx_smolvla._lab.training.finetune",
         fromlist=["CheckpointState", "MetricsWriter", "UpdateResult"],
     )
     path = tmp_path / "metrics.csv"
@@ -1137,7 +1137,7 @@ def test_metrics_resume_rejects_incorrect_boundary_throughput(tmp_path: Path) ->
 
 
 def test_flow_rng_fast_forward_reproduces_the_next_draw_exactly() -> None:
-    module = __import__("training.finetune", fromlist=["advance_flow_random_state"])
+    module = __import__("mlx_smolvla._lab.training.finetune", fromlist=["advance_flow_random_state"])
     shape = (1, 4, 3)
     mx.random.seed(20260901)
     for _ in range(5):
@@ -1158,7 +1158,7 @@ def test_atomic_checkpoint_restores_model_and_optimizer_for_exact_continuation(
     tmp_path: Path,
 ) -> None:
     module = __import__(
-        "training.finetune",
+        "mlx_smolvla._lab.training.finetune",
         fromlist=[
             "CheckpointState",
             "UpdateResult",
@@ -1167,7 +1167,7 @@ def test_atomic_checkpoint_restores_model_and_optimizer_for_exact_continuation(
         ],
     )
     optimizer_module = __import__(
-        "training.optimizer",
+        "mlx_smolvla._lab.training.optimizer",
         fromlist=["SmolVLAAdamW", "SmolVLAOptimizerConfig"],
     )
     config = optimizer_module.SmolVLAOptimizerConfig(training_horizon=6)
@@ -1242,11 +1242,11 @@ def test_checkpoint_save_rejects_optimizer_state_for_a_different_model_schema(
     tmp_path: Path,
 ) -> None:
     module = __import__(
-        "training.finetune",
+        "mlx_smolvla._lab.training.finetune",
         fromlist=["save_training_checkpoint"],
     )
     optimizer_module = __import__(
-        "training.optimizer",
+        "mlx_smolvla._lab.training.optimizer",
         fromlist=["SmolVLAAdamW", "SmolVLAOptimizerConfig"],
     )
     model = TinyRegressor()
@@ -1277,7 +1277,7 @@ def test_checkpoint_save_rejects_optimizer_state_for_a_different_model_schema(
 
 
 def test_checkpoint_cadence_is_enabled_and_validated() -> None:
-    module = __import__("training.finetune", fromlist=["FineTuneConfig"])
+    module = __import__("mlx_smolvla._lab.training.finetune", fromlist=["FineTuneConfig"])
 
     assert module.FineTuneConfig().checkpoint_interval == 100
     try:
@@ -1290,11 +1290,11 @@ def test_checkpoint_cadence_is_enabled_and_validated() -> None:
 
 def test_run_config_digest_locks_trajectory_but_not_the_resume_switch() -> None:
     module = __import__(
-        "training.finetune",
+        "mlx_smolvla._lab.training.finetune",
         fromlist=["FineTuneConfig", "training_run_config_sha256"],
     )
     optimizer_module = __import__(
-        "training.optimizer", fromlist=["SmolVLAOptimizerConfig"]
+        "mlx_smolvla._lab.training.optimizer", fromlist=["SmolVLAOptimizerConfig"]
     )
     arguments = {
         "selected_steps": 3000,
@@ -1367,7 +1367,7 @@ def test_run_config_digest_locks_trajectory_but_not_the_resume_switch() -> None:
 
 
 def test_finetune_config_rejects_unknown_scope_and_budget_mode() -> None:
-    module = __import__("training.finetune", fromlist=["FineTuneConfig"])
+    module = __import__("mlx_smolvla._lab.training.finetune", fromlist=["FineTuneConfig"])
     for kwargs in (
         {"lora_scope": "vision"},
         {"budget_mode": "post_hoc"},
@@ -1394,11 +1394,11 @@ def test_finetune_config_rejects_unknown_scope_and_budget_mode() -> None:
 
 def test_t3b_train_statistics_must_match_the_frozen_population() -> None:
     module = __import__(
-        "training.finetune",
+        "mlx_smolvla._lab.training.finetune",
         fromlist=["_validate_t3b_train_statistics_sha256"],
     )
     contract = __import__(
-        "training.t3_contract", fromlist=["FROZEN_TRAIN_STATISTICS_SHA256"]
+        "mlx_smolvla._lab.training.t3_contract", fromlist=["FROZEN_TRAIN_STATISTICS_SHA256"]
     )
     expected = contract.FROZEN_TRAIN_STATISTICS_SHA256
 
@@ -1416,7 +1416,7 @@ def test_pretraining_launch_config_is_self_hashed_and_no_clobber(
     monkeypatch,
 ) -> None:
     module = __import__(
-        "training.finetune",
+        "mlx_smolvla._lab.training.finetune",
         fromlist=[
             "FineTuneConfig",
             "assemble_finetune_launch_config",
@@ -1424,7 +1424,7 @@ def test_pretraining_launch_config_is_self_hashed_and_no_clobber(
         ],
     )
     optimizer_module = __import__(
-        "training.optimizer", fromlist=["SmolVLAOptimizerConfig"]
+        "mlx_smolvla._lab.training.optimizer", fromlist=["SmolVLAOptimizerConfig"]
     )
     config = module.FineTuneConfig(
         output_dir=tmp_path / "t3b",
@@ -1596,7 +1596,7 @@ def test_pretraining_launch_config_is_self_hashed_and_no_clobber(
 
 def test_runtime_launch_binding_reconstructs_every_frozen_input(tmp_path: Path) -> None:
     module = __import__(
-        "training.finetune",
+        "mlx_smolvla._lab.training.finetune",
         fromlist=[
             "FineTuneConfig",
             "assemble_finetune_launch_config",
@@ -1604,7 +1604,7 @@ def test_runtime_launch_binding_reconstructs_every_frozen_input(tmp_path: Path) 
         ],
     )
     optimizer_module = __import__(
-        "training.optimizer", fromlist=["SmolVLAOptimizerConfig"]
+        "mlx_smolvla._lab.training.optimizer", fromlist=["SmolVLAOptimizerConfig"]
     )
     config = module.FineTuneConfig(
         output_dir=tmp_path / "t3b",
@@ -1722,7 +1722,7 @@ def test_runtime_launch_binding_reconstructs_every_frozen_input(tmp_path: Path) 
 
 def test_prepared_t3b_output_rejects_uncommitted_entries(tmp_path: Path) -> None:
     module = __import__(
-        "training.finetune",
+        "mlx_smolvla._lab.training.finetune",
         fromlist=["_validate_prepared_t3b_output"],
     )
     output = tmp_path / "t3b"
@@ -1758,7 +1758,7 @@ def test_t3b_prestart_reconciles_budget_and_atomic_write_staging(
     monkeypatch,
 ) -> None:
     module = __import__(
-        "training.finetune",
+        "mlx_smolvla._lab.training.finetune",
         fromlist=["FineTuneConfig", "run_lora_finetune"],
     )
     output = tmp_path / "t3b"
@@ -1813,7 +1813,7 @@ def test_t3b_prestart_reconciles_budget_and_atomic_write_staging(
 
 def test_t3b_training_lock_allows_only_one_live_owner(tmp_path: Path) -> None:
     module = __import__(
-        "training.finetune",
+        "mlx_smolvla._lab.training.finetune",
         fromlist=["_acquire_t3b_training_lock", "_release_t3b_training_lock"],
     )
     output = tmp_path / "t3b"
@@ -1839,7 +1839,7 @@ def test_t3b_launcher_opens_the_training_log_exclusively_without_following(
     monkeypatch,
 ) -> None:
     module = __import__(
-        "training.finetune",
+        "mlx_smolvla._lab.training.finetune",
         fromlist=["FineTuneConfig", "run_lora_finetune"],
     )
     output = tmp_path / "t3b"
@@ -1917,7 +1917,7 @@ def test_t3b_launcher_rejects_live_log_replacement_before_training_body(
     monkeypatch,
 ) -> None:
     module = __import__(
-        "training.finetune",
+        "mlx_smolvla._lab.training.finetune",
         fromlist=["FineTuneConfig", "run_lora_finetune"],
     )
     output = tmp_path / "t3b"
@@ -1968,7 +1968,7 @@ def test_t3b_resume_log_must_match_the_prior_run_identity(
     monkeypatch,
 ) -> None:
     module = __import__(
-        "training.finetune",
+        "mlx_smolvla._lab.training.finetune",
         fromlist=["FineTuneConfig", "run_lora_finetune"],
     )
     output = tmp_path / "t3b"
@@ -2017,7 +2017,7 @@ def test_t3b_training_lock_rejects_symlink_and_ignores_stale_pid(
     tmp_path: Path,
 ) -> None:
     module = __import__(
-        "training.finetune",
+        "mlx_smolvla._lab.training.finetune",
         fromlist=["_acquire_t3b_training_lock", "_release_t3b_training_lock"],
     )
     output = tmp_path / "t3b"
@@ -2047,7 +2047,7 @@ def test_t3b_training_lock_rejects_named_inode_replacement(
     monkeypatch,
 ) -> None:
     module = __import__(
-        "training.finetune",
+        "mlx_smolvla._lab.training.finetune",
         fromlist=["_acquire_t3b_training_lock"],
     )
     output = tmp_path / "t3b"
@@ -2078,7 +2078,7 @@ def test_t3b_checkpoint_root_binding_rejects_replacement_without_writes(
     tmp_path: Path,
 ) -> None:
     module = __import__(
-        "training.finetune",
+        "mlx_smolvla._lab.training.finetune",
         fromlist=[
             "_acquire_t3b_training_lock",
             "_bind_t3b_checkpoint_root",
@@ -2115,7 +2115,7 @@ def test_fresh_checkpoint_root_binding_never_accepts_a_late_competitor(
     tmp_path: Path,
 ) -> None:
     module = __import__(
-        "training.finetune",
+        "mlx_smolvla._lab.training.finetune",
         fromlist=[
             "_acquire_t3b_training_lock",
             "_bind_t3b_checkpoint_root",
@@ -2146,7 +2146,7 @@ def test_t3b_training_lock_rejects_output_directory_replacement_before_body(
     monkeypatch,
 ) -> None:
     module = __import__(
-        "training.finetune",
+        "mlx_smolvla._lab.training.finetune",
         fromlist=["FineTuneConfig", "run_lora_finetune"],
     )
     output = tmp_path / "t3b"
@@ -2187,7 +2187,7 @@ def test_t3b_live_owner_blocks_resume_before_training_body(
     monkeypatch,
 ) -> None:
     module = __import__(
-        "training.finetune",
+        "mlx_smolvla._lab.training.finetune",
         fromlist=["FineTuneConfig", "run_lora_finetune"],
     )
     output = tmp_path / "t3b"
@@ -2222,7 +2222,7 @@ def test_stable_path_guards_reject_file_directory_and_ancestor_swaps(
     tmp_path: Path,
 ) -> None:
     module = __import__(
-        "training.finetune",
+        "mlx_smolvla._lab.training.finetune",
         fromlist=[
             "_private_stable_file",
             "_revalidate_directory_snapshot",
@@ -2279,7 +2279,7 @@ def test_stable_copy_cleanup_preserves_a_replacement_file(
     monkeypatch,
 ) -> None:
     module = __import__(
-        "training.finetune",
+        "mlx_smolvla._lab.training.finetune",
         fromlist=["_copy_stable_file_no_clobber"],
     )
     source = tmp_path / "source.bin"
@@ -2318,7 +2318,7 @@ def test_private_stable_file_cleanup_preserves_a_replacement_file(
     tmp_path: Path,
 ) -> None:
     module = __import__(
-        "training.finetune",
+        "mlx_smolvla._lab.training.finetune",
         fromlist=["_private_stable_file"],
     )
     source = tmp_path / "source.json"
@@ -2346,7 +2346,7 @@ def test_private_stable_tensor_load_uses_retained_inode_and_rejects_replacement(
     tmp_path: Path,
 ) -> None:
     module = __import__(
-        "training.finetune",
+        "mlx_smolvla._lab.training.finetune",
         fromlist=["_private_stable_file"],
     )
     source = tmp_path / "source.safetensors"
@@ -2384,7 +2384,7 @@ def test_bound_temporary_directory_cleanup_preserves_a_replacement(
     tmp_path: Path,
 ) -> None:
     module = __import__(
-        "training.finetune",
+        "mlx_smolvla._lab.training.finetune",
         fromlist=["_bound_temporary_directory"],
     )
     replacement: Path | None = None
@@ -2415,7 +2415,7 @@ def test_t3b_tree_snapshot_rejects_escaping_links_and_output_overlap(
     tmp_path: Path,
 ) -> None:
     module = __import__(
-        "training.finetune",
+        "mlx_smolvla._lab.training.finetune",
         fromlist=["_reject_t3b_output_input_overlap", "_snapshot_tree_evidence"],
     )
     root = tmp_path / "root"
@@ -2468,7 +2468,7 @@ def test_t3b_entry_points_reject_symlinked_output_ancestry_before_work(
     monkeypatch,
 ) -> None:
     module = __import__(
-        "training.finetune",
+        "mlx_smolvla._lab.training.finetune",
         fromlist=["FineTuneConfig", "prepare_lora_finetune_launch", "run_lora_finetune"],
     )
     physical_parent = tmp_path / "physical"
@@ -2515,7 +2515,7 @@ def test_frozen_tree_files_must_match_the_independent_revision_records(
     tmp_path: Path,
 ) -> None:
     module = __import__(
-        "training.finetune",
+        "mlx_smolvla._lab.training.finetune",
         fromlist=["_snapshot_tree_evidence", "_validate_tree_files_against_revision"],
     )
     root = tmp_path / "snapshot"
@@ -2580,7 +2580,7 @@ def test_frozen_tree_files_must_match_the_independent_revision_records(
 
 def test_t3b_dataset_inventory_rejects_extra_behavior_shards(tmp_path: Path) -> None:
     module = __import__(
-        "training.finetune",
+        "mlx_smolvla._lab.training.finetune",
         fromlist=["_validate_t3b_dataset_inventory"],
     )
     root = tmp_path / "dataset"
@@ -2611,7 +2611,7 @@ def test_t3b_dataset_inventory_rejects_extra_behavior_shards(tmp_path: Path) -> 
 
 def test_t3b_input_capture_requires_identical_before_and_after_views() -> None:
     module = __import__(
-        "training.finetune",
+        "mlx_smolvla._lab.training.finetune",
         fromlist=["_require_unchanged_t3b_inputs"],
     )
     before = _t3b_frozen_inputs()
@@ -2631,7 +2631,7 @@ def test_private_t3b_export_source_is_a_byte_copy_not_a_hard_link(
     monkeypatch,
 ) -> None:
     module = __import__(
-        "training.finetune",
+        "mlx_smolvla._lab.training.finetune",
         fromlist=["FineTuneConfig", "_private_t3b_source_checkpoint"],
     )
     source = tmp_path / "source"
@@ -2673,7 +2673,7 @@ def test_private_t3b_source_cleanup_preserves_a_replacement_directory(
     monkeypatch,
 ) -> None:
     module = __import__(
-        "training.finetune",
+        "mlx_smolvla._lab.training.finetune",
         fromlist=["FineTuneConfig", "_private_t3b_source_checkpoint"],
     )
     source = tmp_path / "source"
@@ -2722,7 +2722,7 @@ def test_runtime_model_must_match_the_committed_converted_bytes(
     tmp_path: Path,
 ) -> None:
     module = __import__(
-        "training.finetune",
+        "mlx_smolvla._lab.training.finetune",
         fromlist=["_validate_runtime_model_matches_converted_checkpoint"],
     )
     model = TinyRegressor()
@@ -2749,7 +2749,7 @@ def test_conversion_semantic_validator_can_only_mutate_private_byte_copies(
     monkeypatch,
 ) -> None:
     module = __import__(
-        "training.finetune",
+        "mlx_smolvla._lab.training.finetune",
         fromlist=["_validate_t3b_conversion_from_stable_hardlinks"],
     )
     convert_module = __import__(
@@ -2801,7 +2801,7 @@ def test_runtime_validation_loader_can_only_mutate_a_private_model_copy(
     monkeypatch,
 ) -> None:
     module = __import__(
-        "training.finetune",
+        "mlx_smolvla._lab.training.finetune",
         fromlist=["_validate_runtime_model_matches_converted_checkpoint"],
     )
     model = TinyRegressor()
@@ -2832,16 +2832,16 @@ def test_runtime_validation_loader_can_only_mutate_a_private_model_copy(
 
 def test_t3b_frozen_input_collector_validates_the_real_pinned_population() -> None:
     module = __import__(
-        "training.finetune",
+        "mlx_smolvla._lab.training.finetune",
         fromlist=["FineTuneConfig", "collect_t3b_frozen_input_evidence"],
     )
     model_module = __import__(
-        "training.model",
+        "mlx_smolvla._lab.training.model",
         fromlist=["SmolVLATrainingModel"],
     )
-    lora_module = __import__("training.lora", fromlist=["LoRAConfig", "install_lora"])
+    lora_module = __import__("mlx_smolvla._lab.training.lora", fromlist=["LoRAConfig", "install_lora"])
     contract = __import__(
-        "training.t3_contract",
+        "mlx_smolvla._lab.training.t3_contract",
         fromlist=[
             "FROZEN_BASE_REPORT_SHA256",
             "FROZEN_TRAIN_STATISTICS_SHA256",
@@ -3000,7 +3000,7 @@ def test_core_t3b_api_requires_the_bound_log_for_fresh_and_resume(
     tmp_path: Path,
 ) -> None:
     module = __import__(
-        "training.finetune",
+        "mlx_smolvla._lab.training.finetune",
         fromlist=["FineTuneConfig", "run_lora_finetune"],
     )
     for resume in (False, True):
@@ -3025,7 +3025,7 @@ def test_prepared_t3b_directory_is_started_fresh_and_only_then_resumable(
     monkeypatch,
 ) -> None:
     module = __import__(
-        "training.finetune",
+        "mlx_smolvla._lab.training.finetune",
         fromlist=["FineTuneConfig", "run_lora_finetune"],
     )
     output = tmp_path / "t3b"
@@ -3080,11 +3080,11 @@ def test_t3b_run_revalidates_launch_immediately_before_update(
     monkeypatch,
 ) -> None:
     module = __import__(
-        "training.finetune",
+        "mlx_smolvla._lab.training.finetune",
         fromlist=["FineTuneConfig", "run_lora_finetune"],
     )
     optimizer_module = __import__(
-        "training.optimizer", fromlist=["SmolVLAOptimizerConfig"]
+        "mlx_smolvla._lab.training.optimizer", fromlist=["SmolVLAOptimizerConfig"]
     )
     output = tmp_path / "t3b"
     config = module.FineTuneConfig(
@@ -3714,11 +3714,11 @@ def test_prepare_t3b_launch_freezes_actual_components_before_updates(
     monkeypatch,
 ) -> None:
     module = __import__(
-        "training.finetune",
+        "mlx_smolvla._lab.training.finetune",
         fromlist=["FineTuneConfig", "prepare_lora_finetune_launch"],
     )
     optimizer_module = __import__(
-        "training.optimizer", fromlist=["SmolVLAAdamW", "SmolVLAOptimizerConfig"]
+        "mlx_smolvla._lab.training.optimizer", fromlist=["SmolVLAAdamW", "SmolVLAOptimizerConfig"]
     )
     config = module.FineTuneConfig(
         output_dir=tmp_path / "t3b",
@@ -3915,10 +3915,10 @@ def test_prepare_t3b_launch_freezes_actual_components_before_updates(
 
 def test_checkpoint_retention_keeps_only_three_valid_newest_steps(tmp_path: Path) -> None:
     module = __import__(
-        "training.finetune", fromlist=["save_training_checkpoint"]
+        "mlx_smolvla._lab.training.finetune", fromlist=["save_training_checkpoint"]
     )
     optimizer_module = __import__(
-        "training.optimizer", fromlist=["SmolVLAAdamW", "SmolVLAOptimizerConfig"]
+        "mlx_smolvla._lab.training.optimizer", fromlist=["SmolVLAAdamW", "SmolVLAOptimizerConfig"]
     )
     root = tmp_path / "checkpoints"
     model = TinyRegressor()
@@ -3956,11 +3956,11 @@ def test_checkpoint_retention_rejects_a_valid_checkpoint_from_a_different_run(
     tmp_path: Path,
 ) -> None:
     module = __import__(
-        "training.finetune",
+        "mlx_smolvla._lab.training.finetune",
         fromlist=["prune_training_checkpoints", "save_training_checkpoint"],
     )
     optimizer_module = __import__(
-        "training.optimizer", fromlist=["SmolVLAAdamW", "SmolVLAOptimizerConfig"]
+        "mlx_smolvla._lab.training.optimizer", fromlist=["SmolVLAAdamW", "SmolVLAOptimizerConfig"]
     )
     root = tmp_path / "checkpoints"
     model = TinyRegressor()
@@ -4025,11 +4025,11 @@ def test_checkpoint_pruning_rejects_selected_path_replacement(
     monkeypatch,
 ) -> None:
     module = __import__(
-        "training.finetune",
+        "mlx_smolvla._lab.training.finetune",
         fromlist=["prune_training_checkpoints", "save_training_checkpoint"],
     )
     optimizer_module = __import__(
-        "training.optimizer", fromlist=["SmolVLAAdamW", "SmolVLAOptimizerConfig"]
+        "mlx_smolvla._lab.training.optimizer", fromlist=["SmolVLAAdamW", "SmolVLAOptimizerConfig"]
     )
     root = tmp_path / "checkpoints"
     model = TinyRegressor()
@@ -4093,11 +4093,11 @@ def test_checkpoint_publication_never_clobbers_an_inserted_target(
     monkeypatch,
 ) -> None:
     module = __import__(
-        "training.finetune",
+        "mlx_smolvla._lab.training.finetune",
         fromlist=["save_training_checkpoint"],
     )
     optimizer_module = __import__(
-        "training.optimizer", fromlist=["SmolVLAAdamW", "SmolVLAOptimizerConfig"]
+        "mlx_smolvla._lab.training.optimizer", fromlist=["SmolVLAAdamW", "SmolVLAOptimizerConfig"]
     )
     root = tmp_path / "checkpoints"
     model = TinyRegressor()
@@ -4148,11 +4148,11 @@ def test_checkpoint_publication_rejects_staged_directory_replacement(
     monkeypatch,
 ) -> None:
     module = __import__(
-        "training.finetune",
+        "mlx_smolvla._lab.training.finetune",
         fromlist=["save_training_checkpoint"],
     )
     optimizer_module = __import__(
-        "training.optimizer", fromlist=["SmolVLAAdamW", "SmolVLAOptimizerConfig"]
+        "mlx_smolvla._lab.training.optimizer", fromlist=["SmolVLAAdamW", "SmolVLAOptimizerConfig"]
     )
     root = tmp_path / "checkpoints"
     model = TinyRegressor()
@@ -4206,11 +4206,11 @@ def test_checkpoint_staging_uses_its_bound_inode_for_first_write(
     monkeypatch,
 ) -> None:
     module = __import__(
-        "training.finetune",
+        "mlx_smolvla._lab.training.finetune",
         fromlist=["save_training_checkpoint"],
     )
     optimizer_module = __import__(
-        "training.optimizer", fromlist=["SmolVLAAdamW", "SmolVLAOptimizerConfig"]
+        "mlx_smolvla._lab.training.optimizer", fromlist=["SmolVLAAdamW", "SmolVLAOptimizerConfig"]
     )
     root = tmp_path / "checkpoints"
     model = TinyRegressor()
@@ -4265,11 +4265,11 @@ def test_checkpoint_first_child_write_never_follows_an_inserted_symlink(
     monkeypatch,
 ) -> None:
     module = __import__(
-        "training.finetune",
+        "mlx_smolvla._lab.training.finetune",
         fromlist=["save_training_checkpoint"],
     )
     optimizer_module = __import__(
-        "training.optimizer", fromlist=["SmolVLAAdamW", "SmolVLAOptimizerConfig"]
+        "mlx_smolvla._lab.training.optimizer", fromlist=["SmolVLAAdamW", "SmolVLAOptimizerConfig"]
     )
     root = tmp_path / "checkpoints"
     outside = tmp_path / "outside.bin"
@@ -4317,11 +4317,11 @@ def test_checkpoint_publication_revalidates_staged_child_bytes(
     monkeypatch,
 ) -> None:
     module = __import__(
-        "training.finetune",
+        "mlx_smolvla._lab.training.finetune",
         fromlist=["save_training_checkpoint"],
     )
     optimizer_module = __import__(
-        "training.optimizer", fromlist=["SmolVLAAdamW", "SmolVLAOptimizerConfig"]
+        "mlx_smolvla._lab.training.optimizer", fromlist=["SmolVLAAdamW", "SmolVLAOptimizerConfig"]
     )
     root = tmp_path / "checkpoints"
     model = TinyRegressor()
@@ -4371,11 +4371,11 @@ def test_checkpoint_save_retains_child_authority_through_pointer_publication(
     monkeypatch,
 ) -> None:
     module = __import__(
-        "training.finetune",
+        "mlx_smolvla._lab.training.finetune",
         fromlist=["save_training_checkpoint"],
     )
     optimizer_module = __import__(
-        "training.optimizer", fromlist=["SmolVLAAdamW", "SmolVLAOptimizerConfig"]
+        "mlx_smolvla._lab.training.optimizer", fromlist=["SmolVLAAdamW", "SmolVLAOptimizerConfig"]
     )
     root = tmp_path / "checkpoints"
     model = TinyRegressor()
@@ -4428,14 +4428,14 @@ def test_checkpoint_binding_is_retained_through_run_state_publication(
     tmp_path: Path,
 ) -> None:
     module = __import__(
-        "training.finetune",
+        "mlx_smolvla._lab.training.finetune",
         fromlist=[
             "_persist_run_state_with_checkpoint_binding",
             "save_training_checkpoint",
         ],
     )
     optimizer_module = __import__(
-        "training.optimizer", fromlist=["SmolVLAAdamW", "SmolVLAOptimizerConfig"]
+        "mlx_smolvla._lab.training.optimizer", fromlist=["SmolVLAAdamW", "SmolVLAOptimizerConfig"]
     )
     root = tmp_path / "checkpoints"
     model = TinyRegressor()
@@ -4490,14 +4490,14 @@ def test_retained_checkpoint_replacement_is_rejected_before_run_state_publicatio
     tmp_path: Path,
 ) -> None:
     module = __import__(
-        "training.finetune",
+        "mlx_smolvla._lab.training.finetune",
         fromlist=[
             "_persist_run_state_with_checkpoint_binding",
             "save_training_checkpoint",
         ],
     )
     optimizer_module = __import__(
-        "training.optimizer", fromlist=["SmolVLAAdamW", "SmolVLAOptimizerConfig"]
+        "mlx_smolvla._lab.training.optimizer", fromlist=["SmolVLAAdamW", "SmolVLAOptimizerConfig"]
     )
     root = tmp_path / "checkpoints"
     model = TinyRegressor()
@@ -4557,7 +4557,7 @@ def test_terminal_checkpoint_binding_survives_cadence_cas_until_final_state(
     tmp_path: Path,
 ) -> None:
     module = __import__(
-        "training.finetune",
+        "mlx_smolvla._lab.training.finetune",
         fromlist=[
             "_acquire_t3b_training_lock",
             "_bind_t3b_checkpoint_root",
@@ -4569,7 +4569,7 @@ def test_terminal_checkpoint_binding_survives_cadence_cas_until_final_state(
         ],
     )
     optimizer_module = __import__(
-        "training.optimizer", fromlist=["SmolVLAAdamW", "SmolVLAOptimizerConfig"]
+        "mlx_smolvla._lab.training.optimizer", fromlist=["SmolVLAAdamW", "SmolVLAOptimizerConfig"]
     )
     output = tmp_path / "run"
     output.mkdir()
@@ -4637,11 +4637,11 @@ def test_checkpoint_save_rejects_latest_pointer_swap_at_publication_boundary(
     monkeypatch,
 ) -> None:
     module = __import__(
-        "training.finetune",
+        "mlx_smolvla._lab.training.finetune",
         fromlist=["save_training_checkpoint", "write_run_state"],
     )
     optimizer_module = __import__(
-        "training.optimizer", fromlist=["SmolVLAAdamW", "SmolVLAOptimizerConfig"]
+        "mlx_smolvla._lab.training.optimizer", fromlist=["SmolVLAAdamW", "SmolVLAOptimizerConfig"]
     )
     root = tmp_path / "checkpoints"
     model = TinyRegressor()
@@ -4717,11 +4717,11 @@ def test_checkpoint_save_rejects_a_contaminated_existing_namespace_prepublicatio
     tmp_path: Path,
 ) -> None:
     module = __import__(
-        "training.finetune",
+        "mlx_smolvla._lab.training.finetune",
         fromlist=["save_training_checkpoint"],
     )
     optimizer_module = __import__(
-        "training.optimizer", fromlist=["SmolVLAAdamW", "SmolVLAOptimizerConfig"]
+        "mlx_smolvla._lab.training.optimizer", fromlist=["SmolVLAAdamW", "SmolVLAOptimizerConfig"]
     )
 
     def two_checkpoint_root(name: str):
@@ -4808,11 +4808,11 @@ def test_checkpoint_save_rejects_namespace_insertion_after_preflight(
     monkeypatch,
 ) -> None:
     module = __import__(
-        "training.finetune",
+        "mlx_smolvla._lab.training.finetune",
         fromlist=["save_training_checkpoint"],
     )
     optimizer_module = __import__(
-        "training.optimizer", fromlist=["SmolVLAAdamW", "SmolVLAOptimizerConfig"]
+        "mlx_smolvla._lab.training.optimizer", fromlist=["SmolVLAAdamW", "SmolVLAOptimizerConfig"]
     )
     root = tmp_path / "checkpoints"
     model = TinyRegressor()
@@ -4880,11 +4880,11 @@ def test_checkpoint_save_rejects_same_schema_value_corruption_before_hashing(
     monkeypatch,
 ) -> None:
     module = __import__(
-        "training.finetune",
+        "mlx_smolvla._lab.training.finetune",
         fromlist=["save_training_checkpoint"],
     )
     optimizer_module = __import__(
-        "training.optimizer", fromlist=["SmolVLAAdamW", "SmolVLAOptimizerConfig"]
+        "mlx_smolvla._lab.training.optimizer", fromlist=["SmolVLAAdamW", "SmolVLAOptimizerConfig"]
     )
     root = tmp_path / "checkpoints"
     model = TinyRegressor()
@@ -4938,11 +4938,11 @@ def test_checkpoint_reader_requires_the_exact_three_file_inventory(
     tmp_path: Path,
 ) -> None:
     module = __import__(
-        "training.finetune",
+        "mlx_smolvla._lab.training.finetune",
         fromlist=["_read_checkpoint_directory", "save_training_checkpoint"],
     )
     optimizer_module = __import__(
-        "training.optimizer", fromlist=["SmolVLAAdamW", "SmolVLAOptimizerConfig"]
+        "mlx_smolvla._lab.training.optimizer", fromlist=["SmolVLAAdamW", "SmolVLAOptimizerConfig"]
     )
     model = TinyRegressor()
     optimizer = optimizer_module.SmolVLAAdamW(
@@ -4982,11 +4982,11 @@ def test_checkpoint_reader_keeps_the_original_candidate_directory_bound(
     monkeypatch,
 ) -> None:
     module = __import__(
-        "training.finetune",
+        "mlx_smolvla._lab.training.finetune",
         fromlist=["_read_checkpoint_directory", "save_training_checkpoint"],
     )
     optimizer_module = __import__(
-        "training.optimizer", fromlist=["SmolVLAAdamW", "SmolVLAOptimizerConfig"]
+        "mlx_smolvla._lab.training.optimizer", fromlist=["SmolVLAAdamW", "SmolVLAOptimizerConfig"]
     )
     root = tmp_path / "checkpoints"
     model = TinyRegressor()
@@ -5064,11 +5064,11 @@ def test_checkpoint_restore_rejects_candidate_replacement_during_pointer_repair(
     monkeypatch,
 ) -> None:
     module = __import__(
-        "training.finetune",
+        "mlx_smolvla._lab.training.finetune",
         fromlist=["load_latest_training_checkpoint", "save_training_checkpoint"],
     )
     optimizer_module = __import__(
-        "training.optimizer", fromlist=["SmolVLAAdamW", "SmolVLAOptimizerConfig"]
+        "mlx_smolvla._lab.training.optimizer", fromlist=["SmolVLAAdamW", "SmolVLAOptimizerConfig"]
     )
     root = tmp_path / "checkpoints"
     saved_model = TinyRegressor()
@@ -5141,11 +5141,11 @@ def test_checkpoint_discovery_rejects_out_of_cadence_candidates_before_mutation(
     tmp_path: Path,
 ) -> None:
     module = __import__(
-        "training.finetune",
+        "mlx_smolvla._lab.training.finetune",
         fromlist=["load_latest_training_checkpoint", "save_training_checkpoint", "write_run_state"],
     )
     optimizer_module = __import__(
-        "training.optimizer", fromlist=["SmolVLAAdamW", "SmolVLAOptimizerConfig"]
+        "mlx_smolvla._lab.training.optimizer", fromlist=["SmolVLAAdamW", "SmolVLAOptimizerConfig"]
     )
     root = tmp_path / "checkpoints"
     model = TinyRegressor()
@@ -5224,11 +5224,11 @@ def test_checkpoint_discovery_rejects_noncanonical_debris_before_mutation(
     tmp_path: Path,
 ) -> None:
     module = __import__(
-        "training.finetune",
+        "mlx_smolvla._lab.training.finetune",
         fromlist=["load_latest_training_checkpoint", "save_training_checkpoint"],
     )
     optimizer_module = __import__(
-        "training.optimizer", fromlist=["SmolVLAAdamW", "SmolVLAOptimizerConfig"]
+        "mlx_smolvla._lab.training.optimizer", fromlist=["SmolVLAAdamW", "SmolVLAOptimizerConfig"]
     )
     root = tmp_path / "checkpoints"
     model = TinyRegressor()
@@ -5295,11 +5295,11 @@ def test_t3b_checkpoint_discovery_rejects_an_extra_valid_retained_step(
     tmp_path: Path,
 ) -> None:
     module = __import__(
-        "training.finetune",
+        "mlx_smolvla._lab.training.finetune",
         fromlist=["load_latest_training_checkpoint", "save_training_checkpoint"],
     )
     optimizer_module = __import__(
-        "training.optimizer", fromlist=["SmolVLAAdamW", "SmolVLAOptimizerConfig"]
+        "mlx_smolvla._lab.training.optimizer", fromlist=["SmolVLAAdamW", "SmolVLAOptimizerConfig"]
     )
     root = tmp_path / "checkpoints"
     model = TinyRegressor()
@@ -5363,11 +5363,11 @@ def test_resume_quarantines_only_the_invalid_uncommitted_checkpoint(
     monkeypatch,
 ) -> None:
     module = __import__(
-        "training.finetune",
+        "mlx_smolvla._lab.training.finetune",
         fromlist=["load_latest_training_checkpoint", "save_training_checkpoint"],
     )
     optimizer_module = __import__(
-        "training.optimizer", fromlist=["SmolVLAAdamW", "SmolVLAOptimizerConfig"]
+        "mlx_smolvla._lab.training.optimizer", fromlist=["SmolVLAAdamW", "SmolVLAOptimizerConfig"]
     )
     output = tmp_path / "run"
     output.mkdir()
@@ -5473,11 +5473,11 @@ def test_invalid_uncommitted_checkpoint_is_not_quarantined_until_namespace_valid
     tmp_path: Path,
 ) -> None:
     module = __import__(
-        "training.finetune",
+        "mlx_smolvla._lab.training.finetune",
         fromlist=["load_latest_training_checkpoint", "save_training_checkpoint"],
     )
     optimizer_module = __import__(
-        "training.optimizer", fromlist=["SmolVLAAdamW", "SmolVLAOptimizerConfig"]
+        "mlx_smolvla._lab.training.optimizer", fromlist=["SmolVLAAdamW", "SmolVLAOptimizerConfig"]
     )
     root = tmp_path / "checkpoints"
     model = TinyRegressor()
@@ -5565,7 +5565,7 @@ def test_invalid_uncommitted_checkpoint_is_not_quarantined_until_namespace_valid
 
 def test_checkpoint_discovery_repairs_a_stale_latest_pointer(tmp_path: Path) -> None:
     module = __import__(
-        "training.finetune",
+        "mlx_smolvla._lab.training.finetune",
         fromlist=[
             "load_latest_training_checkpoint",
             "save_training_checkpoint",
@@ -5573,7 +5573,7 @@ def test_checkpoint_discovery_repairs_a_stale_latest_pointer(tmp_path: Path) -> 
         ],
     )
     optimizer_module = __import__(
-        "training.optimizer", fromlist=["SmolVLAAdamW", "SmolVLAOptimizerConfig"]
+        "mlx_smolvla._lab.training.optimizer", fromlist=["SmolVLAAdamW", "SmolVLAOptimizerConfig"]
     )
     root = tmp_path / "checkpoints"
     model = TinyRegressor()
@@ -5645,7 +5645,7 @@ def test_checkpoint_resume_stays_bound_to_the_original_output_directory(
     tmp_path: Path,
 ) -> None:
     module = __import__(
-        "training.finetune",
+        "mlx_smolvla._lab.training.finetune",
         fromlist=[
             "_acquire_t3b_training_lock",
             "_release_t3b_training_lock",
@@ -5654,7 +5654,7 @@ def test_checkpoint_resume_stays_bound_to_the_original_output_directory(
         ],
     )
     optimizer_module = __import__(
-        "training.optimizer", fromlist=["SmolVLAAdamW", "SmolVLAOptimizerConfig"]
+        "mlx_smolvla._lab.training.optimizer", fromlist=["SmolVLAAdamW", "SmolVLAOptimizerConfig"]
     )
     output = tmp_path / "t3b"
     output.mkdir()
@@ -5716,7 +5716,7 @@ def test_zero_step_checkpoint_recovery_stays_bound_to_original_output(
     tmp_path: Path,
 ) -> None:
     module = __import__(
-        "training.finetune",
+        "mlx_smolvla._lab.training.finetune",
         fromlist=[
             "_acquire_t3b_training_lock",
             "_prepare_zero_step_checkpoint_replay",
@@ -5757,7 +5757,7 @@ def test_later_cadence_checkpoint_staging_is_quarantined_and_retry_safe(
     tmp_path: Path,
 ) -> None:
     module = __import__(
-        "training.finetune",
+        "mlx_smolvla._lab.training.finetune",
         fromlist=[
             "_acquire_t3b_training_lock",
             "_bind_t3b_checkpoint_root",
@@ -5812,7 +5812,7 @@ def test_checkpoint_transaction_debris_is_quarantined_and_retry_safe(
     tmp_path: Path,
 ) -> None:
     module = __import__(
-        "training.finetune",
+        "mlx_smolvla._lab.training.finetune",
         fromlist=[
             "_acquire_t3b_training_lock",
             "_bind_t3b_checkpoint_root",
@@ -5908,7 +5908,7 @@ def test_checkpoint_transaction_debris_is_quarantined_and_retry_safe(
 
 def test_resume_output_staging_is_quarantined_and_retry_safe(tmp_path: Path) -> None:
     module = __import__(
-        "training.finetune",
+        "mlx_smolvla._lab.training.finetune",
         fromlist=[
             "_acquire_t3b_training_lock",
             "_reconcile_t3b_resume_output_staging",
@@ -6003,7 +6003,7 @@ def test_resume_output_staging_is_quarantined_and_retry_safe(tmp_path: Path) -> 
 
 def test_loaded_end_checkpoint_reconciles_stale_run_metadata(tmp_path: Path) -> None:
     module = __import__(
-        "training.finetune",
+        "mlx_smolvla._lab.training.finetune",
         fromlist=["_reconcile_loaded_checkpoint_run_document"],
     )
     checkpoint = SimpleNamespace(
@@ -6037,7 +6037,7 @@ def test_loaded_end_checkpoint_reconciles_stale_run_metadata(tmp_path: Path) -> 
 
 
 def test_atomic_run_state_replaces_complete_json(tmp_path: Path) -> None:
-    module = __import__("training.finetune", fromlist=["write_run_state"])
+    module = __import__("mlx_smolvla._lab.training.finetune", fromlist=["write_run_state"])
     path = tmp_path / "run.json"
 
     first_hash = module.write_run_state(path, {"status": "running", "step": 0})
@@ -6052,7 +6052,7 @@ def test_bound_run_state_compare_and_swap_preserves_a_replacement(
     tmp_path: Path,
 ) -> None:
     module = __import__(
-        "training.finetune",
+        "mlx_smolvla._lab.training.finetune",
         fromlist=["_write_run_state_with_binding"],
     )
     path = tmp_path / "run.json"
@@ -6088,7 +6088,7 @@ def test_fresh_run_never_overwrites_a_late_run_document(
     monkeypatch,
 ) -> None:
     module = __import__(
-        "training.finetune",
+        "mlx_smolvla._lab.training.finetune",
         fromlist=["FineTuneConfig", "_run_lora_finetune_impl"],
     )
     output = tmp_path / "fresh"
@@ -6125,7 +6125,7 @@ def test_fresh_run_never_overwrites_a_late_budget_document(
     monkeypatch,
 ) -> None:
     module = __import__(
-        "training.finetune",
+        "mlx_smolvla._lab.training.finetune",
         fromlist=["FineTuneConfig", "_run_lora_finetune_impl"],
     )
     output = tmp_path / "fresh"
@@ -6161,7 +6161,7 @@ def test_atomic_run_state_uses_bound_parent_after_path_replacement(
     monkeypatch,
 ) -> None:
     module = __import__(
-        "training.finetune",
+        "mlx_smolvla._lab.training.finetune",
         fromlist=["_acquire_t3b_training_lock", "write_run_state"],
     )
     output = tmp_path / "t3b"
@@ -6199,7 +6199,7 @@ def test_atomic_run_state_uses_bound_parent_after_path_replacement(
 def test_adapter_checkpoint_uses_a_real_safetensors_temporary_suffix(
     tmp_path: Path,
 ) -> None:
-    module = __import__("training.finetune", fromlist=["_save_adapter_checkpoint"])
+    module = __import__("mlx_smolvla._lab.training.finetune", fromlist=["_save_adapter_checkpoint"])
     model = TinyRegressor()
     names = tuple(name for name, _ in tree_flatten(model.trainable_parameters()))
     report = SimpleNamespace(
@@ -6223,7 +6223,7 @@ def test_adapter_checkpoint_uses_a_real_safetensors_temporary_suffix(
 
 
 def test_expert_adapter_checkpoint_records_nonlegacy_scope(tmp_path: Path) -> None:
-    module = __import__("training.finetune", fromlist=["_save_adapter_checkpoint"])
+    module = __import__("mlx_smolvla._lab.training.finetune", fromlist=["_save_adapter_checkpoint"])
     model = TinyRegressor()
     names = tuple(name for name, _ in tree_flatten(model.trainable_parameters()))
     report = SimpleNamespace(
@@ -6246,7 +6246,7 @@ def test_expert_adapter_checkpoint_records_nonlegacy_scope(tmp_path: Path) -> No
 def test_adapter_checkpoint_exact_retry_reuses_the_published_pair(
     tmp_path: Path,
 ) -> None:
-    module = __import__("training.finetune", fromlist=["_save_adapter_checkpoint"])
+    module = __import__("mlx_smolvla._lab.training.finetune", fromlist=["_save_adapter_checkpoint"])
     model = TinyRegressor()
     names = tuple(name for name, _ in tree_flatten(model.trainable_parameters()))
     report = SimpleNamespace(
@@ -6273,7 +6273,7 @@ def test_adapter_checkpoint_never_clobbers_an_inserted_target(
     tmp_path: Path,
     monkeypatch,
 ) -> None:
-    module = __import__("training.finetune", fromlist=["_save_adapter_checkpoint"])
+    module = __import__("mlx_smolvla._lab.training.finetune", fromlist=["_save_adapter_checkpoint"])
     model = TinyRegressor()
     names = tuple(name for name, _ in tree_flatten(model.trainable_parameters()))
     report = SimpleNamespace(
@@ -6316,7 +6316,7 @@ def test_adapter_staging_uses_its_bound_inode_for_first_write(
     tmp_path: Path,
     monkeypatch,
 ) -> None:
-    module = __import__("training.finetune", fromlist=["_save_adapter_checkpoint"])
+    module = __import__("mlx_smolvla._lab.training.finetune", fromlist=["_save_adapter_checkpoint"])
     model = TinyRegressor()
     names = tuple(name for name, _ in tree_flatten(model.trainable_parameters()))
     report = SimpleNamespace(
@@ -6362,7 +6362,7 @@ def test_adapter_first_child_write_never_follows_an_inserted_symlink(
     tmp_path: Path,
     monkeypatch,
 ) -> None:
-    module = __import__("training.finetune", fromlist=["_save_adapter_checkpoint"])
+    module = __import__("mlx_smolvla._lab.training.finetune", fromlist=["_save_adapter_checkpoint"])
     model = TinyRegressor()
     names = tuple(name for name, _ in tree_flatten(model.trainable_parameters()))
     report = SimpleNamespace(
@@ -6403,7 +6403,7 @@ def test_finetune_provenance_covers_repo_and_installed_runtime_paths(
     monkeypatch,
 ) -> None:
     module = __import__(
-        "training.finetune",
+        "mlx_smolvla._lab.training.finetune",
         fromlist=["finetune_implementation_hashes"],
     )
     hashes = module.finetune_implementation_hashes()
@@ -6444,7 +6444,7 @@ def test_distribution_payload_hash_rejects_recorded_file_mutation(
     tmp_path: Path,
 ) -> None:
     module = __import__(
-        "training.finetune",
+        "mlx_smolvla._lab.training.finetune",
         fromlist=["_hash_distribution_recorded_files"],
     )
     site_packages = tmp_path / "venv" / "lib" / "site-packages"
@@ -6488,7 +6488,7 @@ def test_distribution_payload_hash_rejects_a_recorded_symlink(
     tmp_path: Path,
 ) -> None:
     module = __import__(
-        "training.finetune",
+        "mlx_smolvla._lab.training.finetune",
         fromlist=["_hash_distribution_recorded_files"],
     )
     environment = tmp_path / "venv"
@@ -6529,7 +6529,7 @@ def test_distribution_inventory_rejects_unrecorded_import_precedence_file(
     tmp_path: Path,
 ) -> None:
     module = __import__(
-        "training.finetune",
+        "mlx_smolvla._lab.training.finetune",
         fromlist=["_hash_distribution_package_inventory"],
     )
     site_packages = tmp_path / "venv" / "lib" / "site-packages"
@@ -6582,7 +6582,7 @@ def test_t3b_input_resolution_rejects_symlinked_configured_cache_roots(
     monkeypatch,
 ) -> None:
     module = __import__(
-        "training.finetune",
+        "mlx_smolvla._lab.training.finetune",
         fromlist=["FineTuneConfig", "_resolve_t3b_input_paths"],
     )
     real_cache = tmp_path / "real-cache"
@@ -6618,7 +6618,7 @@ def test_resume_process_identity_requires_the_exact_bound_pid_document(
     tmp_path: Path,
 ) -> None:
     module = __import__(
-        "training.finetune",
+        "mlx_smolvla._lab.training.finetune",
         fromlist=[
             "_snapshot_regular_file",
             "_validate_resume_process_identity",
@@ -6688,7 +6688,7 @@ def test_resume_pid_rotation_recovers_a_crash_before_run_publication(
     tmp_path: Path,
 ) -> None:
     module = __import__(
-        "training.finetune",
+        "mlx_smolvla._lab.training.finetune",
         fromlist=[
             "_acquire_t3b_training_lock",
             "_backup_resume_process_identity",
@@ -6778,7 +6778,7 @@ def test_resume_restores_uniquely_bound_previous_state_generations(
     tmp_path: Path,
 ) -> None:
     module = __import__(
-        "training.finetune",
+        "mlx_smolvla._lab.training.finetune",
         fromlist=[
             "_acquire_t3b_training_lock",
             "_release_t3b_training_lock",
@@ -6831,7 +6831,7 @@ def test_metrics_recovery_inventory_adopts_only_exact_regular_files(
     tmp_path: Path,
 ) -> None:
     module = __import__(
-        "training.finetune",
+        "mlx_smolvla._lab.training.finetune",
         fromlist=[
             "_acquire_t3b_training_lock",
             "_metrics_recovery_inventory",
@@ -6865,7 +6865,7 @@ def test_metrics_recovery_inventory_adopts_only_exact_regular_files(
 
 def test_checkpoint_state_decoder_rejects_noncanonical_json_scalars() -> None:
     module = __import__(
-        "training.finetune",
+        "mlx_smolvla._lab.training.finetune",
         fromlist=["_checkpoint_state_from_dict"],
     )
     valid = {
@@ -6916,11 +6916,11 @@ def test_self_rehashed_checkpoint_rejects_noncanonical_state_metadata(
     tmp_path: Path,
 ) -> None:
     module = __import__(
-        "training.finetune",
+        "mlx_smolvla._lab.training.finetune",
         fromlist=["_read_checkpoint_directory", "save_training_checkpoint"],
     )
     optimizer_module = __import__(
-        "training.optimizer", fromlist=["SmolVLAAdamW", "SmolVLAOptimizerConfig"]
+        "mlx_smolvla._lab.training.optimizer", fromlist=["SmolVLAAdamW", "SmolVLAOptimizerConfig"]
     )
     model = TinyRegressor()
     optimizer = optimizer_module.SmolVLAAdamW(
@@ -6965,11 +6965,11 @@ def test_resume_rejects_a_self_rehashed_committed_checkpoint_binding(
     tmp_path: Path,
 ) -> None:
     module = __import__(
-        "training.finetune",
+        "mlx_smolvla._lab.training.finetune",
         fromlist=["load_latest_training_checkpoint", "save_training_checkpoint"],
     )
     optimizer_module = __import__(
-        "training.optimizer", fromlist=["SmolVLAAdamW", "SmolVLAOptimizerConfig"]
+        "mlx_smolvla._lab.training.optimizer", fromlist=["SmolVLAAdamW", "SmolVLAOptimizerConfig"]
     )
     root = tmp_path / "checkpoints"
     model = TinyRegressor()
@@ -7045,7 +7045,7 @@ def test_forged_checkpoint_metrics_boundary_causes_zero_resume_mutations(
     tmp_path: Path,
 ) -> None:
     module = __import__(
-        "training.finetune",
+        "mlx_smolvla._lab.training.finetune",
         fromlist=[
             "MetricsWriter",
             "_snapshot_regular_file_at",
@@ -7054,7 +7054,7 @@ def test_forged_checkpoint_metrics_boundary_causes_zero_resume_mutations(
         ],
     )
     optimizer_module = __import__(
-        "training.optimizer", fromlist=["SmolVLAAdamW", "SmolVLAOptimizerConfig"]
+        "mlx_smolvla._lab.training.optimizer", fromlist=["SmolVLAAdamW", "SmolVLAOptimizerConfig"]
     )
     root = tmp_path / "checkpoints"
     model = TinyRegressor()
@@ -7149,7 +7149,7 @@ def test_t3b_training_bridge_reconstruction_rejects_materialized_aba(
     monkeypatch,
 ) -> None:
     module = __import__(
-        "training.finetune",
+        "mlx_smolvla._lab.training.finetune",
         fromlist=["FineTuneConfig", "_validate_t3b_training_bridge_semantics"],
     )
     frozen_inputs = _t3b_frozen_inputs()
@@ -7195,7 +7195,7 @@ def test_t3b_training_bridge_reconstruction_materializes_disposable_batch(
     monkeypatch,
 ) -> None:
     module = __import__(
-        "training.finetune",
+        "mlx_smolvla._lab.training.finetune",
         fromlist=["FineTuneConfig", "_validate_t3b_training_bridge_semantics"],
     )
     frozen_inputs = _t3b_frozen_inputs()
@@ -7249,7 +7249,7 @@ def test_t3b_training_bridge_reconstruction_materializes_disposable_batch(
 
 def test_t3b_resume_run_rejects_self_rehashed_immutable_contradictions() -> None:
     module = __import__(
-        "training.finetune",
+        "mlx_smolvla._lab.training.finetune",
         fromlist=["_validate_t3b_resume_run_document"],
     )
     immutable = {
@@ -7304,7 +7304,7 @@ def test_recorded_recovery_paths_require_safe_live_inventory_before_resume(
     tmp_path: Path,
 ) -> None:
     module = __import__(
-        "training.finetune",
+        "mlx_smolvla._lab.training.finetune",
         fromlist=[
             "_acquire_t3b_training_lock",
             "_release_t3b_training_lock",
@@ -7395,7 +7395,7 @@ def test_startup_recovery_inventory_reads_the_retained_tree_during_aba(
     monkeypatch,
 ) -> None:
     module = __import__(
-        "training.finetune",
+        "mlx_smolvla._lab.training.finetune",
         fromlist=[
             "_acquire_t3b_training_lock",
             "_release_t3b_training_lock",
@@ -7451,7 +7451,7 @@ def test_t3b_final_artifact_bindings_reject_child_replacement(
     tmp_path: Path,
 ) -> None:
     module = __import__(
-        "training.finetune",
+        "mlx_smolvla._lab.training.finetune",
         fromlist=[
             "_acquire_t3b_training_lock",
             "_bind_t3b_adapter_files",
@@ -7559,7 +7559,7 @@ def test_bound_file_revalidation_rechecks_the_public_name_after_hashing(
     monkeypatch,
 ) -> None:
     module = __import__(
-        "training.finetune",
+        "mlx_smolvla._lab.training.finetune",
         fromlist=["_open_bound_regular_file_at", "_revalidate_bound_regular_file_at"],
     )
     target = tmp_path / "artifact.bin"

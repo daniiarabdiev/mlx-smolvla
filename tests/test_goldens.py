@@ -10,7 +10,7 @@ import pytest
 
 
 def test_golden_writer_hashes_exact_bytes_and_store_loads_them(tmp_path: Path) -> None:
-    from reference.goldens import GoldenStore, GoldenWriter
+    from mlx_smolvla._lab.reference.goldens import GoldenStore, GoldenWriter
 
     writer = GoldenWriter(tmp_path)
     writer.add("sample_000/noise", np.arange(6, dtype=np.float32).reshape(2, 3))
@@ -26,7 +26,7 @@ def test_golden_writer_hashes_exact_bytes_and_store_loads_them(tmp_path: Path) -
 
 
 def test_manifest_is_stable_when_the_same_arrays_are_written_twice(tmp_path: Path) -> None:
-    from reference.goldens import GoldenWriter
+    from mlx_smolvla._lab.reference.goldens import GoldenWriter
 
     value = np.linspace(-1.0, 1.0, 12, dtype=np.float32).reshape(3, 4)
     first = GoldenWriter(tmp_path)
@@ -42,7 +42,7 @@ def test_manifest_is_stable_when_the_same_arrays_are_written_twice(tmp_path: Pat
 
 
 def test_sample_plan_spans_eight_real_episodes() -> None:
-    from reference.goldens import GOLDEN_SAMPLE_SPECS
+    from mlx_smolvla._lab.reference.goldens import GOLDEN_SAMPLE_SPECS
 
     assert len(GOLDEN_SAMPLE_SPECS) >= 8
     assert len({spec.episode for spec in GOLDEN_SAMPLE_SPECS}) >= 8
@@ -51,8 +51,8 @@ def test_sample_plan_spans_eight_real_episodes() -> None:
 
 @pytest.mark.slow
 def test_real_reference_capture_contains_all_audited_boundaries(tmp_path: Path) -> None:
-    from reference.goldens import GoldenWriter, capture_sample
-    from reference.policy import ReferencePolicy, load_dataset_observation
+    from mlx_smolvla._lab.reference.goldens import GoldenWriter, capture_sample
+    from mlx_smolvla._lab.reference.policy import ReferencePolicy, load_dataset_observation
 
     reference = ReferencePolicy.load(cache_dir=Path(".cache/hf"))
     sample = load_dataset_observation(cache_dir=Path(".cache/hf"), index=0, episode=0)

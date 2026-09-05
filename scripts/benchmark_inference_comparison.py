@@ -23,12 +23,12 @@ _REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 if str(_REPOSITORY_ROOT) not in sys.path:
     sys.path.insert(0, str(_REPOSITORY_ROOT))
 
-from reference.benchmark import (
+from mlx_smolvla._lab.reference.benchmark import (
     ComparisonProtocol,
     EngineTiming,
     validate_comparison_document,
 )
-from reference.discovery import CHECKPOINT_ID, CHECKPOINT_REVISION
+from mlx_smolvla._lab.reference.discovery import CHECKPOINT_ID, CHECKPOINT_REVISION
 
 
 _RESULT_PREFIX = "SMOLVLA_BENCHMARK_RESULT="
@@ -45,7 +45,7 @@ _COMPETING_MARKERS = (
     "make test",
     "finetune_lora",
     "benchmark_training.py",
-    "training.self_consistency",
+    "mlx_smolvla._lab.training.self_consistency",
     "self_consistency.py",
     "scripts/bench.py",
     "profile_inference_dtypes.py",
@@ -234,7 +234,7 @@ def _torch_worker(args: argparse.Namespace) -> dict[str, object]:
     import numpy as np
     import torch
 
-    from reference.policy import ReferencePolicy
+    from mlx_smolvla._lab.reference.policy import ReferencePolicy
 
     protocol = ComparisonProtocol()
     if not torch.backends.mps.is_available():

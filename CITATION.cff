@@ -2,7 +2,7 @@ cff-version: 1.2.0
 message: "If mlx-smolvla supports your work, cite this software and the upstream SmolVLA work."
 title: "mlx-smolvla"
 type: software
-version: 0.1.1
+version: 0.1.2
 license: Apache-2.0
 authors:
   - name: "mlx-smolvla contributors"

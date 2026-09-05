@@ -39,7 +39,7 @@ def test_import_bootstrap_rejects_source_swapped_after_capture(tmp_path: Path) -
         f"""
 import sys
 from pathlib import Path
-from training.runtime_provenance import install_runtime_provenance
+from mlx_smolvla._lab.training.runtime_provenance import install_runtime_provenance
 root = Path({str(guarded)!r})
 sys.path.insert(0, str(root))
 install_runtime_provenance(repository_root=root, include_installed=False)
@@ -69,7 +69,7 @@ def test_import_bootstrap_rejects_new_guarded_modules_after_freeze(
         f"""
 import sys
 from pathlib import Path
-from training.runtime_provenance import (
+from mlx_smolvla._lab.training.runtime_provenance import (
     freeze_runtime_provenance,
     install_runtime_provenance,
     runtime_provenance_evidence,
@@ -105,7 +105,7 @@ def test_import_bootstrap_rejects_a_preloaded_guarded_module(
         f"""
 import sys
 from pathlib import Path
-from training.runtime_provenance import install_runtime_provenance
+from mlx_smolvla._lab.training.runtime_provenance import install_runtime_provenance
 root = Path({str(guarded)!r})
 sys.path.insert(0, str(root))
 import preloaded
@@ -134,7 +134,7 @@ def test_binary_loader_verifies_origin_before_delegate_create_module(
         f"""
 from pathlib import Path
 from types import SimpleNamespace
-import training.runtime_provenance as provenance
+import mlx_smolvla._lab.training.runtime_provenance as provenance
 root = Path({str(guarded)!r})
 origin = root / 'native.so'
 provenance.install_runtime_provenance(repository_root=root, include_installed=False)
@@ -177,7 +177,7 @@ def test_binary_loader_delegates_through_the_retained_inode_during_aba(
         f"""
 from pathlib import Path
 from types import SimpleNamespace
-import training.runtime_provenance as provenance
+import mlx_smolvla._lab.training.runtime_provenance as provenance
 root = Path({str(guarded)!r})
 origin = root / 'native.so'
 provenance.install_runtime_provenance(repository_root=root, include_installed=False)
@@ -219,7 +219,7 @@ def test_import_bootstrap_rejects_a_guarded_sourceless_loader_after_freeze(
 import py_compile
 import sys
 from pathlib import Path
-from training.runtime_provenance import (
+from mlx_smolvla._lab.training.runtime_provenance import (
     freeze_runtime_provenance,
     install_runtime_provenance,
 )
@@ -344,7 +344,7 @@ def test_fixed_t3b_public_apis_reject_an_unisolated_uninstalled_runtime(
         repository_root,
         f"""
 from pathlib import Path
-from training.finetune import (
+from mlx_smolvla._lab.training.finetune import (
     FIXED_BUDGET_MODE,
     FineTuneConfig,
     prepare_lora_finetune_launch,

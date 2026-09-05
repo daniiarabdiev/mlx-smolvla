@@ -5,12 +5,12 @@ requires = [
   "mlx==0.32.2",
   "nanobind==2.15.0",
 ]
-build-backend = "reference._build_backend"
+build-backend = "_build_backend"
 backend-path = ["."]
 
 [project]
 name = "mlx-smolvla"
-version = "0.1.1"
+version = "0.1.2"
 description = "Native MLX inference, serving, and training tools for SmolVLA on Apple Silicon"
 readme = "README.md"
 requires-python = ">=3.11,<3.14"
@@ -35,12 +35,12 @@ classifiers = [
   "Topic :: Scientific/Engineering :: Artificial Intelligence",
 ]
 dependencies = [
-  "huggingface-hub==1.29.0",
+  "huggingface-hub>=1.29.0,<2",
   "mlx>=0.32.0,<0.32.3",
-  "numpy==2.2.6",
-  "pillow==12.3.0",
-  "safetensors==0.8.0",
-  "tokenizers==0.22.2",
+  "numpy>=2.2.6,<3",
+  "pillow>=12.3.0,<13",
+  "safetensors>=0.8.0,<0.9",
+  "tokenizers>=0.22.2,<0.23",
 ]
 
 [project.urls]
@@ -53,6 +53,7 @@ Repository = "https://github.com/daniiarabdiev/mlx-smolvla"
 [project.scripts]
 mlx-smolvla = "mlx_smolvla.cli:main"
 
+# Keep reference/protocol extras pinned to the audited LeRobot and Torch versions.
 [project.optional-dependencies]
 hardware = [
   "lerobot[async,hardware]==0.6.1; python_version >= '3.12'",

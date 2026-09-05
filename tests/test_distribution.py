@@ -51,11 +51,11 @@ def test_installed_runtime_requires_the_audited_dependency_versions() -> None:
     assert "0.32.3" not in mlx_requirement
     assert "0.33.0" not in mlx_requirement
     assert runtime == {
-        "huggingface-hub": "==1.29.0",
-        "numpy": "==2.2.6",
-        "pillow": "==12.3.0",
-        "safetensors": "==0.8.0",
-        "tokenizers": "==0.22.2",
+        "huggingface-hub": "<2,>=1.29.0",
+        "numpy": "<3,>=2.2.6",
+        "pillow": "<13,>=12.3.0",
+        "safetensors": "<0.9,>=0.8.0",
+        "tokenizers": "<0.23,>=0.22.2",
     }
 
 
@@ -120,7 +120,7 @@ def test_serve_extra_is_optional_and_guarded_by_lerobots_python_312_floor() -> N
 def test_native_extension_build_is_optional_and_targets_macos_14(
     monkeypatch,
 ) -> None:
-    from reference._build_backend import setup_kwargs
+    from _build_backend import setup_kwargs
 
     monkeypatch.setenv("MLX_SMOLVLA_BUILD_NATIVE", "0")
     monkeypatch.delenv("MACOSX_DEPLOYMENT_TARGET", raising=False)
@@ -132,7 +132,7 @@ def test_native_extension_build_is_optional_and_targets_macos_14(
 
 
 def test_native_extension_is_built_by_default(monkeypatch) -> None:
-    from reference._build_backend import setup_kwargs
+    from _build_backend import setup_kwargs
 
     monkeypatch.delenv("MLX_SMOLVLA_BUILD_NATIVE", raising=False)
     configuration = setup_kwargs()
@@ -146,17 +146,17 @@ def test_native_extension_is_built_by_default(monkeypatch) -> None:
 def test_training_package_is_shipped_as_an_optional_surface() -> None:
     metadata = distribution("mlx-smolvla").metadata
 
-    assert find_spec("training") is not None
+    assert find_spec("mlx_smolvla._lab.training") is not None
     assert "train" in (metadata.get_all("Provides-Extra") or [])
 
 
 def test_trained_parity_subpackage_is_in_the_wheel_package_list() -> None:
-    from reference._build_backend import setup_kwargs
+    from _build_backend import setup_kwargs
 
     configuration = setup_kwargs()
 
     assert "mlx_smolvla.training" in configuration["packages"]
-    assert "reference" in configuration["packages"]
+    assert "mlx_smolvla._lab.reference" in configuration["packages"]
     assert find_spec("mlx_smolvla.training.trained_parity") is not None
 
 
@@ -184,13 +184,14 @@ def test_built_wheel_contains_and_imports_the_trained_parity_surface(
     assert len(wheels) == 1
     with zipfile.ZipFile(wheels[0]) as archive:
         names = set(archive.namelist())
-    assert not any(name.startswith("smolvla_mlx/") for name in names)
+    assert {name.split("/")[0] for name in names if ".dist-info/" not in name} == {"mlx_smolvla"}
+    assert not any("_build_backend" in name for name in names)
     assert "mlx_smolvla/server.py" in names
     assert "mlx_smolvla/training/trained_parity.py" in names
-    assert "training/t3_contract.py" in names
-    assert "training/ux.py" in names
-    assert "training/benchmark.py" in names
-    assert "reference/discovery.py" in names
+    assert "mlx_smolvla/_lab/training/t3_contract.py" in names
+    assert "mlx_smolvla/_lab/training/ux.py" in names
+    assert "mlx_smolvla/_lab/training/benchmark.py" in names
+    assert "mlx_smolvla/_lab/reference/discovery.py" in names
 
     target = tmp_path / "installed"
     installed = subprocess.run(
@@ -211,6 +212,9 @@ def test_built_wheel_contains_and_imports_the_trained_parity_surface(
     )
     assert installed.returncode == 0, installed.stderr
     environment["PYTHONPATH"] = str(target)
+    for decoy in ("training", "reference"):
+        (tmp_path / decoy).mkdir()
+        (tmp_path / decoy / "__init__.py").write_text("")
     imported = subprocess.run(
         [
             sys.executable,

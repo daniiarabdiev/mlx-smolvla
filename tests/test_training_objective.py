@@ -7,7 +7,7 @@ import pytest
 
 
 def test_differentiable_rms_norm_has_finite_input_and_weight_gradients() -> None:
-    module = __import__("training.differentiable", fromlist=["differentiable_rms_norm"])
+    module = __import__("mlx_smolvla._lab.training.differentiable", fromlist=["differentiable_rms_norm"])
     function = module.differentiable_rms_norm
     inputs = mx.array([[1.0, -2.0, 3.0]], dtype=mx.float32)
     weight = mx.ones((3,), dtype=mx.float32)
@@ -26,7 +26,7 @@ def test_differentiable_rms_norm_has_finite_input_and_weight_gradients() -> None
 
 
 def test_flow_objective_ignores_padded_action_dimensions() -> None:
-    module = __import__("training.objective", fromlist=["flow_matching_inputs"])
+    module = __import__("mlx_smolvla._lab.training.objective", fromlist=["flow_matching_inputs"])
     actions = mx.zeros((1, 2, 4), dtype=mx.float32)
     noise = mx.ones((1, 2, 4), dtype=mx.float32)
     timesteps = mx.array([0.25], dtype=mx.float32)
@@ -45,7 +45,7 @@ def test_flow_objective_ignores_padded_action_dimensions() -> None:
 
 
 def test_flow_objective_ignores_temporally_padded_actions_in_numerator_and_denominator() -> None:
-    module = __import__("training.objective", fromlist=["masked_velocity_mse"])
+    module = __import__("mlx_smolvla._lab.training.objective", fromlist=["masked_velocity_mse"])
     target = mx.zeros((1, 2, 4), dtype=mx.float32)
     prediction = mx.array(
         [[[1.0, 3.0, 100.0, 100.0], [50.0, 70.0, 100.0, 100.0]]],
@@ -65,7 +65,7 @@ def test_flow_objective_ignores_temporally_padded_actions_in_numerator_and_denom
 
 
 def test_flow_objective_all_padded_batch_uses_clamped_denominator() -> None:
-    module = __import__("training.objective", fromlist=["masked_velocity_mse"])
+    module = __import__("mlx_smolvla._lab.training.objective", fromlist=["masked_velocity_mse"])
     target = mx.zeros((1, 2, 4), dtype=mx.float32)
     prediction = mx.full((1, 2, 4), 100.0, dtype=mx.float32)
 
@@ -81,7 +81,7 @@ def test_flow_objective_all_padded_batch_uses_clamped_denominator() -> None:
 
 
 def test_flow_inputs_reject_mismatched_action_and_noise_shapes() -> None:
-    module = __import__("training.objective", fromlist=["flow_matching_inputs"])
+    module = __import__("mlx_smolvla._lab.training.objective", fromlist=["flow_matching_inputs"])
 
     with pytest.raises(ValueError, match="actions and noise must have identical shapes"):
         module.flow_matching_inputs(
@@ -92,7 +92,7 @@ def test_flow_inputs_reject_mismatched_action_and_noise_shapes() -> None:
 
 
 def test_flow_inputs_require_a_timestep_for_each_batch_item() -> None:
-    module = __import__("training.objective", fromlist=["flow_matching_inputs"])
+    module = __import__("mlx_smolvla._lab.training.objective", fromlist=["flow_matching_inputs"])
 
     with pytest.raises(ValueError, match="timesteps must have shape"):
         module.flow_matching_inputs(
@@ -103,7 +103,7 @@ def test_flow_inputs_require_a_timestep_for_each_batch_item() -> None:
 
 
 def test_velocity_loss_rejects_action_width_outside_the_padded_tensor() -> None:
-    module = __import__("training.objective", fromlist=["masked_velocity_mse"])
+    module = __import__("mlx_smolvla._lab.training.objective", fromlist=["masked_velocity_mse"])
     velocity = mx.zeros((1, 2, 4))
 
     with pytest.raises(ValueError, match="action_dim must be in"):
@@ -111,7 +111,7 @@ def test_velocity_loss_rejects_action_width_outside_the_padded_tensor() -> None:
 
 
 def test_velocity_loss_rejects_mismatched_prediction_and_target_shapes() -> None:
-    module = __import__("training.objective", fromlist=["masked_velocity_mse"])
+    module = __import__("mlx_smolvla._lab.training.objective", fromlist=["masked_velocity_mse"])
 
     with pytest.raises(ValueError, match="prediction and target velocity must have identical shapes"):
         module.masked_velocity_mse(
@@ -122,7 +122,7 @@ def test_velocity_loss_rejects_mismatched_prediction_and_target_shapes() -> None
 
 
 def test_velocity_loss_rejects_mismatched_temporal_mask_shape() -> None:
-    module = __import__("training.objective", fromlist=["masked_velocity_mse"])
+    module = __import__("mlx_smolvla._lab.training.objective", fromlist=["masked_velocity_mse"])
     velocity = mx.zeros((2, 3, 4))
 
     with pytest.raises(ValueError, match="action_is_pad must have shape"):

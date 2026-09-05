@@ -36,7 +36,7 @@ class IdentityBasePreprocessor:
 
 
 def test_stats_aware_preprocessor_matches_lerobot_mean_std_math() -> None:
-    module = __import__("training.preprocessing", fromlist=["StatsAwareSmolVLAPreprocessor"])
+    module = __import__("mlx_smolvla._lab.training.preprocessing", fromlist=["StatsAwareSmolVLAPreprocessor"])
     processor = module.StatsAwareSmolVLAPreprocessor(
         base=IdentityBasePreprocessor(),
         state_mean=mx.array([10.0, -2.0], dtype=mx.float32),
@@ -62,7 +62,7 @@ def test_stats_aware_preprocessor_matches_lerobot_mean_std_math() -> None:
 
 
 def test_stats_aware_preprocessor_reads_standard_processor_safetensors(tmp_path: Path) -> None:
-    module = __import__("training.preprocessing", fromlist=["StatsAwareSmolVLAPreprocessor"])
+    module = __import__("mlx_smolvla._lab.training.preprocessing", fromlist=["StatsAwareSmolVLAPreprocessor"])
     mx.save_safetensors(
         str(tmp_path / "policy_preprocessor_step_5_normalizer_processor.safetensors"),
         {
@@ -92,7 +92,7 @@ def test_stats_aware_preprocessor_reads_standard_processor_safetensors(tmp_path:
 
 
 def test_inverse_checkpoint_mapping_is_strict_and_reverses_patch_layout() -> None:
-    module = __import__("training.export", fromlist=["source_name_map"])
+    module = __import__("mlx_smolvla._lab.training.export", fromlist=["source_name_map"])
     source_names = (
         "model.state_proj.weight",
         "model.vlm_with_expert.vlm.model.vision_model.embeddings.patch_embedding.weight",
@@ -113,9 +113,9 @@ def test_inverse_checkpoint_mapping_is_strict_and_reverses_patch_layout() -> Non
 
 @pytest.fixture(scope="module")
 def standard_export(tmp_path_factory: pytest.TempPathFactory):
-    dataset = __import__("training.dataset", fromlist=["compute_train_statistics"])
-    export = __import__("training.export", fromlist=["export_merged_checkpoint"])
-    model_module = __import__("training.model", fromlist=["SmolVLATrainingModel"])
+    dataset = __import__("mlx_smolvla._lab.training.dataset", fromlist=["compute_train_statistics"])
+    export = __import__("mlx_smolvla._lab.training.export", fromlist=["export_merged_checkpoint"])
+    model_module = __import__("mlx_smolvla._lab.training.model", fromlist=["SmolVLATrainingModel"])
     root = tmp_path_factory.mktemp("standard-export")
     source = export.resolve_base_checkpoint(Path(".cache/hf"))
     split = dataset.make_episode_split(num_episodes=50, seed=20260901)
@@ -187,7 +187,7 @@ def test_complete_export_can_be_validated_and_reused_after_finalization_interrup
 ) -> None:
     output, original, _, _ = standard_export
     module = __import__(
-        "training.export", fromlist=["validate_merged_checkpoint_export"]
+        "mlx_smolvla._lab.training.export", fromlist=["validate_merged_checkpoint_export"]
     )
     expected_metadata = json.loads(
         (output / "training_manifest.json").read_text(encoding="utf-8")
@@ -218,7 +218,7 @@ def test_tokenizer_snapshot_resolution_is_strictly_local(
     monkeypatch,
 ) -> None:
     module = __import__(
-        "training.reference_export",
+        "mlx_smolvla._lab.training.reference_export",
         fromlist=["resolve_tokenizer_snapshot"],
     )
     resolved = tmp_path / "tokenizer"
@@ -240,12 +240,12 @@ def test_bound_export_validator_reads_one_retained_export_tree(
 ) -> None:
     output, original, source, root = standard_export
     module = __import__(
-        "training.export",
+        "mlx_smolvla._lab.training.export",
         fromlist=["validate_bound_merged_checkpoint_export"],
     )
-    dataset = __import__("training.dataset", fromlist=["compute_train_statistics"])
+    dataset = __import__("mlx_smolvla._lab.training.dataset", fromlist=["compute_train_statistics"])
     model_module = __import__(
-        "training.model", fromlist=["SmolVLATrainingModel"]
+        "mlx_smolvla._lab.training.model", fromlist=["SmolVLATrainingModel"]
     )
     split = dataset.make_episode_split(num_episodes=50, seed=20260901)
     stats = dataset.compute_train_statistics(
@@ -296,7 +296,7 @@ def test_reused_export_requires_exact_manifest_and_directory_inventory(
 ) -> None:
     output, _, _, _ = standard_export
     module = __import__(
-        "training.export",
+        "mlx_smolvla._lab.training.export",
         fromlist=["validate_merged_checkpoint_export"],
     )
     for case, declare in (("declared", True), ("unmanifested", False)):
@@ -330,9 +330,9 @@ def test_reused_export_support_files_are_bound_to_source_and_statistics(
     tmp_path: Path,
 ) -> None:
     output, _, source, _ = standard_export
-    dataset = __import__("training.dataset", fromlist=["compute_train_statistics"])
+    dataset = __import__("mlx_smolvla._lab.training.dataset", fromlist=["compute_train_statistics"])
     module = __import__(
-        "training.export",
+        "mlx_smolvla._lab.training.export",
         fromlist=[
             "expected_merged_checkpoint_support_file_sha256",
             "validate_merged_checkpoint_support_files",
@@ -385,7 +385,7 @@ def test_support_file_generation_cleanup_preserves_a_replacement_directory(
     monkeypatch,
 ) -> None:
     module = __import__(
-        "training.export",
+        "mlx_smolvla._lab.training.export",
         fromlist=["expected_merged_checkpoint_support_file_sha256"],
     )
     source = tmp_path / "source"
@@ -431,11 +431,11 @@ def test_reused_export_model_is_bound_to_current_merged_values(
 ) -> None:
     output, _, source, _ = standard_export
     module = __import__(
-        "training.export",
+        "mlx_smolvla._lab.training.export",
         fromlist=["validate_merged_checkpoint_model_values"],
     )
     model_module = __import__(
-        "training.model",
+        "mlx_smolvla._lab.training.model",
         fromlist=["SmolVLATrainingModel"],
     )
     altered = tmp_path / "altered-model-export"
@@ -487,7 +487,7 @@ def test_reused_export_model_is_bound_to_current_merged_values(
 
 def test_export_publication_never_clobbers_an_inserted_symlink(tmp_path: Path) -> None:
     module = __import__(
-        "training.export",
+        "mlx_smolvla._lab.training.export",
         fromlist=["_publish_directory_no_clobber"],
     )
     staged = tmp_path / ".staged"
@@ -514,7 +514,7 @@ def test_export_publication_rejects_staged_directory_replacement(
     monkeypatch,
 ) -> None:
     module = __import__(
-        "training.export",
+        "mlx_smolvla._lab.training.export",
         fromlist=["_publish_directory_no_clobber"],
     )
     staged = tmp_path / ".staged"
@@ -550,7 +550,7 @@ def test_export_publication_quarantines_a_stage_replaced_during_rename(
     monkeypatch,
 ) -> None:
     module = __import__(
-        "training.export",
+        "mlx_smolvla._lab.training.export",
         fromlist=["_publish_directory_no_clobber"],
     )
     staged = tmp_path / ".staged"
@@ -628,7 +628,7 @@ def test_bound_export_never_writes_into_a_replacement_output_parent(
     monkeypatch,
 ) -> None:
     module = __import__(
-        "training.export",
+        "mlx_smolvla._lab.training.export",
         fromlist=["_export_merged_checkpoint_under_bound_parent"],
     )
     _install_tiny_bound_export_fakes(module, monkeypatch)
@@ -684,7 +684,7 @@ def test_bound_export_cleanup_preserves_a_replacement_staging_directory(
     monkeypatch,
 ) -> None:
     module = __import__(
-        "training.export",
+        "mlx_smolvla._lab.training.export",
         fromlist=["_export_merged_checkpoint_under_bound_parent"],
     )
     _install_tiny_bound_export_fakes(module, monkeypatch)
@@ -743,7 +743,7 @@ def test_bound_export_stage_uses_its_inode_for_the_first_model_write(
     monkeypatch,
 ) -> None:
     module = __import__(
-        "training.export",
+        "mlx_smolvla._lab.training.export",
         fromlist=["_export_merged_checkpoint_under_bound_parent"],
     )
     _install_tiny_bound_export_fakes(module, monkeypatch)
@@ -806,7 +806,7 @@ def test_bound_export_child_writes_never_follow_inserted_symlinks(
     attacked_name: str,
 ) -> None:
     module = __import__(
-        "training.export",
+        "mlx_smolvla._lab.training.export",
         fromlist=["_export_merged_checkpoint_under_bound_parent"],
     )
     source = tmp_path / "source"
@@ -902,8 +902,8 @@ def test_exported_processor_contains_exact_train_only_stats(standard_export) -> 
 
 def test_export_loads_strictly_in_mlx_and_torch(standard_export) -> None:
     output, _, _, root = standard_export
-    preprocessing = __import__("training.preprocessing", fromlist=["load_stats_aware_policy"])
-    reference = __import__("training.reference_export", fromlist=["TorchExportPolicy"])
+    preprocessing = __import__("mlx_smolvla._lab.training.preprocessing", fromlist=["load_stats_aware_policy"])
+    reference = __import__("mlx_smolvla._lab.training.reference_export", fromlist=["TorchExportPolicy"])
 
     mlx_policy = preprocessing.load_stats_aware_policy(
         output,

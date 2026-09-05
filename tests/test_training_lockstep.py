@@ -7,7 +7,7 @@ from pathlib import Path
 import numpy as np
 import pytest
 
-from training.data import TrainingArtifact
+from mlx_smolvla._lab.training.data import TrainingArtifact
 
 
 _T1_DIR = Path(".cache/training/gradient_goldens")
@@ -17,7 +17,7 @@ _NATIVE_CACHE = Path(".cache/mlx_smolvla/policy-float32")
 
 def test_optimizer_lockstep_thresholds_are_immutable() -> None:
     module = __import__(
-        "training.lockstep",
+        "mlx_smolvla._lab.training.lockstep",
         fromlist=["LOSS_RELATIVE_TOLERANCE", "PARAMETER_RELATIVE_L2_TOLERANCE"],
     )
 
@@ -27,7 +27,7 @@ def test_optimizer_lockstep_thresholds_are_immutable() -> None:
 
 def test_optimizer_artifact_link_and_step_draw_consumption_are_exact() -> None:
     module = __import__(
-        "training.lockstep",
+        "mlx_smolvla._lab.training.lockstep",
         fromlist=["validate_optimizer_artifact_link", "load_lockstep_training_batch"],
     )
     t1_artifact = TrainingArtifact(_T1_DIR)
@@ -60,7 +60,7 @@ def test_optimizer_artifact_link_and_step_draw_consumption_are_exact() -> None:
 
 @pytest.mark.slow
 def test_real_25_step_optimizer_lockstep_passes_every_gate() -> None:
-    module = __import__("training.lockstep", fromlist=["run_optimizer_lockstep"])
+    module = __import__("mlx_smolvla._lab.training.lockstep", fromlist=["run_optimizer_lockstep"])
 
     result = module.run_optimizer_lockstep(
         t1_dir=_T1_DIR,

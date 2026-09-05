@@ -8,15 +8,20 @@ needed to make a safe, reviewable contribution.
 
 - `mlx_smolvla/`: dependency-light conversion and inference runtime, CLI,
   diagnostics, and serving adapter.
-- `training/`: native MLX objectives, gradients, optimizers, LoRA/full
+- `training/` (installed as `mlx_smolvla._lab.training`): native MLX objectives, gradients, optimizers, LoRA/full
   fine-tuning, checkpointing, and export.
-- `reference/`: pinned PyTorch/LeRobot evidence-generation lane; never import it
+- `reference/` (installed as `mlx_smolvla._lab.reference`): pinned PyTorch/LeRobot evidence-generation lane; never import it
   from the base runtime.
 - `tests/`: unit, parity, statistical, packaging, serving, and training tests.
 - `scripts/`: reproducible evidence and benchmark entry points.
 - `hardware/`: redacted first-contact evidence, preflight results, and the
   fail-closed client design contract.
 - `docs/`: architecture, operations, development guidance, and evidence.
+
+The lab source directories retain their historical paths for provenance, but
+all Python imports use the private `mlx_smolvla._lab` namespace. Setuptools
+maps those source directories into the namespace in wheels. `_build_backend.py`
+is source-only build machinery. Do not add generic top-level wheel packages.
 
 ## Validate changes
 

@@ -22,7 +22,7 @@ from huggingface_hub import snapshot_download
 import mlx.core as mx
 import numpy as np
 
-from reference.goldens import GoldenStore
+from mlx_smolvla._lab.reference.goldens import GoldenStore
 from mlx_smolvla.policy import SmolVLAMLX
 from mlx_smolvla.production_evidence import ProductionDeterministicEvidence
 

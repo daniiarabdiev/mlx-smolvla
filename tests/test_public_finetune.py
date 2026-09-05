@@ -11,7 +11,7 @@ import mlx.core as mx
 import numpy as np
 import pytest
 
-from reference.goldens import GoldenStore
+from mlx_smolvla._lab.reference.goldens import GoldenStore
 from scripts.make_public_finetune_goldens import MODEL_ID, MODEL_REVISION
 from mlx_smolvla.policy import SmolVLAMLX
 from mlx_smolvla.statistical import StatisticalResult

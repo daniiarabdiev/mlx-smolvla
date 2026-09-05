@@ -53,3 +53,22 @@ Keep changes scoped, explain the user-visible behavior, list exact commands and
 results, and link any new evidence. Do not include generated model weights,
 datasets, caches, machine paths, credentials, or uploads. By participating, you
 agree to the [code of conduct](.github/CODE_OF_CONDUCT.md).
+
+
+## Dependency and release contracts
+
+Ranges in `pyproject.toml` are the install contract. `uv.lock` is the evidence
+lane: regenerate numerical evidence only from the lockfile. Reference/LeRobot
+extras remain pinned because the protocol and comparison audits are specific
+to those versions. MLX remains within the verified 0.32.0–0.32.2 range; the
+0.32.0/0.32.1 CPU fallback remains supported. Pre-1.0 safetensors and tokenizers
+stay within their tested minor lines until additional compatibility is checked.
+
+Lab sources retain `training/` and `reference/` paths to preserve provenance
+identifiers. Import them as `mlx_smolvla._lab.training` and
+`mlx_smolvla._lab.reference`; distributions expose only the `mlx_smolvla`
+top-level package. `_build_backend.py` belongs in the sdist, never the wheel.
+
+README links use absolute URLs pinned to the release tag so PyPI links work
+and each release cites the evidence as it existed at that release. Existing
+result documents remain immutable; publish new validation separately.

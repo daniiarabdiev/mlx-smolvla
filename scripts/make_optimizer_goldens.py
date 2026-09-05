@@ -13,7 +13,7 @@ _REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 if str(_REPOSITORY_ROOT) not in sys.path:
     sys.path.insert(0, str(_REPOSITORY_ROOT))
 
-from training.reference_lockstep import capture_reference_optimizer_golden
+from mlx_smolvla._lab.training.reference_lockstep import capture_reference_optimizer_golden
 
 
 def main(argv: list[str] | None = None) -> int:

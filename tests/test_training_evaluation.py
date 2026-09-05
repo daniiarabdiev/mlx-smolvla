@@ -13,7 +13,7 @@ import shutil
 import numpy as np
 import pytest
 
-from training.data import TrainingArtifact
+from mlx_smolvla._lab.training.data import TrainingArtifact
 
 
 _EVALUATION_DIR = Path(".cache/training/t3-evaluation")
@@ -21,7 +21,7 @@ _BASE_REPORT = Path(".cache/training/t3-base-evaluation.json")
 
 
 def test_t3_outcome_thresholds_are_immutable() -> None:
-    module = __import__("training.evaluation", fromlist=["MAE_IMPROVEMENT_RATIO_MAXIMUM"])
+    module = __import__("mlx_smolvla._lab.training.evaluation", fromlist=["MAE_IMPROVEMENT_RATIO_MAXIMUM"])
 
     assert module.MAE_IMPROVEMENT_RATIO_MAXIMUM == 0.9
     assert module.TORCH_MLX_MAE_RATIO_MINIMUM == 0.95
@@ -35,7 +35,7 @@ def test_t3_outcome_thresholds_are_immutable() -> None:
 
 def test_stats_active_parity_applies_the_separate_preprocessing_limits() -> None:
     module = __import__(
-        "training.evaluation",
+        "mlx_smolvla._lab.training.evaluation",
         fromlist=["_stats_active_parity_passed"],
     )
 
@@ -64,7 +64,7 @@ def test_stats_active_parity_applies_the_separate_preprocessing_limits() -> None
 
 def test_evaluation_free_space_floor_is_enforced_before_loading() -> None:
     module = __import__(
-        "training.evaluation",
+        "mlx_smolvla._lab.training.evaluation",
         fromlist=["_require_minimum_free_bytes"],
     )
 
@@ -74,7 +74,7 @@ def test_evaluation_free_space_floor_is_enforced_before_loading() -> None:
 
 
 def test_frozen_evaluation_artifact_is_complete_integral_and_unseen() -> None:
-    module = __import__("training.evaluation", fromlist=["load_evaluation_cases"])
+    module = __import__("mlx_smolvla._lab.training.evaluation", fromlist=["load_evaluation_cases"])
     artifact = TrainingArtifact(_EVALUATION_DIR)
     names = artifact.verify_all()
     metadata = artifact.metadata
@@ -102,7 +102,7 @@ def test_frozen_evaluation_artifact_is_complete_integral_and_unseen() -> None:
 def test_frozen_evaluation_rejects_metadata_changed_after_capture(
     tmp_path: Path,
 ) -> None:
-    module = __import__("training.evaluation", fromlist=["load_evaluation_cases"])
+    module = __import__("mlx_smolvla._lab.training.evaluation", fromlist=["load_evaluation_cases"])
     altered = tmp_path / "evaluation"
     altered.mkdir()
     (altered / "manifest.json").write_bytes(
@@ -123,7 +123,7 @@ def test_frozen_evaluation_rejects_metadata_changed_after_capture(
 
 def test_evaluation_metadata_is_reconstructed_from_the_pinned_dataset() -> None:
     module = __import__(
-        "training.evaluation",
+        "mlx_smolvla._lab.training.evaluation",
         fromlist=["_validate_evaluation_metadata_against_dataset"],
     )
     metadata = json.loads(
@@ -140,7 +140,7 @@ def test_evaluation_metadata_is_reconstructed_from_the_pinned_dataset() -> None:
 
 
 def test_frozen_evaluation_rejects_a_symlinked_ancestor(tmp_path: Path) -> None:
-    module = __import__("training.evaluation", fromlist=["load_evaluation_cases"])
+    module = __import__("mlx_smolvla._lab.training.evaluation", fromlist=["load_evaluation_cases"])
     alias = tmp_path / "training-cache"
     alias.symlink_to(_EVALUATION_DIR.resolve().parent, target_is_directory=True)
 
@@ -150,7 +150,7 @@ def test_frozen_evaluation_rejects_a_symlinked_ancestor(tmp_path: Path) -> None:
 
 def test_json_evidence_rejects_a_symlinked_ancestor(tmp_path: Path) -> None:
     module = __import__(
-        "training.evaluation",
+        "mlx_smolvla._lab.training.evaluation",
         fromlist=["_read_json_document"],
     )
     alias = tmp_path / "training-cache"
@@ -165,7 +165,7 @@ def test_json_evidence_rejects_a_symlinked_ancestor(tmp_path: Path) -> None:
 
 def test_outcome_paths_must_stay_in_the_repository_cache(tmp_path: Path) -> None:
     module = __import__(
-        "training.evaluation",
+        "mlx_smolvla._lab.training.evaluation",
         fromlist=["_require_repository_cache_path"],
     )
 
@@ -178,7 +178,7 @@ def test_outcome_paths_must_stay_in_the_repository_cache(tmp_path: Path) -> None
 
 def test_pinned_dataset_root_rejects_a_nested_symlink(tmp_path: Path) -> None:
     module = __import__(
-        "training.evaluation",
+        "mlx_smolvla._lab.training.evaluation",
         fromlist=["_require_pinned_dataset_root"],
     )
     cache_dir = tmp_path / "hf"
@@ -196,7 +196,7 @@ def test_pinned_dataset_root_verifies_files_against_the_revision_tree(
     tmp_path: Path,
 ) -> None:
     module = __import__(
-        "training.evaluation",
+        "mlx_smolvla._lab.training.evaluation",
         fromlist=["_require_pinned_dataset_root"],
     )
     source = Path(".cache/hf/datasets/svla_so101_pickplace")
@@ -225,7 +225,7 @@ def test_pinned_dataset_root_verifies_files_against_the_revision_tree(
 
 
 def test_absolute_error_aggregates_physical_action_mae_without_rounding() -> None:
-    module = __import__("training.evaluation", fromlist=["absolute_error"])
+    module = __import__("mlx_smolvla._lab.training.evaluation", fromlist=["absolute_error"])
     prediction = np.array([1.0, 3.0, -2.0], dtype=np.float32)
     target = np.array([0.0, 5.0, 2.0], dtype=np.float32)
 
@@ -236,7 +236,7 @@ def test_absolute_error_aggregates_physical_action_mae_without_rounding() -> Non
 
 
 def test_outcome_gate_requires_all_three_independent_results() -> None:
-    module = __import__("training.evaluation", fromlist=["evaluate_outcome_gates"])
+    module = __import__("mlx_smolvla._lab.training.evaluation", fromlist=["evaluate_outcome_gates"])
 
     passing = module.evaluate_outcome_gates(
         base_mlx_mae=10.0,
@@ -404,7 +404,7 @@ def _actual_outcome_inputs(module) -> dict[str, object]:
 
 def test_outcome_report_records_the_complete_frozen_evaluation_identity() -> None:
     module = __import__(
-        "training.evaluation",
+        "mlx_smolvla._lab.training.evaluation",
         fromlist=["assemble_finetune_outcome_report"],
     )
 
@@ -431,7 +431,7 @@ def test_outcome_report_records_the_complete_frozen_evaluation_identity() -> Non
 
 def test_outcome_report_rejects_parity_that_skips_frozen_cases() -> None:
     module = __import__(
-        "training.evaluation",
+        "mlx_smolvla._lab.training.evaluation",
         fromlist=["assemble_finetune_outcome_report"],
     )
 
@@ -457,7 +457,7 @@ def test_outcome_report_rejects_parity_that_skips_frozen_cases() -> None:
 
 def test_outcome_report_requires_raw_physical_error_in_the_parity_gate() -> None:
     module = __import__(
-        "training.evaluation",
+        "mlx_smolvla._lab.training.evaluation",
         fromlist=["assemble_finetune_outcome_report"],
     )
     inputs = _actual_outcome_inputs(module)
@@ -487,7 +487,7 @@ def test_outcome_report_requires_raw_physical_error_in_the_parity_gate() -> None
 
 def test_outcome_report_rejects_missing_fine_tuned_sample_evidence() -> None:
     module = __import__(
-        "training.evaluation",
+        "mlx_smolvla._lab.training.evaluation",
         fromlist=["assemble_finetune_outcome_report"],
     )
     inputs = _actual_outcome_inputs(module)
@@ -540,7 +540,7 @@ def test_metrics_validation_rejects_negative_training_semantics(
     tmp_path: Path,
 ) -> None:
     module = __import__(
-        "training.evaluation",
+        "mlx_smolvla._lab.training.evaluation",
         fromlist=["_validated_metrics_sha256"],
     )
     path = tmp_path / "metrics.csv"
@@ -574,7 +574,7 @@ def test_metrics_validation_reconciles_the_final_row_to_the_run(
     tmp_path: Path,
 ) -> None:
     module = __import__(
-        "training.evaluation",
+        "mlx_smolvla._lab.training.evaluation",
         fromlist=["_validated_metrics_sha256"],
     )
     path = tmp_path / "metrics.csv"
@@ -609,7 +609,7 @@ def test_metrics_validation_rejects_a_positive_but_wrong_learning_rate(
     tmp_path: Path,
 ) -> None:
     module = __import__(
-        "training.evaluation",
+        "mlx_smolvla._lab.training.evaluation",
         fromlist=["_validated_metrics_sha256"],
     )
     path = tmp_path / "metrics.csv"
@@ -641,7 +641,7 @@ def test_metrics_validation_rejects_a_positive_but_wrong_learning_rate(
 
 def test_run_configuration_digest_is_recomputed_from_the_run_document() -> None:
     module = __import__(
-        "training.evaluation",
+        "mlx_smolvla._lab.training.evaluation",
         fromlist=["_validated_training_run_config_sha256"],
     )
     run = json.loads(
@@ -659,7 +659,7 @@ def test_run_configuration_digest_is_recomputed_from_the_run_document() -> None:
 
 def test_t3b_run_configuration_digest_reconstructs_fixed_expert_only_scope() -> None:
     module = __import__(
-        "training.evaluation",
+        "mlx_smolvla._lab.training.evaluation",
         fromlist=["_validated_training_run_config_sha256"],
     )
     run = json.loads(
@@ -677,7 +677,7 @@ def test_t3b_run_configuration_digest_reconstructs_fixed_expert_only_scope() -> 
 
 def test_completed_t3b_artifacts_bind_expert_only_adapter_metadata() -> None:
     module = __import__(
-        "training.evaluation",
+        "mlx_smolvla._lab.training.evaluation",
         fromlist=["_validate_completed_training_artifacts"],
     )
     run = json.loads(
@@ -695,7 +695,7 @@ def test_completed_t3b_artifacts_bind_expert_only_adapter_metadata() -> None:
 
 def test_t3b_expected_export_metadata_includes_lora_scope() -> None:
     module = __import__(
-        "training.evaluation",
+        "mlx_smolvla._lab.training.evaluation",
         fromlist=["_expected_export_metadata"],
     )
     run = json.loads(
@@ -714,7 +714,7 @@ def test_t3b_expected_export_metadata_includes_lora_scope() -> None:
 
 def test_completed_metrics_trace_is_validated_and_hashed_from_the_same_bytes() -> None:
     module = __import__(
-        "training.evaluation",
+        "mlx_smolvla._lab.training.evaluation",
         fromlist=["_validated_metrics_sha256"],
     )
     run = json.loads(
@@ -752,7 +752,7 @@ def test_completed_metrics_trace_is_validated_and_hashed_from_the_same_bytes() -
 
 def test_expected_export_metadata_binds_run_and_frozen_evaluation_sources() -> None:
     module = __import__(
-        "training.evaluation",
+        "mlx_smolvla._lab.training.evaluation",
         fromlist=["_expected_export_metadata"],
     )
     run = json.loads(
@@ -781,7 +781,7 @@ def test_expected_export_metadata_binds_run_and_frozen_evaluation_sources() -> N
 
 def test_native_conversion_is_cryptographically_bound_to_the_validated_export() -> None:
     module = __import__(
-        "training.evaluation",
+        "mlx_smolvla._lab.training.evaluation",
         fromlist=["_validate_native_conversion_for_export"],
     )
     converted_path = Path(
@@ -809,7 +809,7 @@ def test_native_conversion_is_cryptographically_bound_to_the_validated_export() 
 
 def test_outcome_report_rejects_incomplete_export_audit_metadata() -> None:
     module = __import__(
-        "training.evaluation",
+        "mlx_smolvla._lab.training.evaluation",
         fromlist=["assemble_finetune_outcome_report"],
     )
     inputs = _actual_outcome_inputs(module)
@@ -826,7 +826,7 @@ def test_outcome_report_rejects_incomplete_export_audit_metadata() -> None:
 
 def test_completed_adapter_and_final_checkpoint_are_hash_validated() -> None:
     module = __import__(
-        "training.evaluation",
+        "mlx_smolvla._lab.training.evaluation",
         fromlist=["_validate_completed_training_artifacts"],
     )
     run = json.loads(
@@ -860,7 +860,7 @@ def test_completed_adapter_and_final_checkpoint_are_hash_validated() -> None:
 
 def test_exported_processor_statistics_derive_from_the_frozen_train_rows() -> None:
     module = __import__(
-        "training.evaluation",
+        "mlx_smolvla._lab.training.evaluation",
         fromlist=["_validate_export_statistics"],
     )
     run = json.loads(
@@ -881,7 +881,7 @@ def test_exported_processor_statistics_derive_from_the_frozen_train_rows() -> No
 
 def test_outcome_report_rejects_a_changed_baseline_with_its_new_hash() -> None:
     module = __import__(
-        "training.evaluation",
+        "mlx_smolvla._lab.training.evaluation",
         fromlist=["assemble_finetune_outcome_report"],
     )
     inputs = _actual_outcome_inputs(module)
@@ -900,7 +900,7 @@ def test_outcome_report_rejects_a_changed_baseline_with_its_new_hash() -> None:
 
 def test_outcome_report_rejects_internally_inconsistent_base_evidence() -> None:
     module = __import__(
-        "training.evaluation",
+        "mlx_smolvla._lab.training.evaluation",
         fromlist=["assemble_finetune_outcome_report"],
     )
     inputs = _actual_outcome_inputs(module)
@@ -917,7 +917,7 @@ def test_outcome_report_rejects_internally_inconsistent_base_evidence() -> None:
 
 def test_outcome_report_binds_the_complete_run_export_and_frozen_population() -> None:
     module = __import__(
-        "training.evaluation",
+        "mlx_smolvla._lab.training.evaluation",
         fromlist=["StatsActiveParity", "assemble_finetune_outcome_report"],
     )
     report = module.assemble_finetune_outcome_report(
@@ -936,7 +936,7 @@ def test_outcome_report_binds_the_complete_run_export_and_frozen_population() ->
 
 def test_outcome_report_rejects_an_incomplete_training_run() -> None:
     module = __import__(
-        "training.evaluation",
+        "mlx_smolvla._lab.training.evaluation",
         fromlist=["StatsActiveParity", "assemble_finetune_outcome_report"],
     )
     parity = module.StatsActiveParity(

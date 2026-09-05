@@ -12,8 +12,8 @@ from typing import Callable, Mapping
 import mlx.core as mx
 import numpy as np
 
-from reference.discovery import DATASET_ID
-from training.ux import (
+from mlx_smolvla._lab.reference.discovery import DATASET_ID
+from mlx_smolvla._lab.training.ux import (
     FullTrainingConfig,
     LoRATrainingConfig,
     _DRAW_CHAIN_INITIAL,

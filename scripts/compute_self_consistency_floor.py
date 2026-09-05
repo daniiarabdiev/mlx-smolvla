@@ -14,12 +14,12 @@ REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 if str(REPOSITORY_ROOT) not in sys.path:
     sys.path.insert(0, str(REPOSITORY_ROOT))
 
-from training.floor_runtime import bootstrap_hidden_worker  # noqa: E402
+from mlx_smolvla._lab.training.floor_runtime import bootstrap_hidden_worker  # noqa: E402
 
 
 bootstrap_hidden_worker(sys.argv[1:])
 
-from training.self_consistency import (  # noqa: E402
+from mlx_smolvla._lab.training.self_consistency import (  # noqa: E402
     PROCEDURE_ID,
     _worker_environment,
     assemble_existing_floor,

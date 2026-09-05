@@ -12,13 +12,13 @@ import numpy as np
 import pytest
 from huggingface_hub import snapshot_download
 
-from reference.discovery import (
+from mlx_smolvla._lab.reference.discovery import (
     BASE_VLM_ID,
     BASE_VLM_REVISION,
     CHECKPOINT_ID,
     CHECKPOINT_REVISION,
 )
-from reference.goldens import GoldenStore
+from mlx_smolvla._lab.reference.goldens import GoldenStore
 
 
 @dataclass(frozen=True)

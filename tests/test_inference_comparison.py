@@ -12,8 +12,8 @@ import pytest
 
 
 def _document() -> dict[str, object]:
-    from reference.benchmark import ComparisonProtocol, EngineTiming
-    from reference.discovery import CHECKPOINT_REVISION
+    from mlx_smolvla._lab.reference.benchmark import ComparisonProtocol, EngineTiming
+    from mlx_smolvla._lab.reference.discovery import CHECKPOINT_REVISION
 
     protocol = ComparisonProtocol()
     return {
@@ -76,7 +76,7 @@ def _document() -> dict[str, object]:
 
 
 def test_comparative_protocol_is_fixed_to_same_case_dtype_and_counts() -> None:
-    from reference.benchmark import ComparisonProtocol
+    from mlx_smolvla._lab.reference.benchmark import ComparisonProtocol
 
     protocol = ComparisonProtocol()
     assert protocol.engines == ("mlx", "pytorch-mps")
@@ -90,7 +90,7 @@ def test_comparative_protocol_is_fixed_to_same_case_dtype_and_counts() -> None:
 
 
 def test_engine_timing_recomputes_summary_from_all_raw_measurements() -> None:
-    from reference.benchmark import EngineTiming
+    from mlx_smolvla._lab.reference.benchmark import EngineTiming
 
     samples = [float(index) for index in range(1, 51)]
     result = EngineTiming.from_samples(
@@ -111,7 +111,7 @@ def test_engine_timing_recomputes_summary_from_all_raw_measurements() -> None:
 
 
 def test_comparison_validator_rejects_incomplete_or_recomputed_evidence() -> None:
-    from reference.benchmark import validate_comparison_document
+    from mlx_smolvla._lab.reference.benchmark import validate_comparison_document
 
     document = _document()
     validated = validate_comparison_document(document)
@@ -141,21 +141,21 @@ def test_torch_worker_enables_mps_fallback_before_framework_imports() -> None:
     assignment = source.index('os.environ["PYTORCH_ENABLE_MPS_FALLBACK"] = "1"')
     clearing = source.rindex("os.environ.pop(name, None)", 0, assignment)
     torch_import = source.index("import torch", assignment)
-    reference_import = source.index("from reference.policy import ReferencePolicy", assignment)
+    reference_import = source.index("from mlx_smolvla._lab.reference.policy import ReferencePolicy", assignment)
     assert clearing < assignment
     assert assignment < torch_import
     assert assignment < reference_import
 
 
 def test_reference_loader_rejects_non_cpu_or_mps_devices_before_resolution() -> None:
-    from reference.policy import ReferencePolicy
+    from mlx_smolvla._lab.reference.policy import ReferencePolicy
 
     with pytest.raises(ValueError, match="cpu.*mps"):
         ReferencePolicy.load(Path("unused"), device="cuda")
 
 
 def test_committed_comparison_artifact_revalidates_from_raw_timings() -> None:
-    from reference.benchmark import validate_comparison_document
+    from mlx_smolvla._lab.reference.benchmark import validate_comparison_document
 
     path = Path("docs/evidence/INFERENCE_COMPARISON.json")
     artifact = json.loads(path.read_text(encoding="utf-8"))

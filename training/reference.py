@@ -20,7 +20,7 @@ from lerobot.datasets.factory import resolve_delta_timestamps
 from lerobot.datasets.lerobot_dataset import LeRobotDataset
 from lerobot.policies.factory import make_pre_post_processors
 
-from reference.discovery import (
+from mlx_smolvla._lab.reference.discovery import (
     BASE_VLM_ID,
     BASE_VLM_REVISION,
     CHECKPOINT_ID,
@@ -28,9 +28,9 @@ from reference.discovery import (
     DATASET_ID,
     DATASET_REVISION,
 )
-from reference.policy import ReferencePolicy
+from mlx_smolvla._lab.reference.policy import ReferencePolicy
 from mlx_smolvla.convert import target_name_for_source
-from training.data import TrainingArtifact, TrainingArtifactWriter
+from mlx_smolvla._lab.training.data import TrainingArtifact, TrainingArtifactWriter
 
 
 GRADIENT_GOLDEN_SEED = 20_260_831

@@ -9,7 +9,7 @@ import torch
 from lerobot.policies.common.flow_matching import euler_integrate
 from lerobot.policies.common.vla_utils import make_att_2d_masks
 
-from reference.policy import ReferencePolicy, ReferenceSample
+from mlx_smolvla._lab.reference.policy import ReferencePolicy, ReferenceSample
 
 
 def _parameter_count(module: torch.nn.Module) -> int:

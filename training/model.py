@@ -13,7 +13,7 @@ from mlx_smolvla.expert import ActionExpert
 from mlx_smolvla.language import TruncatedLanguageModel, pad_state_to_width
 from mlx_smolvla.types import ProcessedObservation
 from mlx_smolvla.vision import VisionEncoder
-from training.objective import flow_matching_inputs, masked_velocity_mse
+from mlx_smolvla._lab.training.objective import flow_matching_inputs, masked_velocity_mse
 
 
 _CAMERA_COUNT = 2

@@ -8,8 +8,8 @@ import pytest
 
 @pytest.mark.slow
 def test_runtime_audit_resolves_every_architecture_hypothesis() -> None:
-    from reference.audit import inspect_reference
-    from reference.policy import ReferencePolicy, load_dataset_observation
+    from mlx_smolvla._lab.reference.audit import inspect_reference
+    from mlx_smolvla._lab.reference.policy import ReferencePolicy, load_dataset_observation
 
     reference = ReferencePolicy.load(cache_dir=Path(".cache/hf"))
     sample = load_dataset_observation(cache_dir=Path(".cache/hf"), index=0)

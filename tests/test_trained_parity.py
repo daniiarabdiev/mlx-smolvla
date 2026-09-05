@@ -112,7 +112,7 @@ def _prospective_floor(
     created_at_ns: int = FLOOR_CREATED_NS,
 ) -> dict[str, object]:
     floor_module = __import__(
-        "training.self_consistency",
+        "mlx_smolvla._lab.training.self_consistency",
         fromlist=["assemble_floor_report"],
     )
     actions = {
@@ -141,7 +141,7 @@ def _write_floor_bundle(
     checkpoint_path: str = ".cache/training/t3b/export",
 ) -> tuple[dict[str, object], Path, Path, str]:
     floor_module = __import__(
-        "training.self_consistency",
+        "mlx_smolvla._lab.training.self_consistency",
         fromlist=[
             "assemble_floor_report",
             "perturbation_plan",
@@ -219,7 +219,7 @@ def _base_evaluation(
         "format_version": 1,
         "artifact_type": "smolvla-lora-base-heldout-evaluation",
         "evaluation_manifest_sha256": __import__(
-            "training.t3_contract", fromlist=["FROZEN_EVALUATION_MANIFEST_SHA256"]
+            "mlx_smolvla._lab.training.t3_contract", fromlist=["FROZEN_EVALUATION_MANIFEST_SHA256"]
         ).FROZEN_EVALUATION_MANIFEST_SHA256,
         "train_statistics_sha256": module.FROZEN_TRAIN_STATISTICS_SHA256,
         "sample_count": 56,
@@ -892,7 +892,7 @@ def _file_fixture(
     export_dir = evidence_root / ".cache" / "training" / "t3b" / "export"
     export_dir.mkdir(parents=True)
     import mlx.core as mx
-    from reference.discovery import CHECKPOINT_ID, CHECKPOINT_REVISION
+    from mlx_smolvla._lab.reference.discovery import CHECKPOINT_ID, CHECKPOINT_REVISION
     from mlx_smolvla.convert import convert_checkpoint
 
     mx.save_safetensors(

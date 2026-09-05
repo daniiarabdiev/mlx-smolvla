@@ -13,7 +13,7 @@ import pytest
 
 
 def test_lora_linear_is_zero_initialized_and_uses_alpha_over_rank() -> None:
-    module = __import__("training.lora", fromlist=["LoRALinear"])
+    module = __import__("mlx_smolvla._lab.training.lora", fromlist=["LoRALinear"])
     mx.random.seed(17)
     base = nn.Linear(5, 3, bias=True)
     expected = base(mx.array([[1.0, -2.0, 0.5, 3.0, -1.0]], dtype=mx.float32))
@@ -35,7 +35,7 @@ def test_lora_linear_is_zero_initialized_and_uses_alpha_over_rank() -> None:
 
 
 def test_lora_linear_merge_preserves_nonzero_adapter_output_and_bias() -> None:
-    module = __import__("training.lora", fromlist=["LoRALinear"])
+    module = __import__("mlx_smolvla._lab.training.lora", fromlist=["LoRALinear"])
     base = nn.Linear(3, 2, bias=True)
     adapter = module.LoRALinear(base, rank=2, alpha=4.0)
     adapter.lora_a = mx.array(
@@ -58,8 +58,8 @@ def test_lora_linear_merge_preserves_nonzero_adapter_output_and_bias() -> None:
 
 
 def test_install_lora_targets_exact_full_smolvla_topology() -> None:
-    lora = __import__("training.lora", fromlist=["install_lora"])
-    model_module = __import__("training.model", fromlist=["SmolVLATrainingModel"])
+    lora = __import__("mlx_smolvla._lab.training.lora", fromlist=["install_lora"])
+    model_module = __import__("mlx_smolvla._lab.training.model", fromlist=["SmolVLATrainingModel"])
     mx.random.seed(20260901)
     model = model_module.SmolVLATrainingModel()
     model.set_dtype(mx.bfloat16)
@@ -87,10 +87,10 @@ def test_install_lora_targets_exact_full_smolvla_topology() -> None:
 
 
 def test_expert_only_lora_targets_only_expert_attention_and_mlp() -> None:
-    lora = __import__("training.lora", fromlist=["install_lora", "merge_lora"])
-    model_module = __import__("training.model", fromlist=["SmolVLATrainingModel"])
+    lora = __import__("mlx_smolvla._lab.training.lora", fromlist=["install_lora", "merge_lora"])
+    model_module = __import__("mlx_smolvla._lab.training.model", fromlist=["SmolVLATrainingModel"])
     optimizer_module = __import__(
-        "training.optimizer", fromlist=["SmolVLAAdamW", "SmolVLAOptimizerConfig"]
+        "mlx_smolvla._lab.training.optimizer", fromlist=["SmolVLAAdamW", "SmolVLAOptimizerConfig"]
     )
     mx.random.seed(20260901)
     model = model_module.SmolVLATrainingModel()
@@ -136,8 +136,8 @@ def test_expert_only_lora_targets_only_expert_attention_and_mlp() -> None:
 
 
 def test_lora_gradients_cover_every_adapter_tensor_on_full_training_path() -> None:
-    lora = __import__("training.lora", fromlist=["install_lora"])
-    model_module = __import__("training.model", fromlist=["SmolVLATrainingModel"])
+    lora = __import__("mlx_smolvla._lab.training.lora", fromlist=["install_lora"])
+    model_module = __import__("mlx_smolvla._lab.training.model", fromlist=["SmolVLATrainingModel"])
     mx.random.seed(20260901)
     model = model_module.SmolVLATrainingModel()
     model.set_dtype(mx.bfloat16)
@@ -180,8 +180,8 @@ def test_lora_gradients_cover_every_adapter_tensor_on_full_training_path() -> No
 
 
 def test_merge_lora_replaces_every_wrapper_with_plain_linears() -> None:
-    lora = __import__("training.lora", fromlist=["merge_lora", "iter_lora"])
-    model_module = __import__("training.model", fromlist=["SmolVLATrainingModel"])
+    lora = __import__("mlx_smolvla._lab.training.lora", fromlist=["merge_lora", "iter_lora"])
+    model_module = __import__("mlx_smolvla._lab.training.model", fromlist=["SmolVLATrainingModel"])
     mx.random.seed(20260901)
     model = model_module.SmolVLATrainingModel()
     model.set_dtype(mx.bfloat16)
@@ -200,7 +200,7 @@ def test_merge_lora_replaces_every_wrapper_with_plain_linears() -> None:
 
 
 def test_lora_config_rejects_invalid_rank_alpha_and_dropout() -> None:
-    module = __import__("training.lora", fromlist=["LoRAConfig"])
+    module = __import__("mlx_smolvla._lab.training.lora", fromlist=["LoRAConfig"])
 
     for kwargs in (
         {"rank": 0},
@@ -219,7 +219,7 @@ def test_lora_config_rejects_invalid_rank_alpha_and_dropout() -> None:
 
 @pytest.mark.slow
 def test_training_composition_loads_real_checkpoint_in_bfloat16() -> None:
-    model_module = __import__("training.model", fromlist=["SmolVLATrainingModel"])
+    model_module = __import__("mlx_smolvla._lab.training.model", fromlist=["SmolVLATrainingModel"])
 
     model = model_module.SmolVLATrainingModel.from_pretrained(
         cache_dir=Path(".cache/mlx_smolvla/policy-float32"),

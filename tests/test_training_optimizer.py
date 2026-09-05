@@ -14,7 +14,7 @@ from lerobot.optim.schedulers import CosineDecayWithWarmupSchedulerConfig
 
 
 def test_smolvla_optimizer_defaults_are_the_audited_reference_preset() -> None:
-    module = __import__("training.optimizer", fromlist=["SmolVLAOptimizerConfig"])
+    module = __import__("mlx_smolvla._lab.training.optimizer", fromlist=["SmolVLAOptimizerConfig"])
 
     config = module.SmolVLAOptimizerConfig()
 
@@ -31,7 +31,7 @@ def test_smolvla_optimizer_defaults_are_the_audited_reference_preset() -> None:
 
 def test_first_25_learning_rates_equal_installed_lerobot_scheduler() -> None:
     module = __import__(
-        "training.optimizer",
+        "mlx_smolvla._lab.training.optimizer",
         fromlist=["SmolVLAOptimizerConfig", "cosine_decay_with_warmup_lr"],
     )
     config = module.SmolVLAOptimizerConfig()
@@ -66,7 +66,7 @@ def test_first_25_learning_rates_equal_installed_lerobot_scheduler() -> None:
 
 def test_global_norm_clipping_matches_pytorch_multi_tensor_float32() -> None:
     module = __import__(
-        "training.optimizer",
+        "mlx_smolvla._lab.training.optimizer",
         fromlist=["clip_gradients_by_global_norm"],
     )
     gradients = {
@@ -110,7 +110,7 @@ class TinyOptimizerModel(nn.Module):
 @pytest.mark.parametrize("step_count", [1, 25])
 def test_adamw_parameter_evolution_matches_pytorch(step_count: int) -> None:
     module = __import__(
-        "training.optimizer",
+        "mlx_smolvla._lab.training.optimizer",
         fromlist=["SmolVLAAdamW", "SmolVLAOptimizerConfig"],
     )
     config = module.SmolVLAOptimizerConfig(

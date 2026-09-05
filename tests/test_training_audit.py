@@ -9,13 +9,13 @@ import sys
 
 
 def test_audit_reads_the_installed_mlx_distribution_version() -> None:
-    module = __import__("training.audit", fromlist=["installed_mlx_version"])
+    module = __import__("mlx_smolvla._lab.training.audit", fromlist=["installed_mlx_version"])
 
     assert module.installed_mlx_version() == "0.32.2"
 
 
 def test_full_random_weight_training_step_has_finite_selected_gradients() -> None:
-    module = __import__("training.audit", fromlist=["run_training_readiness_audit"])
+    module = __import__("mlx_smolvla._lab.training.audit", fromlist=["run_training_readiness_audit"])
 
     result = module.run_training_readiness_audit(seed=0)
     payload = result.as_dict()

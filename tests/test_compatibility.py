@@ -65,6 +65,8 @@ def test_doctor_reports_real_environment_cache_and_release_compatibility(
         "cache_size_bytes",
         "chip",
         "compatibility",
+        "cpu_compatibility_backend",
+        "native_extension_unavailable_reason",
         "macos_version",
         "metal_default",
         "mlx_version",

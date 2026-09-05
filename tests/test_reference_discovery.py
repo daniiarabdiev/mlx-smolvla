@@ -4,7 +4,7 @@ import sys
 
 
 def test_discovery_finds_installed_smolvla_sources(tmp_path: Path) -> None:
-    from reference.discovery import discover_reference
+    from mlx_smolvla._lab.reference.discovery import discover_reference
 
     result = discover_reference(cache_dir=tmp_path)
 
@@ -17,7 +17,7 @@ def test_discovery_finds_installed_smolvla_sources(tmp_path: Path) -> None:
 
 
 def test_discovery_pins_checkpoint_and_real_dataset(tmp_path: Path) -> None:
-    from reference.discovery import discover_reference
+    from mlx_smolvla._lab.reference.discovery import discover_reference
 
     result = discover_reference(cache_dir=tmp_path)
 
@@ -42,7 +42,7 @@ def test_discovery_cli_writes_architecture_evidence(tmp_path: Path) -> None:
         [
             sys.executable,
             "-m",
-            "reference.discovery",
+            "mlx_smolvla._lab.reference.discovery",
             "--cache-dir",
             str(tmp_path / "cache"),
             "--write",

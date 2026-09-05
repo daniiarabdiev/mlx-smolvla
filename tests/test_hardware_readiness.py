@@ -64,12 +64,19 @@ def test_public_hardware_status_matches_bounded_motion_evidence() -> None:
     first_contact = Path("hardware/FIRST_CONTACT.md").read_text(encoding="utf-8")
     readme = Path("README.md").read_text(encoding="utf-8")
     prose = " ".join(first_contact.split())
+    readme_prose = " ".join(readme.split())
 
     assert "bounded physical integration passed on 2026-09-04" in prose
     assert "one valid single action" in prose
     assert "two-chunk continuous run" in prose
-    assert "failed exact return-to-start" in prose
+    assert "inconclusive under reduced torque" in prose
+    assert "exact return-to-start requirement was not met" in prose
+    assert "This run exited nonzero" in prose
+    assert "Cleanup still disabled all six torque bits" in prose
+    assert "retained logs do not isolate the cause" in prose
     assert "all six torque bits as zero" in prose
     assert "reliable task completion are not evidenced" in prose
     assert "Raw `lerobot/smolvla_base` output is not a physical-action interface" in readme
-    assert "20-chunk attempt failed exact return" in readme
+    assert "20-chunk" not in readme
+    assert "reliable task completion and sustained operation remain unvalidated" in readme_prose
+    assert "blob/v0.1.2/hardware/FIRST_CONTACT.md" in readme

@@ -111,8 +111,8 @@ def revalidate_files(bindings: list[dict[str, object]]) -> None:
 def validate_fixed_outcome(outcome: dict[str, object]) -> dict[str, object]:
     """Recompute all 56-case summaries and apply the original fixed limits."""
 
-    from training.evaluation import evaluate_outcome_gates
-    from training.t3_contract import FROZEN_EVALUATION_MANIFEST_SHA256
+    from mlx_smolvla._lab.training.evaluation import evaluate_outcome_gates
+    from mlx_smolvla._lab.training.t3_contract import FROZEN_EVALUATION_MANIFEST_SHA256
 
     if outcome["thresholds"] != FIXED_LIMITS:
         raise ValueError("repair outcome differs from the original fixed limits")
@@ -187,8 +187,8 @@ def main(argv: list[str] | None = None) -> int:
         args.variants, args.envelope,
     ])
 
-    from training.self_consistency import collect_floor_input_hashes, collect_floor_input_evidence
-    from training.evaluation import run_finetune_outcome_evaluation
+    from mlx_smolvla._lab.training.self_consistency import collect_floor_input_hashes, collect_floor_input_evidence
+    from mlx_smolvla._lab.training.evaluation import run_finetune_outcome_evaluation
 
     locations = {
         "checkpoint_dir": ROOT / ".cache/training/t3b/export",

@@ -14,7 +14,7 @@ _REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 if str(_REPOSITORY_ROOT) not in sys.path:
     sys.path.insert(0, str(_REPOSITORY_ROOT))
 
-from training.lockstep import run_optimizer_lockstep, write_optimizer_lockstep_report
+from mlx_smolvla._lab.training.lockstep import run_optimizer_lockstep, write_optimizer_lockstep_report
 
 
 def main(argv: list[str] | None = None) -> int:

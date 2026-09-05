@@ -13,7 +13,7 @@ REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 if str(REPOSITORY_ROOT) not in sys.path:
     sys.path.insert(0, str(REPOSITORY_ROOT))
 
-from training.audit import run_training_readiness_audit
+from mlx_smolvla._lab.training.audit import run_training_readiness_audit
 
 
 def parse_args() -> argparse.Namespace:

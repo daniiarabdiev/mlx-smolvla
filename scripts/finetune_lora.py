@@ -178,8 +178,8 @@ if __name__ == "__main__":
             Path(__file__),
             code_filename=sys._getframe().f_code.co_filename,
         ),
-        "training": stable_bootstrap_source(REPOSITORY_ROOT / "training" / "__init__.py"),
-        "training.runtime_provenance": stable_bootstrap_source(
+        "mlx_smolvla._lab.training": stable_bootstrap_source(REPOSITORY_ROOT / "training" / "__init__.py"),
+        "mlx_smolvla._lab.training.runtime_provenance": stable_bootstrap_source(
             REPOSITORY_ROOT / "training" / "runtime_provenance.py"
         ),
     }
@@ -190,13 +190,13 @@ if __name__ == "__main__":
             "executed launcher code differs from the captured bootstrap source"
         )
     training_package = execute_bootstrap_module(
-        "training",
-        bootstrap_sources["training"],
+        "mlx_smolvla._lab.training",
+        bootstrap_sources["mlx_smolvla._lab.training"],
         package=True,
     )
     provenance_module = execute_bootstrap_module(
-        "training.runtime_provenance",
-        bootstrap_sources["training.runtime_provenance"],
+        "mlx_smolvla._lab.training.runtime_provenance",
+        bootstrap_sources["mlx_smolvla._lab.training.runtime_provenance"],
         package=False,
     )
     training_package.runtime_provenance = provenance_module
@@ -205,7 +205,7 @@ if __name__ == "__main__":
         bootstrap_sources=bootstrap_sources,
     )
 
-from training.finetune import (  # noqa: E402
+from mlx_smolvla._lab.training.finetune import (  # noqa: E402
     ADAPTIVE_BUDGET_MODE,
     FIXED_BUDGET_MODE,
     FineTuneConfig,
@@ -215,8 +215,8 @@ from training.finetune import (  # noqa: E402
     run_lora_finetune,
     write_run_state,
 )
-from training.lora import EXPERT_ONLY_SCOPE, LEGACY_FULL_SCOPE  # noqa: E402
-from training.runtime_provenance import runtime_provenance_evidence  # noqa: E402
+from mlx_smolvla._lab.training.lora import EXPERT_ONLY_SCOPE, LEGACY_FULL_SCOPE  # noqa: E402
+from mlx_smolvla._lab.training.runtime_provenance import runtime_provenance_evidence  # noqa: E402
 
 
 def main(argv: list[str] | None = None) -> None:

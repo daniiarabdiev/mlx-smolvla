@@ -19,23 +19,23 @@ import mlx.nn as nn
 from mlx.utils import tree_flatten
 import numpy as np
 
-from training.data import TrainingArtifact
-from training.differentiable import differentiable_cpu_primitives
-from training.gradients import (
+from mlx_smolvla._lab.training.data import TrainingArtifact
+from mlx_smolvla._lab.training.differentiable import differentiable_cpu_primitives
+from mlx_smolvla._lab.training.gradients import (
     GradientComparison,
     canonical_parameter_name,
     compare_gradient_arrays,
     configure_reference_trainable,
     relative_loss_difference,
 )
-from training.model import SmolVLATrainingModel, TrainingBatch, training_loss
-from training.optimizer import (
+from mlx_smolvla._lab.training.model import SmolVLATrainingModel, TrainingBatch, training_loss
+from mlx_smolvla._lab.training.optimizer import (
     SmolVLAAdamW,
     SmolVLAOptimizerConfig,
     clip_gradients_by_global_norm,
     cosine_decay_with_warmup_lr,
 )
-from training.parity import (
+from mlx_smolvla._lab.training.parity import (
     load_serialized_training_batch,
     validate_checkpoint_parameter_identity,
 )

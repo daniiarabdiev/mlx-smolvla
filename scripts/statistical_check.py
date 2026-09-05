@@ -23,9 +23,9 @@ import numpy as np
 import torch
 from huggingface_hub import snapshot_download
 
-from reference.discovery import CHECKPOINT_ID, CHECKPOINT_REVISION
-from reference.discovery import DATASET_ID, DATASET_REVISION
-from reference.policy import (
+from mlx_smolvla._lab.reference.discovery import CHECKPOINT_ID, CHECKPOINT_REVISION
+from mlx_smolvla._lab.reference.discovery import DATASET_ID, DATASET_REVISION
+from mlx_smolvla._lab.reference.policy import (
     ReferencePolicy,
     load_checkpoint_dataset_observation,
     load_dataset_observation,

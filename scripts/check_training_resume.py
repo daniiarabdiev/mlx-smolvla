@@ -11,8 +11,8 @@ import platform
 import shutil
 import sys
 
-from training.finetune import write_run_state
-from training.ux import (
+from mlx_smolvla._lab.training.finetune import write_run_state
+from mlx_smolvla._lab.training.ux import (
     FullTrainingConfig,
     LoRATrainingConfig,
     evaluate_resume_exactness,

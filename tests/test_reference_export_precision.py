@@ -11,8 +11,8 @@ from safetensors import safe_open
 from safetensors.torch import load_file, save_file
 import torch
 
-from training.export import resolve_base_checkpoint
-from training.reference_export import TorchExportPolicy
+from mlx_smolvla._lab.training.export import resolve_base_checkpoint
+from mlx_smolvla._lab.training.reference_export import TorchExportPolicy
 
 
 pytestmark = pytest.mark.slow

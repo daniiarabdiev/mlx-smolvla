@@ -11,7 +11,8 @@ only the client boundary:
 1. Produce observations with the checkpoint's configured image/state keys and
    a task string.
 2. Use the pinned LeRobot protobuf service and `Ready`, `SendObservations`,
-   `GetActions`, and `Stop` semantics documented in `docs/ARCHITECTURE.md`.
+   `SendPolicyInstructions`, and `GetActions` semantics documented in the
+   [architecture](../../docs/ARCHITECTURE.md).
 3. Validate action shape/range and apply independent joint, rate, watchdog,
    session-duration, and exception-cleanup limits before any actuator write.
 4. Complete a no-motion protocol before a single bounded action.
@@ -39,12 +40,18 @@ follower serial/port match, an existing calibration, an operator-attested
 hardware-limit profile, a start pose inside the 10%-inset calibration, and a
 local checkpoint with effective six-axis state/action statistics. Every valid
 target is rate-limited from live servo readback; malformed or out-of-domain
-chunks hold, and every exit path returns slowly and verifies torque off.
+chunks hold, and exit cleanup attempts a bounded return and verifies torque off.
+A return can exhaust its step cap; torque-off cleanup is still required.
 
 Do not infer actuation readiness from the shipped code or completed no-motion
 test. Follow the exact [hardware runbook](../../docs/HARDWARE_RUNBOOK.md),
 [client design](../../hardware/CLIENT_DESIGN.md), and current
 [first-contact status](../../hardware/FIRST_CONTACT.md). The 2026-09-02
-no-motion protocol passed; later checks also verified camera framing and a
-supported inset pose. The exact operator-attested low-controller profile and
-the final physical checklist still block the first physical action.
+no-motion protocol passed. The later 2026-09-04 session passed a final no-motion
+loop, one valid guarded action, and a two-chunk continuous run, with exact
+return and verified torque-off cleanup for the powered runs under the temporary
+10% torque profile. A separate 20-chunk attempt is inconclusive under reduced
+torque: exact return was not met, while torque-off cleanup was verified. These
+results do not establish sustained operation or reliable task completion. Each
+new powered session requires fresh live authorization, controller-profile
+readback, and the runbook’s physical preflight.
