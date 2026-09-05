@@ -2,8 +2,12 @@
 
 This manifest records the final local `mlx-smolvla` 0.1.0 artifacts built from
 the pushed annotated tag `v0.1.0`. The tag resolves to verified source commit
-`9b28dc216e24aa86d121d9b805c1fc1733afbf9d`. Nothing was uploaded and the
-GitHub repository remains private.
+`9b28dc216e24aa86d121d9b805c1fc1733afbf9d`. On 2026-09-05, the operator explicitly authorized publication. The GitHub
+repository was made public and its unauthenticated page returned HTTP 200.
+All four artifact hashes were reverified unchanged. PyPI still returned HTTP
+404 for the project; an upload attempt stopped with missing credentials before
+any artifact was published. The GitHub Release awaits successful PyPI upload
+per the release sequence. No Hub upload was performed.
 
 ## Build environment
 

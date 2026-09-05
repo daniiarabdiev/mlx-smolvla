@@ -3627,3 +3627,13 @@
   intact to `.cache/dist-pre-tag-v0.1.0-20260904`; verified tag-built bytes now
   occupy ignored `dist/`. Nothing was uploaded, no visibility changed, and no
   GitHub Release was created.
+
+
+## 2026-09-05 — authorized publication
+
+The operator authorized publication. Made `daniiarabdiev/mlx-smolvla` public
+and verified unauthenticated HTTP 200. Reverified tag target and all four
+manifest artifact hashes. PyPI project lookup returned 404; `uv publish`
+stopped for missing credentials, with no artifact published. GitHub Release
+remains pending the PyPI step; notes are prepared locally. No Hub upload or
+hardware action occurred.

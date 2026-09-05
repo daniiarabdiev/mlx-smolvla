@@ -52,21 +52,10 @@ authorized actions.
   torque bits zero afterward. Camera indices must still be visually rechecked
   after device changes as documented in `docs/HARDWARE_RUNBOOK.md`.
 
-## Open — make the GitHub repository public
+## Done — make the GitHub repository public
 
-- After the hardware gate and final verification pass, review the tracked tree.
-  Obtain separate explicit authorization to make the repository public before
-  running this command; the continuation's commit/push authorization does not
-  cover visibility changes:
-
-  ```sh
-  gh repo edit daniiarabdiev/mlx-smolvla \
-    --visibility public \
-    --accept-visibility-change-consequences
-  ```
-
-- Verify the public, logged-out view before sharing the link. Do not run this
-  command until the operator explicitly authorizes the visibility change.
+- The operator explicitly authorized publication on 2026-09-05. Repository
+  visibility is public and the unauthenticated GitHub page returned HTTP 200.
 
 ## Done — prepare the final tag and Python distributions
 
@@ -81,7 +70,15 @@ authorized actions.
   reference/training identity checks all pass. Exact hashes are in
   [`../evidence/DIST_MANIFEST.md`](../evidence/DIST_MANIFEST.md).
 
-## Open — publish the Python distributions
+## Blocked on credentials — publish the Python distributions
+
+- Publication is explicitly authorized as of 2026-09-05. All four hashes match
+  the manifest. PyPI project lookup returned HTTP 404. `uv publish` stopped
+  before publication because no credentials, keyring provider, or supported
+  trusted-publishing identity were configured. Supply credentials securely in
+  the publishing process; do not paste a token into chat. No new authorization
+  is needed to resume this upload or the subsequent GitHub Release.
+
 
 - Obtain separate explicit authorization for the PyPI upload. Immediately
   before an authorized publication, recheck that the name is still available:
@@ -104,7 +101,11 @@ authorized actions.
 
 - Never write the token to a file, shell history, issue, log, or commit.
 
-## Open — create the GitHub Release
+## Pending PyPI upload — create the GitHub Release
+
+- Explicitly authorized on 2026-09-05; waiting on the preceding PyPI upload.
+  Prepared notes are in ignored `.cache/release-v0.1.0-notes.md`.
+
 
 - Only after a verified `v0.1.0` tag exists, PyPI publication succeeds, and
   separate explicit authorization to create the GitHub Release is supplied:
