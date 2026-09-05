@@ -23,6 +23,8 @@ jobs:
           - python: '3.12'
             resolution: lowest-direct
     env:
+      # Hosted CPython is universal2; both compiler and wheel must target arm64.
+      ARCHFLAGS: '-arch arm64'
       MACOSX_DEPLOYMENT_TARGET: '14.0'
       CMAKE_OSX_DEPLOYMENT_TARGET: '14.0'
       UV_PYTHON_DOWNLOADS: never
@@ -43,7 +45,8 @@ jobs:
       - name: Build the sdist and wheel from that sdist
         run: |
           uv build --sdist --python "$(command -v python)" --out-dir "$RUNNER_TEMP/source-dist"
-          uv build "$RUNNER_TEMP"/source-dist/*.tar.gz --wheel --python "$(command -v python)" --out-dir "$RUNNER_TEMP/wheel-dist"
+          uv build "$RUNNER_TEMP"/source-dist/*.tar.gz --wheel --python "$(command -v python)" \
+            --config-setting=--build-option=--plat-name=macosx_14_0_arm64 --out-dir "$RUNNER_TEMP/wheel-dist"
           python -m twine check "$RUNNER_TEMP"/source-dist/*.tar.gz "$RUNNER_TEMP"/wheel-dist/*.whl
       - name: Install resolved wheel in an isolated environment
         env:

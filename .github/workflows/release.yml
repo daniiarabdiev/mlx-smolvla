@@ -32,6 +32,8 @@ jobs:
       version: ${{ steps.source.outputs.version }}
       commit: ${{ steps.source.outputs.commit }}
     env:
+      # Hosted CPython is universal2; both compiler and wheel must target arm64.
+      ARCHFLAGS: '-arch arm64'
       MACOSX_DEPLOYMENT_TARGET: '14.0'
       CMAKE_OSX_DEPLOYMENT_TARGET: '14.0'
       UV_PYTHON_DOWNLOADS: never
@@ -82,6 +84,8 @@ jobs:
       matrix:
         python: ['3.11', '3.12', '3.13']
     env:
+      # Hosted CPython is universal2; both compiler and wheel must target arm64.
+      ARCHFLAGS: '-arch arm64'
       MACOSX_DEPLOYMENT_TARGET: '14.0'
       CMAKE_OSX_DEPLOYMENT_TARGET: '14.0'
       UV_PYTHON_DOWNLOADS: never
@@ -104,7 +108,8 @@ jobs:
         run: |
           test "$(uname -m)" = arm64
           python -m pip install uv==0.11.25 twine
-          uv build source-dist/*.tar.gz --wheel --python "$(command -v python)" --out-dir release-dist
+          uv build source-dist/*.tar.gz --wheel --python "$(command -v python)" \
+            --config-setting=--build-option=--plat-name=macosx_14_0_arm64 --out-dir release-dist
           python -m twine check release-dist/*.whl
           uv venv "$RUNNER_TEMP/installed" --python "$(command -v python)"
           uv pip install --python "$RUNNER_TEMP/installed/bin/python" release-dist/*.whl
