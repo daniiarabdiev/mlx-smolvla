@@ -2,6 +2,13 @@
 
 This project follows [Semantic Versioning](https://semver.org/).
 
+## [0.1.1] - 2026-09-05
+
+### Fixed
+
+- Correct the packaged PyPI description to show current installation instructions
+  instead of pre-publication wording. Runtime behavior is unchanged.
+
 ## [0.1.0] - 2026-09-02
 
 Initial public release candidate.
@@ -63,3 +70,5 @@ Evidence and reproducibility details are indexed in
 [`docs/evidence/`](docs/evidence/README.md).
 
 [0.1.0]: https://github.com/daniiarabdiev/mlx-smolvla/releases/tag/v0.1.0
+
+[0.1.1]: https://github.com/daniiarabdiev/mlx-smolvla/releases/tag/v0.1.1

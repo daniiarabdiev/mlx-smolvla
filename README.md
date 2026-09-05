@@ -34,7 +34,7 @@ dylib inspection evidence.
 
 ## Install
 
-Install v0.1.0 from PyPI:
+Install from PyPI:
 
 ```bash
 python -m pip install mlx-smolvla

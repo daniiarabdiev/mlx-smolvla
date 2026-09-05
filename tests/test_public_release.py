@@ -1,4 +1,4 @@
-"""Contracts for the public 0.1.0 repository surface."""
+"""Contracts for the public 0.1.1 repository surface."""
 
 from __future__ import annotations
 
@@ -20,7 +20,7 @@ def test_public_distribution_metadata_is_complete_and_canonical() -> None:
     project = _project()
 
     assert project["name"] == "mlx-smolvla"
-    assert project["version"] == "0.1.0"
+    assert project["version"] == "0.1.1"
     assert project["readme"] == "README.md"
     assert project["license"] == "Apache-2.0"
     assert project["keywords"] == [
@@ -53,7 +53,7 @@ def test_public_distribution_metadata_is_complete_and_canonical() -> None:
 def test_source_and_package_versions_match_public_release() -> None:
     from mlx_smolvla import __version__
 
-    assert __version__ == "0.1.0"
+    assert __version__ == "0.1.1"
 
 
 def test_public_community_files_are_present_and_actionable() -> None:
